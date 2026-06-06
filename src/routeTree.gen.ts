@@ -18,7 +18,9 @@ import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as DashboardScheduleRouteImport } from './routes/dashboard.schedule'
 import { Route as DashboardProfileRouteImport } from './routes/dashboard.profile'
+import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as DashboardScheduleIdRouteImport } from './routes/dashboard.schedule.$id'
+import { Route as AdminScheduleIdRouteImport } from './routes/admin.schedule.$id'
 
 const PendingRoute = PendingRouteImport.update({
   id: '/pending',
@@ -65,10 +67,20 @@ const DashboardProfileRoute = DashboardProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => DashboardRoute,
 } as any)
+const AdminUsersRoute = AdminUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AdminRoute,
+} as any)
 const DashboardScheduleIdRoute = DashboardScheduleIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => DashboardScheduleRoute,
+} as any)
+const AdminScheduleIdRoute = AdminScheduleIdRouteImport.update({
+  id: '/schedule/$id',
+  path: '/schedule/$id',
+  getParentRoute: () => AdminRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -77,20 +89,24 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/pending': typeof PendingRoute
+  '/admin/users': typeof AdminUsersRoute
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/schedule': typeof DashboardScheduleRouteWithChildren
   '/admin/': typeof AdminIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/admin/schedule/$id': typeof AdminScheduleIdRoute
   '/dashboard/schedule/$id': typeof DashboardScheduleIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/pending': typeof PendingRoute
+  '/admin/users': typeof AdminUsersRoute
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/schedule': typeof DashboardScheduleRouteWithChildren
   '/admin': typeof AdminIndexRoute
   '/dashboard': typeof DashboardIndexRoute
+  '/admin/schedule/$id': typeof AdminScheduleIdRoute
   '/dashboard/schedule/$id': typeof DashboardScheduleIdRoute
 }
 export interface FileRoutesById {
@@ -100,10 +116,12 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/pending': typeof PendingRoute
+  '/admin/users': typeof AdminUsersRoute
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/schedule': typeof DashboardScheduleRouteWithChildren
   '/admin/': typeof AdminIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/admin/schedule/$id': typeof AdminScheduleIdRoute
   '/dashboard/schedule/$id': typeof DashboardScheduleIdRoute
 }
 export interface FileRouteTypes {
@@ -114,20 +132,24 @@ export interface FileRouteTypes {
     | '/auth'
     | '/dashboard'
     | '/pending'
+    | '/admin/users'
     | '/dashboard/profile'
     | '/dashboard/schedule'
     | '/admin/'
     | '/dashboard/'
+    | '/admin/schedule/$id'
     | '/dashboard/schedule/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
     | '/pending'
+    | '/admin/users'
     | '/dashboard/profile'
     | '/dashboard/schedule'
     | '/admin'
     | '/dashboard'
+    | '/admin/schedule/$id'
     | '/dashboard/schedule/$id'
   id:
     | '__root__'
@@ -136,10 +158,12 @@ export interface FileRouteTypes {
     | '/auth'
     | '/dashboard'
     | '/pending'
+    | '/admin/users'
     | '/dashboard/profile'
     | '/dashboard/schedule'
     | '/admin/'
     | '/dashboard/'
+    | '/admin/schedule/$id'
     | '/dashboard/schedule/$id'
   fileRoutesById: FileRoutesById
 }
@@ -216,6 +240,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardProfileRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/admin/users': {
+      id: '/admin/users'
+      path: '/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminUsersRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/dashboard/schedule/$id': {
       id: '/dashboard/schedule/$id'
       path: '/$id'
@@ -223,15 +254,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardScheduleIdRouteImport
       parentRoute: typeof DashboardScheduleRoute
     }
+    '/admin/schedule/$id': {
+      id: '/admin/schedule/$id'
+      path: '/schedule/$id'
+      fullPath: '/admin/schedule/$id'
+      preLoaderRoute: typeof AdminScheduleIdRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
 interface AdminRouteChildren {
+  AdminUsersRoute: typeof AdminUsersRoute
   AdminIndexRoute: typeof AdminIndexRoute
+  AdminScheduleIdRoute: typeof AdminScheduleIdRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminUsersRoute: AdminUsersRoute,
   AdminIndexRoute: AdminIndexRoute,
+  AdminScheduleIdRoute: AdminScheduleIdRoute,
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
