@@ -15,6 +15,8 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
 import { Route as DashboardScheduleRouteImport } from './routes/dashboard.schedule'
+import { Route as DashboardProfileRouteImport } from './routes/dashboard.profile'
+import { Route as DashboardScheduleIdRouteImport } from './routes/dashboard.schedule.$id'
 
 const PendingRoute = PendingRouteImport.update({
   id: '/pending',
@@ -46,21 +48,35 @@ const DashboardScheduleRoute = DashboardScheduleRouteImport.update({
   path: '/schedule',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardProfileRoute = DashboardProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardScheduleIdRoute = DashboardScheduleIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => DashboardScheduleRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/pending': typeof PendingRoute
-  '/dashboard/schedule': typeof DashboardScheduleRoute
+  '/dashboard/profile': typeof DashboardProfileRoute
+  '/dashboard/schedule': typeof DashboardScheduleRouteWithChildren
   '/dashboard/': typeof DashboardIndexRoute
+  '/dashboard/schedule/$id': typeof DashboardScheduleIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/pending': typeof PendingRoute
-  '/dashboard/schedule': typeof DashboardScheduleRoute
+  '/dashboard/profile': typeof DashboardProfileRoute
+  '/dashboard/schedule': typeof DashboardScheduleRouteWithChildren
   '/dashboard': typeof DashboardIndexRoute
+  '/dashboard/schedule/$id': typeof DashboardScheduleIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -68,8 +84,10 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/pending': typeof PendingRoute
-  '/dashboard/schedule': typeof DashboardScheduleRoute
+  '/dashboard/profile': typeof DashboardProfileRoute
+  '/dashboard/schedule': typeof DashboardScheduleRouteWithChildren
   '/dashboard/': typeof DashboardIndexRoute
+  '/dashboard/schedule/$id': typeof DashboardScheduleIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -78,18 +96,29 @@ export interface FileRouteTypes {
     | '/auth'
     | '/dashboard'
     | '/pending'
+    | '/dashboard/profile'
     | '/dashboard/schedule'
     | '/dashboard/'
+    | '/dashboard/schedule/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/pending' | '/dashboard/schedule' | '/dashboard'
+  to:
+    | '/'
+    | '/auth'
+    | '/pending'
+    | '/dashboard/profile'
+    | '/dashboard/schedule'
+    | '/dashboard'
+    | '/dashboard/schedule/$id'
   id:
     | '__root__'
     | '/'
     | '/auth'
     | '/dashboard'
     | '/pending'
+    | '/dashboard/profile'
     | '/dashboard/schedule'
     | '/dashboard/'
+    | '/dashboard/schedule/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -143,16 +172,43 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardScheduleRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/profile': {
+      id: '/dashboard/profile'
+      path: '/profile'
+      fullPath: '/dashboard/profile'
+      preLoaderRoute: typeof DashboardProfileRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/schedule/$id': {
+      id: '/dashboard/schedule/$id'
+      path: '/$id'
+      fullPath: '/dashboard/schedule/$id'
+      preLoaderRoute: typeof DashboardScheduleIdRouteImport
+      parentRoute: typeof DashboardScheduleRoute
+    }
   }
 }
 
+interface DashboardScheduleRouteChildren {
+  DashboardScheduleIdRoute: typeof DashboardScheduleIdRoute
+}
+
+const DashboardScheduleRouteChildren: DashboardScheduleRouteChildren = {
+  DashboardScheduleIdRoute: DashboardScheduleIdRoute,
+}
+
+const DashboardScheduleRouteWithChildren =
+  DashboardScheduleRoute._addFileChildren(DashboardScheduleRouteChildren)
+
 interface DashboardRouteChildren {
-  DashboardScheduleRoute: typeof DashboardScheduleRoute
+  DashboardProfileRoute: typeof DashboardProfileRoute
+  DashboardScheduleRoute: typeof DashboardScheduleRouteWithChildren
   DashboardIndexRoute: typeof DashboardIndexRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
-  DashboardScheduleRoute: DashboardScheduleRoute,
+  DashboardProfileRoute: DashboardProfileRoute,
+  DashboardScheduleRoute: DashboardScheduleRouteWithChildren,
   DashboardIndexRoute: DashboardIndexRoute,
 }
 
