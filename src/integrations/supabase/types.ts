@@ -14,16 +14,209 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      attendance_responses: {
+        Row: {
+          assignment_id: string
+          created_at: string
+          id: string
+          note: string | null
+          reason: string | null
+          status: Database["public"]["Enums"]["attendance_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assignment_id: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          reason?: string | null
+          status: Database["public"]["Enums"]["attendance_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assignment_id?: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          reason?: string | null
+          status?: Database["public"]["Enums"]["attendance_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_responses_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "schedule_assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          address: string | null
+          age: number | null
+          church_name: string | null
+          created_at: string
+          email: string | null
+          full_name: string
+          id: string
+          phone: string | null
+          profile_image_url: string | null
+          rejection_reason: string | null
+          requested_role: Database["public"]["Enums"]["requested_role"]
+          spiritual_father: string | null
+          status: Database["public"]["Enums"]["profile_status"]
+          updated_at: string
+          whatsapp: string | null
+        }
+        Insert: {
+          address?: string | null
+          age?: number | null
+          church_name?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string
+          id: string
+          phone?: string | null
+          profile_image_url?: string | null
+          rejection_reason?: string | null
+          requested_role?: Database["public"]["Enums"]["requested_role"]
+          spiritual_father?: string | null
+          status?: Database["public"]["Enums"]["profile_status"]
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Update: {
+          address?: string | null
+          age?: number | null
+          church_name?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string
+          id?: string
+          phone?: string | null
+          profile_image_url?: string | null
+          rejection_reason?: string | null
+          requested_role?: Database["public"]["Enums"]["requested_role"]
+          spiritual_father?: string | null
+          status?: Database["public"]["Enums"]["profile_status"]
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
+      schedule_assignments: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          schedule_id: string
+          service_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          schedule_id: string
+          service_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          schedule_id?: string
+          service_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schedule_assignments_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "schedules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      schedules: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          friday_date: string
+          id: string
+          notes: string | null
+          status: Database["public"]["Enums"]["schedule_status"]
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          friday_date: string
+          id?: string
+          notes?: string | null
+          status?: Database["public"]["Enums"]["schedule_status"]
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          friday_date?: string
+          id?: string
+          notes?: string | null
+          status?: Database["public"]["Enums"]["schedule_status"]
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "deacon" | "servant"
+      attendance_status: "attend" | "decline"
+      profile_status: "pending" | "approved" | "rejected"
+      requested_role: "admin" | "deacon" | "servant" | "pending"
+      schedule_status: "draft" | "published"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +343,12 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "deacon", "servant"],
+      attendance_status: ["attend", "decline"],
+      profile_status: ["pending", "approved", "rejected"],
+      requested_role: ["admin", "deacon", "servant", "pending"],
+      schedule_status: ["draft", "published"],
+    },
   },
 } as const
