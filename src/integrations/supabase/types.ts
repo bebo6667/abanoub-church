@@ -53,6 +53,13 @@ export type Database = {
             referencedRelation: "schedule_assignments"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "attendance_responses_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       profiles: {
@@ -142,6 +149,13 @@ export type Database = {
             referencedRelation: "schedules"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "schedule_assignments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       schedules: {
@@ -196,7 +210,15 @@ export type Database = {
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
