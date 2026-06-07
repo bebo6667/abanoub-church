@@ -13,9 +13,11 @@ import {
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { ROLE_LABELS, STATUS_LABELS } from "@/lib/services";
+import {
+  ROLE_LABELS, STATUS_LABELS, normalizeWhatsapp, whatsappDigits, formatDate,
+} from "@/lib/services";
 import { toast } from "sonner";
-import { Phone, MessageCircle, Check, X, Search } from "lucide-react";
+import { Phone, MessageCircle, Check, X, Search, Shield } from "lucide-react";
 
 export const Route = createFileRoute("/admin/users")({
   component: AdminUsers,
@@ -23,7 +25,7 @@ export const Route = createFileRoute("/admin/users")({
 
 function AdminUsers() {
   const qc = useQueryClient();
-  const [tab, setTab] = useState("pending");
+  const [tab, setTab] = useState("approved");
   const [q, setQ] = useState("");
   const [sort, setSort] = useState("name");
   const [rejectFor, setRejectFor] = useState<any>(null);
@@ -58,7 +60,6 @@ function AdminUsers() {
       status: "approved", rejection_reason: null,
     }).eq("id", approveFor.id);
     if (e1) return toast.error(e1.message);
-    // remove any previous role then assign new one
     await db.from("user_roles").delete().eq("user_id", approveFor.id);
     const { error: e2 } = await db.from("user_roles").insert({ user_id: approveFor.id, role: approveRole });
     if (e2) return toast.error(e2.message);
@@ -116,58 +117,112 @@ function AdminUsers() {
         </Select>
       </div>
 
-      <div className="space-y-2">
-        {filtered.map((u) => {
-          const role = u.user_roles?.[0]?.role;
-          const wa = u.whatsapp?.replace(/\D/g, "");
-          return (
-            <Card key={u.id} className="p-3">
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2 min-w-0">
-                  <div className="h-10 w-10 rounded-full bg-secondary overflow-hidden grid place-items-center font-semibold">
-                    {u.profile_image_url ? <img src={u.profile_image_url} className="h-full w-full object-cover" /> : u.full_name?.charAt(0)}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="font-semibold truncate">{u.full_name}</p>
-                    <p className="text-xs text-muted-foreground truncate">{u.email}</p>
-                    <div className="flex gap-1 mt-1">
-                      <Badge variant="outline" className="text-[10px]">{STATUS_LABELS[u.status]}</Badge>
-                      {role && <Badge className="text-[10px]">{ROLE_LABELS[role]}</Badge>}
-                      {u.age && <Badge variant="secondary" className="text-[10px]">{u.age} سنة</Badge>}
+      <Card className="overflow-x-auto p-0">
+        <table className="w-full text-sm border-collapse min-w-[900px]">
+          <thead className="bg-secondary/50">
+            <tr className="text-right">
+              <th className="p-2 font-semibold">الصورة</th>
+              <th className="p-2 font-semibold">الاسم</th>
+              <th className="p-2 font-semibold">الدور / الحالة</th>
+              <th className="p-2 font-semibold">السن</th>
+              <th className="p-2 font-semibold">تاريخ الميلاد</th>
+              <th className="p-2 font-semibold">العنوان</th>
+              <th className="p-2 font-semibold">رقم الهاتف</th>
+              <th className="p-2 font-semibold text-center">تواصل</th>
+              <th className="p-2 font-semibold text-center">إجراءات</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map((u) => {
+              const role = u.user_roles?.[0]?.role;
+              const waNumber = normalizeWhatsapp(u.whatsapp);
+              const waDigits = whatsappDigits(u.whatsapp);
+              const callNumber = u.phone || waNumber;
+              return (
+                <tr key={u.id} className="border-t align-middle">
+                  <td className="p-2">
+                    <div className="h-10 w-10 rounded-full bg-secondary overflow-hidden grid place-items-center font-semibold">
+                      {u.profile_image_url
+                        ? <img src={u.profile_image_url} className="h-full w-full object-cover" alt="" />
+                        : u.full_name?.charAt(0)}
                     </div>
-                  </div>
-                </div>
-                <div className="flex flex-col gap-1">
-                  {wa && <a href={`https://wa.me/${wa}`} target="_blank" rel="noopener noreferrer"><Button size="icon" variant="ghost" className="h-8 w-8 text-success"><MessageCircle className="h-4 w-4" /></Button></a>}
-                  {u.phone && <a href={`tel:${u.phone}`}><Button size="icon" variant="ghost" className="h-8 w-8"><Phone className="h-4 w-4" /></Button></a>}
-                </div>
-              </div>
-              {u.church_name && <p className="text-xs text-muted-foreground mt-2">{u.church_name} • أب الاعتراف: {u.spiritual_father || "—"}</p>}
-              {u.rejection_reason && <p className="text-xs text-destructive mt-1">سبب الرفض: {u.rejection_reason}</p>}
-              {u.status === "pending" && (
-                <div className="flex gap-2 mt-3">
-                  <Button size="sm" className="flex-1 bg-success text-success-foreground hover:opacity-90"
-                    onClick={() => { setApproveFor(u); setApproveRole(u.requested_role === "servant" ? "servant" : "deacon"); }}>
-                    <Check className="h-4 w-4" />موافقة
-                  </Button>
-                  <Button size="sm" variant="outline" className="flex-1" onClick={() => setRejectFor(u)}>
-                    <X className="h-4 w-4" />رفض
-                  </Button>
-                </div>
-              )}
-              {u.status === "approved" && (
-                <div className="flex gap-2 mt-3">
-                  <Button size="sm" variant="outline" className="flex-1"
-                    onClick={() => { setChangeRoleFor(u); setNewRole((role as any) || "deacon"); }}>
-                    تغيير الدور
-                  </Button>
-                </div>
-              )}
-            </Card>
-          );
-        })}
-        {filtered.length === 0 && <Card className="p-6 text-center text-sm text-muted-foreground">لا توجد نتائج</Card>}
-      </div>
+                  </td>
+                  <td className="p-2 min-w-[140px]">
+                    <p className="font-semibold leading-tight">{u.full_name}</p>
+                    <p className="text-[11px] text-muted-foreground truncate max-w-[160px]">{u.email}</p>
+                    {u.church_name && <p className="text-[11px] text-muted-foreground">{u.church_name}</p>}
+                    {u.rejection_reason && <p className="text-[11px] text-destructive mt-1">رفض: {u.rejection_reason}</p>}
+                  </td>
+                  <td className="p-2">
+                    <div className="flex flex-col gap-1">
+                      <Badge variant="outline" className="text-[10px] w-fit">{STATUS_LABELS[u.status]}</Badge>
+                      {role && (
+                        <Badge className={`text-[10px] w-fit ${role === "admin" ? "bg-gold text-foreground" : ""}`}>
+                          {role === "admin" && <Shield className="h-3 w-3 ml-0.5" />}
+                          {ROLE_LABELS[role]}
+                        </Badge>
+                      )}
+                    </div>
+                  </td>
+                  <td className="p-2">{u.age ?? "—"}</td>
+                  <td className="p-2 whitespace-nowrap">{formatDate(u.date_of_birth)}</td>
+                  <td className="p-2 max-w-[180px]">
+                    <span className="text-xs">{u.address || "—"}</span>
+                  </td>
+                  <td className="p-2 whitespace-nowrap" dir="ltr">
+                    {waNumber || "—"}
+                    {u.phone && <div className="text-[11px] text-muted-foreground">{u.phone}</div>}
+                  </td>
+                  <td className="p-2">
+                    <div className="flex items-center justify-center gap-1">
+                      {waDigits && (
+                        <a href={`https://wa.me/${waDigits}`} target="_blank" rel="noopener noreferrer">
+                          <Button size="icon" variant="ghost" className="h-8 w-8 text-success" title="واتساب">
+                            <MessageCircle className="h-4 w-4" />
+                          </Button>
+                        </a>
+                      )}
+                      {callNumber && (
+                        <a href={`tel:${callNumber}`}>
+                          <Button size="icon" variant="ghost" className="h-8 w-8" title="اتصال">
+                            <Phone className="h-4 w-4" />
+                          </Button>
+                        </a>
+                      )}
+                    </div>
+                  </td>
+                  <td className="p-2">
+                    {u.status === "pending" ? (
+                      <div className="flex gap-1 justify-center">
+                        <Button size="sm" className="h-8 bg-success text-success-foreground hover:opacity-90"
+                          onClick={() => { setApproveFor(u); setApproveRole(u.requested_role === "servant" ? "servant" : "deacon"); }}>
+                          <Check className="h-4 w-4" />
+                        </Button>
+                        <Button size="sm" variant="outline" className="h-8" onClick={() => setRejectFor(u)}>
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ) : u.status === "approved" ? (
+                      <Button size="sm" variant="outline" className="h-8 whitespace-nowrap"
+                        onClick={() => { setChangeRoleFor(u); setNewRole((role as any) || "deacon"); }}>
+                        تغيير الدور
+                      </Button>
+                    ) : (
+                      <Button size="sm" variant="outline" className="h-8"
+                        onClick={() => { setApproveFor(u); setApproveRole("deacon"); }}>
+                        إعادة قبول
+                      </Button>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+            {filtered.length === 0 && (
+              <tr><td colSpan={9} className="p-6 text-center text-sm text-muted-foreground">لا توجد نتائج</td></tr>
+            )}
+          </tbody>
+        </table>
+      </Card>
 
       <Dialog open={!!approveFor} onOpenChange={(v) => !v && setApproveFor(null)}>
         <DialogContent>
@@ -177,7 +232,7 @@ function AdminUsers() {
             <SelectContent>
               <SelectItem value="deacon">شماس</SelectItem>
               <SelectItem value="servant">خادم</SelectItem>
-              <SelectItem value="admin">خادم رئيسي (Admin)</SelectItem>
+              <SelectItem value="admin">أدمن</SelectItem>
             </SelectContent>
           </Select>
           <DialogFooter>
@@ -195,7 +250,7 @@ function AdminUsers() {
             <SelectContent>
               <SelectItem value="deacon">شماس</SelectItem>
               <SelectItem value="servant">خادم</SelectItem>
-              <SelectItem value="admin">خادم رئيسي (Admin)</SelectItem>
+              <SelectItem value="admin">أدمن</SelectItem>
             </SelectContent>
           </Select>
           <DialogFooter>
