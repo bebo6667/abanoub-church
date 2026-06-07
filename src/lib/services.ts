@@ -71,3 +71,29 @@ export function formatFridayDate(d: string) {
     return d;
   }
 }
+
+/** Always returns a WhatsApp number with +20 prefix (Egypt). */
+export function normalizeWhatsapp(raw?: string | null): string | null {
+  if (!raw) return null;
+  let digits = raw.replace(/\D/g, "");
+  if (!digits) return null;
+  // Strip leading 0
+  if (digits.startsWith("00")) digits = digits.slice(2);
+  if (digits.startsWith("20")) digits = digits.slice(2);
+  if (digits.startsWith("0")) digits = digits.slice(1);
+  return `+20${digits}`;
+}
+
+export function whatsappDigits(raw?: string | null): string | null {
+  const n = normalizeWhatsapp(raw);
+  return n ? n.replace(/\D/g, "") : null;
+}
+
+export function formatDate(d?: string | null) {
+  if (!d) return "—";
+  try {
+    return new Date(d).toLocaleDateString("ar-EG-u-nu-latn", {
+      year: "numeric", month: "2-digit", day: "2-digit",
+    });
+  } catch { return d; }
+}
