@@ -33,13 +33,14 @@ function AdminScheduleEditor() {
   const { data, isLoading } = useQuery({
     queryKey: ["admin-schedule", id],
     queryFn: async () => {
-      const [{ data: schedule }, { data: assignments }, { data: deacons }, { data: responses }] = await Promise.all([
+      const [{ data: schedule }, { data: assignments }, { data: deacons }] = await Promise.all([
         db.from("schedules").select("*").eq("id", id).maybeSingle(),
-        db.from("schedule_assignments").select("*, profiles!schedule_assignments_user_id_fkey(id,full_name,profile_image_url)").eq("schedule_id", id),
+        db.from("schedule_assignments")
+          .select("*, profiles!schedule_assignments_user_id_fkey(id,full_name,profile_image_url), attendance_responses!attendance_responses_assignment_id_fkey(status,reason,note)")
+          .eq("schedule_id", id),
         db.from("profiles").select("id,full_name,profile_image_url,age,user_roles!user_roles_user_id_fkey(role)").eq("status", "approved"),
-        db.from("attendance_responses").select("*").eq("schedule_id", id),
       ]);
-      return { schedule, assignments: (assignments ?? []) as any[], deacons: (deacons ?? []) as any[], responses: (responses ?? []) as any[] };
+      return { schedule, assignments: (assignments ?? []) as any[], deacons: (deacons ?? []) as any[] };
     },
   });
 
@@ -75,7 +76,7 @@ function AdminScheduleEditor() {
     }
     if (toAdd.length) {
       await db.from("schedule_assignments").insert(toAdd.map((u) => ({
-        schedule_id: id, user_id: u, service_type: pickerFor, status: "assigned",
+        schedule_id: id, user_id: u, service_type: pickerFor,
       })));
     }
     setPickerFor(null);
@@ -112,7 +113,7 @@ function AdminScheduleEditor() {
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm opacity-80">قداس الجمعة</p>
-            <h2 className="text-xl font-bold">{formatFridayDate(schedule.week_date)}</h2>
+            <h2 className="text-xl font-bold">{formatFridayDate(schedule.friday_date)}</h2>
           </div>
           <Badge variant="secondary">{isPublished ? "منشور" : "مسودة"}</Badge>
         </div>
@@ -148,7 +149,7 @@ function AdminScheduleEditor() {
               ) : (
                 <div className="space-y-1">
                   {list.map((a) => {
-                    const resp = data.responses.find((r) => r.user_id === a.user_id);
+                    const resp = a.attendance_responses?.[0];
                     return (
                       <div key={a.id} className="flex items-center justify-between gap-2 rounded bg-secondary/40 p-2">
                         <div className="flex items-center gap-2 min-w-0">
@@ -158,8 +159,8 @@ function AdminScheduleEditor() {
                           <div className="min-w-0">
                             <p className="text-sm truncate">{a.profiles?.full_name}</p>
                             {resp && (
-                              <Badge variant={resp.response === "decline" ? "destructive" : "default"} className="text-[10px]">
-                                {resp.response === "attend" ? "سيحضر" : `اعتذر${resp.reason ? " — " + DECLINE_REASONS[resp.reason] : ""}`}
+                              <Badge variant={resp.status === "decline" ? "destructive" : "default"} className="text-[10px]">
+                                {resp.status === "attend" ? "سيحضر" : `اعتذر${resp.reason ? " — " + (DECLINE_REASONS[resp.reason] || resp.reason) : ""}`}
                               </Badge>
                             )}
                           </div>

@@ -14,7 +14,7 @@ function ScheduleList() {
   const { data } = useQuery({
     queryKey: ["all-schedules"],
     queryFn: async () => {
-      const { data } = await db.from("schedules").select("*").eq("status", "published").order("week_date", { ascending: false });
+      const { data } = await db.from("schedules").select("*").eq("status", "published").order("friday_date", { ascending: false });
       return (data ?? []) as any[];
     },
   });
@@ -26,7 +26,7 @@ function ScheduleList() {
           <Link key={s.id} to="/dashboard/schedule/$id" params={{ id: s.id }}>
             <Card className="p-4 flex items-center gap-3">
               <CalendarDays className="h-5 w-5 text-primary" />
-              <span className="font-medium">{formatFridayDate(s.week_date)}</span>
+              <span className="font-medium">{formatFridayDate(s.friday_date)}</span>
             </Card>
           </Link>
         ))}

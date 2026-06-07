@@ -22,7 +22,7 @@ function DashboardHome() {
         .from("schedules")
         .select("*")
         .eq("status", "published")
-        .order("week_date", { ascending: false })
+        .order("friday_date", { ascending: false })
         .limit(5);
       return (data ?? []) as any[];
     },
@@ -34,7 +34,7 @@ function DashboardHome() {
     queryFn: async () => {
       const { data } = await db
         .from("schedule_assignments")
-        .select("*, schedules(week_date,status)")
+        .select("*, schedules(friday_date,status)")
         .eq("user_id", user!.id)
         .order("created_at", { ascending: false });
       return ((data ?? []) as any[]).filter((a) => a.schedules?.status === "published");
@@ -58,7 +58,7 @@ function DashboardHome() {
                 <div>
                   <div className="flex items-center gap-2">
                     <CalendarDays className="h-4 w-4 text-primary" />
-                    <span className="font-semibold">{formatFridayDate(a.schedules.week_date)}</span>
+                    <span className="font-semibold">{formatFridayDate(a.schedules.friday_date)}</span>
                   </div>
                   <Badge variant="secondary" className="mt-2">{SERVICE_LABELS[a.service_type as keyof typeof SERVICE_LABELS]}</Badge>
                 </div>
@@ -81,7 +81,7 @@ function DashboardHome() {
           schedules.map((s) => (
             <Link key={s.id} to="/dashboard/schedule/$id" params={{ id: s.id }}>
               <Card className="p-4 flex items-center justify-between">
-                <span>{formatFridayDate(s.week_date)}</span>
+                <span>{formatFridayDate(s.friday_date)}</span>
                 <Button variant="ghost" size="sm">عرض</Button>
               </Card>
             </Link>
