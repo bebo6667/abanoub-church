@@ -21,6 +21,7 @@ function ProfilePage() {
   const [form, setForm] = useState({
     full_name: profile?.full_name ?? "",
     age: profile?.age?.toString() ?? "",
+    date_of_birth: profile?.date_of_birth ?? "",
     whatsapp: profile?.whatsapp ?? "",
     phone: profile?.phone ?? "",
     address: profile?.address ?? "",
@@ -33,6 +34,7 @@ function ProfilePage() {
     const { error } = await db.from("profiles").update({
       full_name: form.full_name,
       age: form.age ? Number(form.age) : null,
+      date_of_birth: form.date_of_birth || null,
       whatsapp: form.whatsapp,
       phone: form.phone || null,
       address: form.address,
@@ -75,8 +77,9 @@ function ProfilePage() {
           {([
             ["الاسم الرباعي", "full_name", "text"],
             ["العمر", "age", "number"],
-            ["واتساب", "whatsapp", "text"],
-            ["هاتف إضافي", "phone", "text"],
+            ["تاريخ الميلاد", "date_of_birth", "date"],
+            ["واتساب (سيُضاف +20 تلقائياً)", "whatsapp", "text"],
+            ["هاتف إضافي للاتصال", "phone", "text"],
             ["العنوان", "address", "text"],
             ["الكنيسة", "church_name", "text"],
             ["أب الاعتراف", "spiritual_father", "text"],

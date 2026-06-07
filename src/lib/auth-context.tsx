@@ -8,6 +8,7 @@ export type Profile = {
   email: string | null;
   full_name: string;
   age: number | null;
+  date_of_birth: string | null;
   whatsapp: string | null;
   phone: string | null;
   address: string | null;

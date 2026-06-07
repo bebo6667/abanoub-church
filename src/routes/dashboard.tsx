@@ -13,11 +13,11 @@ function DashboardLayout() {
   useEffect(() => {
     if (loading) return;
     if (!session) navigate({ to: "/auth", replace: true });
-    else if (isAdmin) navigate({ to: "/admin", replace: true });
-    else if (profile && profile.status !== "approved") navigate({ to: "/pending", replace: true });
+    // Admin has servant privileges too — allow dashboard access without redirect.
+    else if (!isAdmin && profile && profile.status !== "approved") navigate({ to: "/pending", replace: true });
   }, [loading, session, profile, isAdmin, navigate]);
 
-  if (loading || !profile || profile.status !== "approved") {
+  if (loading || !profile || (!isAdmin && profile.status !== "approved")) {
     return <div className="flex min-h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
   return <Outlet />;
