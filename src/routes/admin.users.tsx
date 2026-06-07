@@ -155,6 +155,14 @@ function AdminUsers() {
                   </Button>
                 </div>
               )}
+              {u.status === "approved" && (
+                <div className="flex gap-2 mt-3">
+                  <Button size="sm" variant="outline" className="flex-1"
+                    onClick={() => { setChangeRoleFor(u); setNewRole((role as any) || "deacon"); }}>
+                    تغيير الدور
+                  </Button>
+                </div>
+              )}
             </Card>
           );
         })}
@@ -169,11 +177,30 @@ function AdminUsers() {
             <SelectContent>
               <SelectItem value="deacon">شماس</SelectItem>
               <SelectItem value="servant">خادم</SelectItem>
+              <SelectItem value="admin">خادم رئيسي (Admin)</SelectItem>
             </SelectContent>
           </Select>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setApproveFor(null)}>إلغاء</Button>
             <Button onClick={approve}>تأكيد الموافقة</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!changeRoleFor} onOpenChange={(v) => !v && setChangeRoleFor(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>تغيير دور {changeRoleFor?.full_name}</DialogTitle></DialogHeader>
+          <Select value={newRole} onValueChange={(v: any) => setNewRole(v)}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="deacon">شماس</SelectItem>
+              <SelectItem value="servant">خادم</SelectItem>
+              <SelectItem value="admin">خادم رئيسي (Admin)</SelectItem>
+            </SelectContent>
+          </Select>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setChangeRoleFor(null)}>إلغاء</Button>
+            <Button onClick={changeRole}>حفظ</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
