@@ -37,7 +37,7 @@ function AdminHome() {
   const { data: schedules } = useQuery({
     queryKey: ["admin-schedules"],
     queryFn: async () => {
-      const { data } = await db.from("schedules").select("*").order("week_date", { ascending: false });
+      const { data } = await db.from("schedules").select("*").order("friday_date", { ascending: false });
       return (data ?? []) as any[];
     },
   });
@@ -52,7 +52,7 @@ function AdminHome() {
 
   async function createSchedule() {
     const { data, error } = await db.from("schedules").insert({
-      week_date: date, status: "draft", created_by: user!.id,
+      friday_date: date, status: "draft", created_by: user!.id,
     }).select().single();
     if (error) return toast.error(error.message);
     setOpen(false);
@@ -101,7 +101,7 @@ function AdminHome() {
               <div className="flex items-center gap-3">
                 <CalendarDays className="h-5 w-5 text-primary" />
                 <div>
-                  <p className="font-medium">{formatFridayDate(s.week_date)}</p>
+                  <p className="font-medium">{formatFridayDate(s.friday_date)}</p>
                   <Badge variant={s.status === "published" ? "default" : "secondary"} className="text-[10px] mt-1">
                     {s.status === "published" ? "منشور" : "مسودة"}
                   </Badge>

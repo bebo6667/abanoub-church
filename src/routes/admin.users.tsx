@@ -29,7 +29,9 @@ function AdminUsers() {
   const [rejectFor, setRejectFor] = useState<any>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [approveFor, setApproveFor] = useState<any>(null);
-  const [approveRole, setApproveRole] = useState<"deacon" | "servant">("deacon");
+  const [approveRole, setApproveRole] = useState<"deacon" | "servant" | "admin">("deacon");
+  const [changeRoleFor, setChangeRoleFor] = useState<any>(null);
+  const [newRole, setNewRole] = useState<"deacon" | "servant" | "admin">("deacon");
 
   const { data: users } = useQuery({
     queryKey: ["admin-users", tab],
@@ -56,12 +58,24 @@ function AdminUsers() {
       status: "approved", rejection_reason: null,
     }).eq("id", approveFor.id);
     if (e1) return toast.error(e1.message);
-    // assign role
-    await db.from("user_roles").upsert({ user_id: approveFor.id, role: approveRole }, { onConflict: "user_id,role" });
+    // remove any previous role then assign new one
+    await db.from("user_roles").delete().eq("user_id", approveFor.id);
+    const { error: e2 } = await db.from("user_roles").insert({ user_id: approveFor.id, role: approveRole });
+    if (e2) return toast.error(e2.message);
     setApproveFor(null);
     qc.invalidateQueries({ queryKey: ["admin-users"] });
     qc.invalidateQueries({ queryKey: ["pending-count"] });
     toast.success("تمت الموافقة");
+  }
+
+  async function changeRole() {
+    if (!changeRoleFor) return;
+    await db.from("user_roles").delete().eq("user_id", changeRoleFor.id);
+    const { error } = await db.from("user_roles").insert({ user_id: changeRoleFor.id, role: newRole });
+    if (error) return toast.error(error.message);
+    setChangeRoleFor(null);
+    qc.invalidateQueries({ queryKey: ["admin-users"] });
+    toast.success("تم تغيير الدور");
   }
 
   async function reject() {
@@ -141,6 +155,14 @@ function AdminUsers() {
                   </Button>
                 </div>
               )}
+              {u.status === "approved" && (
+                <div className="flex gap-2 mt-3">
+                  <Button size="sm" variant="outline" className="flex-1"
+                    onClick={() => { setChangeRoleFor(u); setNewRole((role as any) || "deacon"); }}>
+                    تغيير الدور
+                  </Button>
+                </div>
+              )}
             </Card>
           );
         })}
@@ -155,11 +177,30 @@ function AdminUsers() {
             <SelectContent>
               <SelectItem value="deacon">شماس</SelectItem>
               <SelectItem value="servant">خادم</SelectItem>
+              <SelectItem value="admin">خادم رئيسي (Admin)</SelectItem>
             </SelectContent>
           </Select>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setApproveFor(null)}>إلغاء</Button>
             <Button onClick={approve}>تأكيد الموافقة</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!changeRoleFor} onOpenChange={(v) => !v && setChangeRoleFor(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>تغيير دور {changeRoleFor?.full_name}</DialogTitle></DialogHeader>
+          <Select value={newRole} onValueChange={(v: any) => setNewRole(v)}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="deacon">شماس</SelectItem>
+              <SelectItem value="servant">خادم</SelectItem>
+              <SelectItem value="admin">خادم رئيسي (Admin)</SelectItem>
+            </SelectContent>
+          </Select>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setChangeRoleFor(null)}>إلغاء</Button>
+            <Button onClick={changeRole}>حفظ</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

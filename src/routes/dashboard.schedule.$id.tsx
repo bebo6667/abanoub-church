@@ -26,16 +26,15 @@ function ScheduleDetail() {
   const qc = useQueryClient();
 
   const { data, isLoading } = useQuery({
-    queryKey: ["schedule", id],
+    queryKey: ["schedule", id, user?.id],
     queryFn: async () => {
-      const [{ data: schedule }, { data: assignments }, { data: response }] = await Promise.all([
+      const [{ data: schedule }, { data: assignments }] = await Promise.all([
         db.from("schedules").select("*").eq("id", id).maybeSingle(),
         db.from("schedule_assignments")
-          .select("*, profiles!schedule_assignments_user_id_fkey(id,full_name,whatsapp,phone,profile_image_url)")
+          .select("*, profiles!schedule_assignments_user_id_fkey(id,full_name,whatsapp,phone,profile_image_url), attendance_responses!attendance_responses_assignment_id_fkey(*)")
           .eq("schedule_id", id),
-        db.from("attendance_responses").select("*").eq("schedule_id", id).eq("user_id", user!.id).maybeSingle(),
       ]);
-      return { schedule, assignments: (assignments ?? []) as any[], response };
+      return { schedule, assignments: (assignments ?? []) as any[] };
     },
   });
 
@@ -45,18 +44,19 @@ function ScheduleDetail() {
 
   const myAssignments = data.assignments.filter((a) => a.user_id === user!.id);
   const hasMine = myAssignments.length > 0;
+  const myResponse = myAssignments[0]?.attendance_responses?.find((r: any) => r.user_id === user!.id) ?? null;
 
   return (
     <AppShell title="جدول الجمعة">
       <Card className="p-4 mb-4 gradient-sacred text-primary-foreground">
         <p className="text-sm opacity-80">قداس الجمعة</p>
-        <h2 className="text-xl font-bold">{formatFridayDate(data.schedule.week_date)}</h2>
+        <h2 className="text-xl font-bold">{formatFridayDate(data.schedule.friday_date)}</h2>
       </Card>
 
       {hasMine && (
         <AttendanceCard
-          scheduleId={id}
-          existing={data.response as any}
+          assignmentId={myAssignments[0].id}
+          existing={myResponse}
           assignments={myAssignments}
           onSaved={() => qc.invalidateQueries({ queryKey: ["schedule", id] })}
         />
@@ -93,7 +93,7 @@ function PersonRow({ a }: { a: any }) {
         </div>
         <div className="min-w-0">
           <p className="font-medium truncate text-sm">{p.full_name}</p>
-          {a.status === "declined" && <Badge variant="destructive" className="text-[10px]">اعتذر</Badge>}
+          {a.attendance_responses?.[0]?.status === "decline" && <Badge variant="destructive" className="text-[10px]">اعتذر</Badge>}
         </div>
       </div>
       <div className="flex items-center gap-1">
@@ -112,20 +112,18 @@ function PersonRow({ a }: { a: any }) {
   );
 }
 
-function AttendanceCard({ scheduleId, existing, assignments, onSaved }: any) {
+function AttendanceCard({ assignmentId, existing, assignments, onSaved }: any) {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState("exams");
   const [text, setText] = useState("");
 
-  async function respond(response: "attend" | "decline") {
-    if (response === "attend") {
+  async function respond(status: "attend" | "decline") {
+    if (status === "attend") {
       const { error } = await db.from("attendance_responses").upsert({
-        user_id: user!.id, schedule_id: scheduleId, response: "attend", reason: null, reason_text: null,
-      }, { onConflict: "user_id,schedule_id" });
+        user_id: user!.id, assignment_id: assignmentId, status: "attend", reason: null, note: null,
+      }, { onConflict: "assignment_id,user_id" });
       if (error) return toast.error(error.message);
-      await db.from("schedule_assignments").update({ status: "confirmed" })
-        .eq("schedule_id", scheduleId).eq("user_id", user!.id);
       toast.success("شكراً لتأكيدك");
       onSaved();
     } else {
@@ -136,11 +134,9 @@ function AttendanceCard({ scheduleId, existing, assignments, onSaved }: any) {
   async function submitDecline() {
     if (reason === "other" && !text.trim()) return toast.error("اكتب السبب");
     const { error } = await db.from("attendance_responses").upsert({
-      user_id: user!.id, schedule_id: scheduleId, response: "decline", reason, reason_text: text || null,
-    }, { onConflict: "user_id,schedule_id" });
+      user_id: user!.id, assignment_id: assignmentId, status: "decline", reason, note: text || null,
+    }, { onConflict: "assignment_id,user_id" });
     if (error) return toast.error(error.message);
-    await db.from("schedule_assignments").update({ status: "declined" })
-      .eq("schedule_id", scheduleId).eq("user_id", user!.id);
     setOpen(false);
     toast.success("تم تسجيل اعتذارك");
     onSaved();
@@ -158,8 +154,8 @@ function AttendanceCard({ scheduleId, existing, assignments, onSaved }: any) {
       </div>
       {responded ? (
         <div className="text-sm">
-          ردك: <strong>{existing.response === "attend" ? "سأحضر" : "اعتذار"}</strong>
-          {existing.reason && <> — {DECLINE_REASONS[existing.reason]}{existing.reason_text ? ` (${existing.reason_text})` : ""}</>}
+          ردك: <strong>{existing.status === "attend" ? "سأحضر" : "اعتذار"}</strong>
+          {existing.reason && <> — {DECLINE_REASONS[existing.reason] || existing.reason}{existing.note ? ` (${existing.note})` : ""}</>}
           <div className="mt-2 flex gap-2">
             <Button size="sm" variant="outline" onClick={() => respond("attend")}><Check className="h-4 w-4" />تغيير: سأحضر</Button>
             <Button size="sm" variant="outline" onClick={() => respond("decline")}><X className="h-4 w-4" />تغيير: اعتذار</Button>
