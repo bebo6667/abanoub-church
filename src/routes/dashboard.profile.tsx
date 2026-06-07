@@ -21,6 +21,7 @@ function ProfilePage() {
   const [form, setForm] = useState({
     full_name: profile?.full_name ?? "",
     age: profile?.age?.toString() ?? "",
+    date_of_birth: profile?.date_of_birth ?? "",
     whatsapp: profile?.whatsapp ?? "",
     phone: profile?.phone ?? "",
     address: profile?.address ?? "",
@@ -33,6 +34,7 @@ function ProfilePage() {
     const { error } = await db.from("profiles").update({
       full_name: form.full_name,
       age: form.age ? Number(form.age) : null,
+      date_of_birth: form.date_of_birth || null,
       whatsapp: form.whatsapp,
       phone: form.phone || null,
       address: form.address,
