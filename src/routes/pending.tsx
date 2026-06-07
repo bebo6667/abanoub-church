@@ -41,6 +41,7 @@ function PendingPage() {
       setForm({
         full_name: profile.full_name ?? "",
         age: profile.age?.toString() ?? "",
+        date_of_birth: profile.date_of_birth ?? "",
         whatsapp: profile.whatsapp ?? "",
         phone: profile.phone ?? "",
         address: profile.address ?? "",
