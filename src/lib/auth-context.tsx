@@ -19,6 +19,14 @@ export type Profile = {
   rejection_reason: string | null;
 };
 
+export type AuthDiagnostic = {
+  source: "profiles" | "user_roles";
+  code?: string;
+  message: string;
+  hint?: string;
+  details?: string;
+};
+
 type AuthCtx = {
   session: Session | null;
   user: User | null;
@@ -26,6 +34,8 @@ type AuthCtx = {
   roles: string[];
   isAdmin: boolean;
   loading: boolean;
+  diagnostics: AuthDiagnostic[];
+  profileMissing: boolean;
   refresh: () => Promise<void>;
   signOut: () => Promise<void>;
 };
@@ -37,14 +47,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [roles, setRoles] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [diagnostics, setDiagnostics] = useState<AuthDiagnostic[]>([]);
+  const [profileMissing, setProfileMissing] = useState(false);
 
   async function loadUserData(uid: string) {
-    const [{ data: p }, { data: r }] = await Promise.all([
+    const diags: AuthDiagnostic[] = [];
+    const [pRes, rRes] = await Promise.all([
       db.from("profiles").select("*").eq("id", uid).maybeSingle(),
       db.from("user_roles").select("role").eq("user_id", uid),
     ]);
-    setProfile((p as Profile | null) ?? null);
-    setRoles(((r as { role: string }[]) ?? []).map((x) => x.role));
+
+    if (pRes.error) {
+      diags.push({
+        source: "profiles",
+        code: pRes.error.code,
+        message: pRes.error.message,
+        hint: pRes.error.hint,
+        details: pRes.error.details,
+      });
+      setProfile(null);
+      setProfileMissing(false);
+    } else {
+      const p = (pRes.data as Profile | null) ?? null;
+      setProfile(p);
+      setProfileMissing(!p);
+    }
+
+    if (rRes.error) {
+      diags.push({
+        source: "user_roles",
+        code: rRes.error.code,
+        message: rRes.error.message,
+        hint: rRes.error.hint,
+        details: rRes.error.details,
+      });
+      setRoles([]);
+    } else {
+      setRoles(((rRes.data as { role: string }[]) ?? []).map((x) => x.role));
+    }
+
+    setDiagnostics(diags);
+    if (diags.length || !pRes.data) {
+      // eslint-disable-next-line no-console
+      console.warn("[auth] diagnostics", { diags, profile: pRes.data, roles: rRes.data });
+    }
   }
 
   useEffect(() => {
@@ -55,6 +101,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         setProfile(null);
         setRoles([]);
+        setDiagnostics([]);
+        setProfileMissing(false);
       }
     });
     supabase.auth.getSession().then(({ data }) => {
@@ -75,6 +123,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     roles,
     isAdmin: roles.includes("admin"),
     loading,
+    diagnostics,
+    profileMissing,
     refresh: async () => {
       if (session?.user) await loadUserData(session.user.id);
     },
