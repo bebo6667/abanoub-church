@@ -108,8 +108,9 @@ function PendingPage() {
             <div className="space-y-3">
               <FieldRow label="الاسم الرباعي" value={form.full_name} onChange={(v) => setForm({ ...form, full_name: v })} />
               <FieldRow label="العمر" type="number" value={form.age} onChange={(v) => setForm({ ...form, age: v })} />
-              <FieldRow label="واتساب" value={form.whatsapp} onChange={(v) => setForm({ ...form, whatsapp: v })} />
-              <FieldRow label="هاتف إضافي" value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} />
+              <FieldRow label="تاريخ الميلاد" type="date" value={form.date_of_birth} onChange={(v) => setForm({ ...form, date_of_birth: v })} />
+              <FieldRow label="واتساب (سيُضاف +20 تلقائياً)" value={form.whatsapp} onChange={(v) => setForm({ ...form, whatsapp: v })} />
+              <FieldRow label="هاتف إضافي للاتصال" value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} />
               <FieldRow label="العنوان" value={form.address} onChange={(v) => setForm({ ...form, address: v })} />
               <FieldRow label="الكنيسة" value={form.church_name} onChange={(v) => setForm({ ...form, church_name: v })} />
               <FieldRow label="أب الاعتراف" value={form.spiritual_father} onChange={(v) => setForm({ ...form, spiritual_father: v })} />
