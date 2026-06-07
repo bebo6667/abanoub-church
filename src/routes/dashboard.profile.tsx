@@ -77,8 +77,9 @@ function ProfilePage() {
           {([
             ["الاسم الرباعي", "full_name", "text"],
             ["العمر", "age", "number"],
-            ["واتساب", "whatsapp", "text"],
-            ["هاتف إضافي", "phone", "text"],
+            ["تاريخ الميلاد", "date_of_birth", "date"],
+            ["واتساب (سيُضاف +20 تلقائياً)", "whatsapp", "text"],
+            ["هاتف إضافي للاتصال", "phone", "text"],
             ["العنوان", "address", "text"],
             ["الكنيسة", "church_name", "text"],
             ["أب الاعتراف", "spiritual_father", "text"],
