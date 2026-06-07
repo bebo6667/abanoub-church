@@ -65,6 +65,7 @@ function PendingPage() {
     const { error } = await db.from("profiles").update({
       full_name: form.full_name,
       age: form.age ? Number(form.age) : null,
+      date_of_birth: form.date_of_birth || null,
       whatsapp: form.whatsapp,
       phone: form.phone || null,
       address: form.address,
