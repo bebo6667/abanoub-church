@@ -21,6 +21,7 @@ function PendingPage() {
   const [form, setForm] = useState({
     full_name: "",
     age: "",
+    date_of_birth: "",
     whatsapp: "",
     phone: "",
     address: "",
