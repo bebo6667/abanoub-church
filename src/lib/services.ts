@@ -59,6 +59,26 @@ export const STATUS_LABELS: Record<string, string> = {
   rejected: "مرفوض",
 };
 
+export type DeaconRank = "psaltos" | "agnostos" | "ibodiakon" | "diakon" | "archdiakon";
+export const RANK_LABELS: Record<DeaconRank, string> = {
+  psaltos: "ابصلتس",
+  agnostos: "أغنسطس",
+  ibodiakon: "إيبودياكون",
+  diakon: "دياكون",
+  archdiakon: "أرشي دياكون",
+};
+export const RANK_ORDER: DeaconRank[] = ["psaltos", "agnostos", "ibodiakon", "diakon", "archdiakon"];
+
+export type EducationStage = "primary" | "preparatory" | "secondary" | "university" | "graduate";
+export const EDUCATION_LABELS: Record<EducationStage, string> = {
+  primary: "ابتدائي",
+  preparatory: "إعدادي",
+  secondary: "ثانوي",
+  university: "جامعي",
+  graduate: "خريج",
+};
+export const EDUCATION_ORDER: EducationStage[] = ["primary", "preparatory", "secondary", "university", "graduate"];
+
 export function formatFridayDate(d: string) {
   try {
     return new Date(d).toLocaleDateString("ar-EG-u-nu-latn", {
@@ -77,7 +97,6 @@ export function normalizeWhatsapp(raw?: string | null): string | null {
   if (!raw) return null;
   let digits = raw.replace(/\D/g, "");
   if (!digits) return null;
-  // Strip leading 0
   if (digits.startsWith("00")) digits = digits.slice(2);
   if (digits.startsWith("20")) digits = digits.slice(2);
   if (digits.startsWith("0")) digits = digits.slice(1);
@@ -96,4 +115,9 @@ export function formatDate(d?: string | null) {
       year: "numeric", month: "2-digit", day: "2-digit",
     });
   } catch { return d; }
+}
+
+export function mapsUrl(lat?: number | null, lng?: number | null): string | null {
+  if (lat == null || lng == null) return null;
+  return `https://www.google.com/maps?q=${lat},${lng}`;
 }

@@ -18,7 +18,6 @@ import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as DashboardScheduleRouteImport } from './routes/dashboard.schedule'
 import { Route as DashboardProfileRouteImport } from './routes/dashboard.profile'
-import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as DashboardScheduleIdRouteImport } from './routes/dashboard.schedule.$id'
 import { Route as AdminScheduleIdRouteImport } from './routes/admin.schedule.$id'
 
@@ -67,11 +66,6 @@ const DashboardProfileRoute = DashboardProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => DashboardRoute,
 } as any)
-const AdminUsersRoute = AdminUsersRouteImport.update({
-  id: '/users',
-  path: '/users',
-  getParentRoute: () => AdminRoute,
-} as any)
 const DashboardScheduleIdRoute = DashboardScheduleIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -89,7 +83,6 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/pending': typeof PendingRoute
-  '/admin/users': typeof AdminUsersRoute
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/schedule': typeof DashboardScheduleRouteWithChildren
   '/admin/': typeof AdminIndexRoute
@@ -101,7 +94,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/pending': typeof PendingRoute
-  '/admin/users': typeof AdminUsersRoute
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/schedule': typeof DashboardScheduleRouteWithChildren
   '/admin': typeof AdminIndexRoute
@@ -116,7 +108,6 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/pending': typeof PendingRoute
-  '/admin/users': typeof AdminUsersRoute
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/schedule': typeof DashboardScheduleRouteWithChildren
   '/admin/': typeof AdminIndexRoute
@@ -132,7 +123,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/dashboard'
     | '/pending'
-    | '/admin/users'
     | '/dashboard/profile'
     | '/dashboard/schedule'
     | '/admin/'
@@ -144,7 +134,6 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/pending'
-    | '/admin/users'
     | '/dashboard/profile'
     | '/dashboard/schedule'
     | '/admin'
@@ -158,7 +147,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/dashboard'
     | '/pending'
-    | '/admin/users'
     | '/dashboard/profile'
     | '/dashboard/schedule'
     | '/admin/'
@@ -240,13 +228,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardProfileRouteImport
       parentRoute: typeof DashboardRoute
     }
-    '/admin/users': {
-      id: '/admin/users'
-      path: '/users'
-      fullPath: '/admin/users'
-      preLoaderRoute: typeof AdminUsersRouteImport
-      parentRoute: typeof AdminRoute
-    }
     '/dashboard/schedule/$id': {
       id: '/dashboard/schedule/$id'
       path: '/$id'
@@ -265,13 +246,11 @@ declare module '@tanstack/react-router' {
 }
 
 interface AdminRouteChildren {
-  AdminUsersRoute: typeof AdminUsersRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminScheduleIdRoute: typeof AdminScheduleIdRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
-  AdminUsersRoute: AdminUsersRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminScheduleIdRoute: AdminScheduleIdRoute,
 }
@@ -315,3 +294,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
