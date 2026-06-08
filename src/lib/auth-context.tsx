@@ -18,6 +18,11 @@ export type Profile = {
   requested_role: "admin" | "deacon" | "servant" | "pending";
   status: "pending" | "approved" | "rejected";
   rejection_reason: string | null;
+  rank: "psaltos" | "agnostos" | "ibodiakon" | "diakon" | "archdiakon" | null;
+  education_stage: "primary" | "preparatory" | "secondary" | "university" | "graduate" | null;
+  last_confession_date: string | null;
+  home_latitude: number | null;
+  home_longitude: number | null;
 };
 
 export type AuthDiagnostic = {

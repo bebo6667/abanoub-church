@@ -13,12 +13,13 @@ export function AppShell({ children, title, isAdmin }: { children: ReactNode; ti
         { to: "/dashboard", label: "الرئيسية", icon: LayoutDashboard },
         { to: "/dashboard/schedule", label: "الجدول", icon: Calendar },
         { to: "/admin", label: "إدارة", icon: Church },
-        { to: "/admin/users", label: "الأعضاء", icon: Users },
+        { to: "/dashboard/members", label: "الأعضاء", icon: Users },
         { to: "/dashboard/profile", label: "حسابي", icon: User },
       ]
     : [
         { to: "/dashboard", label: "الرئيسية", icon: LayoutDashboard },
         { to: "/dashboard/schedule", label: "الجدول", icon: Calendar },
+        { to: "/dashboard/members", label: "الأعضاء", icon: Users },
         { to: "/dashboard/profile", label: "حسابي", icon: User },
       ];
 
