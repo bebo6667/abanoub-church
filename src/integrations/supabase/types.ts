@@ -69,11 +69,16 @@ export type Database = {
           church_name: string | null
           created_at: string
           date_of_birth: string | null
+          education_stage: Database["public"]["Enums"]["education_stage"] | null
           email: string | null
           full_name: string
+          home_latitude: number | null
+          home_longitude: number | null
           id: string
+          last_confession_date: string | null
           phone: string | null
           profile_image_url: string | null
+          rank: Database["public"]["Enums"]["deacon_rank"] | null
           rejection_reason: string | null
           requested_role: Database["public"]["Enums"]["requested_role"]
           spiritual_father: string | null
@@ -87,11 +92,18 @@ export type Database = {
           church_name?: string | null
           created_at?: string
           date_of_birth?: string | null
+          education_stage?:
+            | Database["public"]["Enums"]["education_stage"]
+            | null
           email?: string | null
           full_name?: string
+          home_latitude?: number | null
+          home_longitude?: number | null
           id: string
+          last_confession_date?: string | null
           phone?: string | null
           profile_image_url?: string | null
+          rank?: Database["public"]["Enums"]["deacon_rank"] | null
           rejection_reason?: string | null
           requested_role?: Database["public"]["Enums"]["requested_role"]
           spiritual_father?: string | null
@@ -105,11 +117,18 @@ export type Database = {
           church_name?: string | null
           created_at?: string
           date_of_birth?: string | null
+          education_stage?:
+            | Database["public"]["Enums"]["education_stage"]
+            | null
           email?: string | null
           full_name?: string
+          home_latitude?: number | null
+          home_longitude?: number | null
           id?: string
+          last_confession_date?: string | null
           phone?: string | null
           profile_image_url?: string | null
+          rank?: Database["public"]["Enums"]["deacon_rank"] | null
           rejection_reason?: string | null
           requested_role?: Database["public"]["Enums"]["requested_role"]
           spiritual_father?: string | null
@@ -239,6 +258,18 @@ export type Database = {
     Enums: {
       app_role: "admin" | "deacon" | "servant"
       attendance_status: "attend" | "decline"
+      deacon_rank:
+        | "psaltos"
+        | "agnostos"
+        | "ibodiakon"
+        | "diakon"
+        | "archdiakon"
+      education_stage:
+        | "primary"
+        | "preparatory"
+        | "secondary"
+        | "university"
+        | "graduate"
       profile_status: "pending" | "approved" | "rejected"
       requested_role: "admin" | "deacon" | "servant" | "pending"
       schedule_status: "draft" | "published"
@@ -371,6 +402,14 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "deacon", "servant"],
       attendance_status: ["attend", "decline"],
+      deacon_rank: ["psaltos", "agnostos", "ibodiakon", "diakon", "archdiakon"],
+      education_stage: [
+        "primary",
+        "preparatory",
+        "secondary",
+        "university",
+        "graduate",
+      ],
       profile_status: ["pending", "approved", "rejected"],
       requested_role: ["admin", "deacon", "servant", "pending"],
       schedule_status: ["draft", "published"],
