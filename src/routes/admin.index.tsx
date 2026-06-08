@@ -63,7 +63,7 @@ function AdminHome() {
   return (
     <AppShell title="لوحة الخادم" isAdmin>
       {pendingCount && pendingCount > 0 ? (
-        <Link to="/admin/users">
+        <Link to="/dashboard/members">
           <Card className="p-4 mb-4 bg-gold/20 border-gold flex items-center justify-between">
             <div>
               <p className="font-semibold">{pendingCount} طلب{pendingCount > 1 ? "ات" : ""} بانتظار المراجعة</p>
