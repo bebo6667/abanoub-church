@@ -18,6 +18,7 @@ import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as DashboardScheduleRouteImport } from './routes/dashboard.schedule'
 import { Route as DashboardProfileRouteImport } from './routes/dashboard.profile'
+import { Route as DashboardMembersRouteImport } from './routes/dashboard.members'
 import { Route as DashboardScheduleIdRouteImport } from './routes/dashboard.schedule.$id'
 import { Route as AdminScheduleIdRouteImport } from './routes/admin.schedule.$id'
 
@@ -66,6 +67,11 @@ const DashboardProfileRoute = DashboardProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardMembersRoute = DashboardMembersRouteImport.update({
+  id: '/members',
+  path: '/members',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardScheduleIdRoute = DashboardScheduleIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -83,6 +89,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/pending': typeof PendingRoute
+  '/dashboard/members': typeof DashboardMembersRoute
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/schedule': typeof DashboardScheduleRouteWithChildren
   '/admin/': typeof AdminIndexRoute
@@ -94,6 +101,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/pending': typeof PendingRoute
+  '/dashboard/members': typeof DashboardMembersRoute
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/schedule': typeof DashboardScheduleRouteWithChildren
   '/admin': typeof AdminIndexRoute
@@ -108,6 +116,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/pending': typeof PendingRoute
+  '/dashboard/members': typeof DashboardMembersRoute
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/schedule': typeof DashboardScheduleRouteWithChildren
   '/admin/': typeof AdminIndexRoute
@@ -123,6 +132,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/dashboard'
     | '/pending'
+    | '/dashboard/members'
     | '/dashboard/profile'
     | '/dashboard/schedule'
     | '/admin/'
@@ -134,6 +144,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/pending'
+    | '/dashboard/members'
     | '/dashboard/profile'
     | '/dashboard/schedule'
     | '/admin'
@@ -147,6 +158,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/dashboard'
     | '/pending'
+    | '/dashboard/members'
     | '/dashboard/profile'
     | '/dashboard/schedule'
     | '/admin/'
@@ -228,6 +240,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardProfileRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/members': {
+      id: '/dashboard/members'
+      path: '/members'
+      fullPath: '/dashboard/members'
+      preLoaderRoute: typeof DashboardMembersRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/schedule/$id': {
       id: '/dashboard/schedule/$id'
       path: '/$id'
@@ -269,12 +288,14 @@ const DashboardScheduleRouteWithChildren =
   DashboardScheduleRoute._addFileChildren(DashboardScheduleRouteChildren)
 
 interface DashboardRouteChildren {
+  DashboardMembersRoute: typeof DashboardMembersRoute
   DashboardProfileRoute: typeof DashboardProfileRoute
   DashboardScheduleRoute: typeof DashboardScheduleRouteWithChildren
   DashboardIndexRoute: typeof DashboardIndexRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardMembersRoute: DashboardMembersRoute,
   DashboardProfileRoute: DashboardProfileRoute,
   DashboardScheduleRoute: DashboardScheduleRouteWithChildren,
   DashboardIndexRoute: DashboardIndexRoute,
@@ -294,3 +315,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
