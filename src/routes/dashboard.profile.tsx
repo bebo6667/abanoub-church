@@ -8,16 +8,19 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Loader2, Upload } from "lucide-react";
+import { Loader2, Upload, MapPin, Crosshair } from "lucide-react";
+import { RANK_LABELS, RANK_ORDER, EDUCATION_LABELS, EDUCATION_ORDER, mapsUrl } from "@/lib/services";
 
 export const Route = createFileRoute("/dashboard/profile")({
   component: ProfilePage,
 });
 
 function ProfilePage() {
-  const { profile, user, refresh } = useAuth();
+  const { profile, user, isAdmin, refresh } = useAuth();
   const [saving, setSaving] = useState(false);
+  const [locating, setLocating] = useState(false);
   const [form, setForm] = useState({
     full_name: profile?.full_name ?? "",
     age: profile?.age?.toString() ?? "",
@@ -27,6 +30,11 @@ function ProfilePage() {
     address: profile?.address ?? "",
     church_name: profile?.church_name ?? "",
     spiritual_father: profile?.spiritual_father ?? "",
+    rank: profile?.rank ?? "",
+    education_stage: profile?.education_stage ?? "",
+    last_confession_date: profile?.last_confession_date ?? "",
+    home_latitude: profile?.home_latitude ?? null as number | null,
+    home_longitude: profile?.home_longitude ?? null as number | null,
   });
 
   async function save() {
@@ -40,6 +48,11 @@ function ProfilePage() {
       address: form.address,
       church_name: form.church_name,
       spiritual_father: form.spiritual_father,
+      rank: (form.rank || null) as any,
+      education_stage: (form.education_stage || null) as any,
+      last_confession_date: form.last_confession_date || null,
+      home_latitude: form.home_latitude,
+      home_longitude: form.home_longitude,
     }).eq("id", user!.id);
     setSaving(false);
     if (error) return toast.error(error.message);
@@ -57,8 +70,27 @@ function ProfilePage() {
     toast.success("تم رفع الصورة");
   }
 
+  function captureLocation() {
+    if (!navigator.geolocation) return toast.error("المتصفح لا يدعم تحديد الموقع");
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setForm((f) => ({ ...f, home_latitude: pos.coords.latitude, home_longitude: pos.coords.longitude }));
+        setLocating(false);
+        toast.success("تم تحديد موقع منزلك. تأكد أنك بالمنزل ثم احفظ.");
+      },
+      (err) => {
+        setLocating(false);
+        toast.error("تعذر تحديد الموقع: " + err.message);
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }
+
+  const map = mapsUrl(form.home_latitude, form.home_longitude);
+
   return (
-    <AppShell title="حسابي">
+    <AppShell title="حسابي" isAdmin={isAdmin}>
       <Card className="p-5 space-y-4">
         <div className="flex items-center gap-4">
           <div className="h-20 w-20 rounded-full bg-secondary overflow-hidden grid place-items-center text-2xl font-bold text-secondary-foreground">
@@ -73,27 +105,83 @@ function ProfilePage() {
             </span>
           </label>
         </div>
+
         <div className="space-y-3">
-          {([
-            ["الاسم الرباعي", "full_name", "text"],
-            ["العمر", "age", "number"],
-            ["تاريخ الميلاد", "date_of_birth", "date"],
-            ["واتساب (سيُضاف +20 تلقائياً)", "whatsapp", "text"],
-            ["هاتف إضافي للاتصال", "phone", "text"],
-            ["العنوان", "address", "text"],
-            ["الكنيسة", "church_name", "text"],
-            ["أب الاعتراف", "spiritual_father", "text"],
-          ] as const).map(([label, key, type]) => (
-            <div key={key}>
-              <Label className="mb-1 block">{label}</Label>
-              <Input type={type} value={(form as any)[key]} onChange={(e) => setForm({ ...form, [key]: e.target.value })} />
+          <Field label="الاسم الرباعي" value={form.full_name} onChange={(v) => setForm({ ...form, full_name: v })} />
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="العمر" type="number" value={form.age} onChange={(v) => setForm({ ...form, age: v })} />
+            <Field label="تاريخ الميلاد" type="date" value={form.date_of_birth} onChange={(v) => setForm({ ...form, date_of_birth: v })} />
+          </div>
+
+          <div>
+            <Label className="mb-1 block">الرتبة الكنسية</Label>
+            <Select value={form.rank || ""} onValueChange={(v) => setForm({ ...form, rank: v as any })}>
+              <SelectTrigger><SelectValue placeholder="اختر الرتبة" /></SelectTrigger>
+              <SelectContent>
+                {RANK_ORDER.map((r) => <SelectItem key={r} value={r}>{RANK_LABELS[r]}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label className="mb-1 block">المرحلة الدراسية</Label>
+            <Select value={form.education_stage || ""} onValueChange={(v) => setForm({ ...form, education_stage: v as any })}>
+              <SelectTrigger><SelectValue placeholder="اختر المرحلة" /></SelectTrigger>
+              <SelectContent>
+                {EDUCATION_ORDER.map((s) => <SelectItem key={s} value={s}>{EDUCATION_LABELS[s]}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Field label="تاريخ آخر اعتراف" type="date" value={form.last_confession_date} onChange={(v) => setForm({ ...form, last_confession_date: v })} />
+
+          <Field label="واتساب (سيُضاف +20 تلقائياً)" value={form.whatsapp} onChange={(v) => setForm({ ...form, whatsapp: v })} />
+          <Field label="هاتف إضافي للاتصال" value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} />
+
+          <Field label="العنوان (اكتبه يدوياً)" value={form.address} onChange={(v) => setForm({ ...form, address: v })} />
+
+          <div className="rounded-lg border p-3 bg-secondary/30 space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-semibold">موقع المنزل على الخريطة</Label>
+              <Button type="button" size="sm" variant="outline" onClick={captureLocation} disabled={locating}>
+                {locating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Crosshair className="h-4 w-4 ml-1" />}
+                {locating ? "جاري التحديد..." : "تحديد موقعي الآن"}
+              </Button>
             </div>
-          ))}
+            <p className="text-xs text-muted-foreground">
+              ⚠️ تأكد أنك بداخل منزلك قبل الضغط — الإحداثيات هتستخدم لفتح خريطة بيتك للخدام.
+            </p>
+            {form.home_latitude != null && form.home_longitude != null ? (
+              <div className="flex items-center justify-between text-xs" dir="ltr">
+                <span className="font-mono">{form.home_latitude.toFixed(5)}, {form.home_longitude.toFixed(5)}</span>
+                {map && (
+                  <a href={map} target="_blank" rel="noopener noreferrer">
+                    <Button type="button" size="sm" variant="ghost" className="h-7">
+                      <MapPin className="h-4 w-4 ml-1" /> معاينة
+                    </Button>
+                  </a>
+                )}
+              </div>
+            ) : <p className="text-xs text-muted-foreground">لم يتم تحديد الموقع بعد</p>}
+          </div>
+
+          <Field label="الكنيسة" value={form.church_name} onChange={(v) => setForm({ ...form, church_name: v })} />
+          <Field label="أب الاعتراف" value={form.spiritual_father} onChange={(v) => setForm({ ...form, spiritual_father: v })} />
         </div>
+
         <Button className="w-full" onClick={save} disabled={saving}>
           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "حفظ"}
         </Button>
       </Card>
     </AppShell>
+  );
+}
+
+function Field({ label, value, onChange, type = "text" }: { label: string; value: string; onChange: (v: string) => void; type?: string }) {
+  return (
+    <div>
+      <Label className="mb-1 block">{label}</Label>
+      <Input type={type} value={value} onChange={(e) => onChange(e.target.value)} />
+    </div>
   );
 }
