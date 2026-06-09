@@ -15,7 +15,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  ROLE_LABELS, STATUS_LABELS, RANK_LABELS, EDUCATION_LABELS,
+  STATUS_LABELS, RANK_LABELS, RANK_ORDER, EDUCATION_LABELS, EDUCATION_ORDER,
   normalizeWhatsapp, whatsappDigits, formatDate, mapsUrl,
 } from "@/lib/services";
 import { toast } from "sonner";
@@ -32,8 +32,6 @@ function MembersPage() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [tab, setTab] = useState<"approved" | "pending" | "rejected" | "all">("approved");
-  const [q, setQ] = useState("");
-  const [sort, setSort] = useState<"name" | "age">("name");
   const [rejectFor, setRejectFor] = useState<Row | null>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [approveFor, setApproveFor] = useState<Row | null>(null);
@@ -47,7 +45,6 @@ function MembersPage() {
     else if (profile?.status !== "approved") navigate({ to: "/pending", replace: true });
   }, [loading, session, profile, navigate]);
 
-  // For non-admins, only show the approved directory; tab control hidden
   const effectiveTab = isAdmin ? tab : "approved";
 
   const { data: users } = useQuery({
@@ -61,24 +58,22 @@ function MembersPage() {
     enabled: !!profile && profile.status === "approved",
   });
 
-  const filtered = useMemo(() => {
-    let list = (users ?? []).filter((u) =>
-      !q || u.full_name?.toLowerCase().includes(q.toLowerCase()) || u.email?.toLowerCase().includes(q.toLowerCase())
-    );
-    if (sort === "name") list = [...list].sort((a, b) => (a.full_name || "").localeCompare(b.full_name || "", "ar"));
-    else if (sort === "age") list = [...list].sort((a, b) => (a.age || 0) - (b.age || 0));
-    return list;
-  }, [users, q, sort]);
+  const byId = useMemo(() => {
+    const m = new Map<string, Row>();
+    (users ?? []).forEach((u) => m.set(u.id, u));
+    return m;
+  }, [users]);
 
   const groups = useMemo(() => {
     const get = (u: Row) => u.user_roles?.[0]?.role;
+    const list = users ?? [];
     return {
-      admins: filtered.filter((u) => get(u) === "admin"),
-      servants: filtered.filter((u) => get(u) === "servant"),
-      deacons: filtered.filter((u) => get(u) === "deacon"),
-      others: filtered.filter((u) => !["admin", "servant", "deacon"].includes(get(u))),
+      admins: list.filter((u) => get(u) === "admin"),
+      servants: list.filter((u) => get(u) === "servant"),
+      deacons: list.filter((u) => get(u) === "deacon"),
+      others: list.filter((u) => !["admin", "servant", "deacon"].includes(get(u))),
     };
-  }, [filtered]);
+  }, [users]);
 
   async function approve() {
     if (!approveFor) return;
@@ -125,7 +120,7 @@ function MembersPage() {
   return (
     <AppShell title="الأعضاء" isAdmin={isAdmin}>
       {isAdmin && (
-        <Tabs value={tab} onValueChange={(v) => setTab(v as any)}>
+        <Tabs value={tab} onValueChange={(v) => setTab(v as any)} className="mb-3">
           <TabsList className="grid grid-cols-4 w-full">
             <TabsTrigger value="pending">معلق</TabsTrigger>
             <TabsTrigger value="approved">مقبول</TabsTrigger>
@@ -135,26 +130,13 @@ function MembersPage() {
         </Tabs>
       )}
 
-      <div className="flex gap-2 my-3">
-        <div className="relative flex-1">
-          <Search className="h-4 w-4 absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="بحث بالاسم..." className="pr-8" />
-        </div>
-        <Select value={sort} onValueChange={(v) => setSort(v as any)}>
-          <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="name">أبجدي</SelectItem>
-            <SelectItem value="age">العمر</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
       <div className="space-y-6">
         <SectionTable
           title="الخدام الرئيسيون (أدمن)"
-          icon={<Shield className="h-4 w-4 text-gold" />}
+          icon={<Shield className="h-4 w-4 text-primary" />}
           rows={groups.admins}
           isAdmin={isAdmin}
+          showLinkedServant={false}
           onApprove={(u) => { setApproveFor(u); setApproveRole("admin"); }}
           onReject={(u) => setRejectFor(u)}
           onChangeRole={(u) => { setChangeRoleFor(u); setNewRole("admin"); }}
@@ -163,6 +145,7 @@ function MembersPage() {
           title="الخدام"
           rows={groups.servants}
           isAdmin={isAdmin}
+          showLinkedServant={false}
           onApprove={(u) => { setApproveFor(u); setApproveRole("servant"); }}
           onReject={(u) => setRejectFor(u)}
           onChangeRole={(u) => { setChangeRoleFor(u); setNewRole("servant"); }}
@@ -171,6 +154,8 @@ function MembersPage() {
           title="الشمامسة"
           rows={groups.deacons}
           isAdmin={isAdmin}
+          showLinkedServant
+          byId={byId}
           onApprove={(u) => { setApproveFor(u); setApproveRole("deacon"); }}
           onReject={(u) => setRejectFor(u)}
           onChangeRole={(u) => { setChangeRoleFor(u); setNewRole("deacon"); }}
@@ -180,6 +165,7 @@ function MembersPage() {
             title="بدون دور / قيد المراجعة"
             rows={groups.others}
             isAdmin={isAdmin}
+            showLinkedServant={false}
             onApprove={(u) => { setApproveFor(u); setApproveRole(u.requested_role === "servant" ? "servant" : "deacon"); }}
             onReject={(u) => setRejectFor(u)}
             onChangeRole={(u) => { setChangeRoleFor(u); setNewRole("deacon"); }}
@@ -237,26 +223,110 @@ function MembersPage() {
   );
 }
 
+function ContactButtons({ u }: { u: Row }) {
+  const waNumber = normalizeWhatsapp(u?.whatsapp);
+  const waDigits = whatsappDigits(u?.whatsapp);
+  const callNumber = u?.phone || waNumber;
+  return (
+    <div className="flex items-center gap-1">
+      {waDigits && (
+        <a href={`https://wa.me/${waDigits}`} target="_blank" rel="noopener noreferrer">
+          <Button size="icon" variant="ghost" className="h-8 w-8 text-success" title="واتساب">
+            <MessageCircle className="h-4 w-4" />
+          </Button>
+        </a>
+      )}
+      {callNumber && (
+        <a href={`tel:${callNumber}`}>
+          <Button size="icon" variant="ghost" className="h-8 w-8" title="اتصال">
+            <Phone className="h-4 w-4" />
+          </Button>
+        </a>
+      )}
+    </div>
+  );
+}
+
 function SectionTable({
-  title, icon, rows, isAdmin, onApprove, onReject, onChangeRole,
+  title, icon, rows, isAdmin, showLinkedServant, byId,
+  onApprove, onReject, onChangeRole,
 }: {
   title: string;
   icon?: React.ReactNode;
   rows: Row[];
   isAdmin: boolean;
+  showLinkedServant?: boolean;
+  byId?: Map<string, Row>;
   onApprove: (u: Row) => void;
   onReject: (u: Row) => void;
   onChangeRole: (u: Row) => void;
 }) {
+  const [q, setQ] = useState("");
+  const [rankF, setRankF] = useState<string>("all");
+  const [eduF, setEduF] = useState<string>("all");
+  const [confF, setConfF] = useState<"all" | "recent" | "stale" | "missing">("all");
+
+  const filtered = useMemo(() => {
+    return rows.filter((u) => {
+      if (q && !(u.full_name?.toLowerCase().includes(q.toLowerCase()) || u.email?.toLowerCase().includes(q.toLowerCase()))) return false;
+      if (rankF !== "all" && u.rank !== rankF) return false;
+      if (eduF !== "all" && u.education_stage !== eduF) return false;
+      if (confF !== "all") {
+        const d = u.last_confession_date ? new Date(u.last_confession_date) : null;
+        if (confF === "missing") { if (d) return false; }
+        else {
+          if (!d) return false;
+          const days = (Date.now() - d.getTime()) / 86400000;
+          if (confF === "recent" && days > 40) return false;
+          if (confF === "stale" && days <= 40) return false;
+        }
+      }
+      return true;
+    });
+  }, [rows, q, rankF, eduF, confF]);
+
+  const colCount = 10 + (showLinkedServant ? 1 : 0) + (isAdmin ? 1 : 0);
+
   return (
     <section>
       <div className="flex items-center gap-2 mb-2 px-1">
         {icon}
         <h2 className="font-bold text-sm">{title}</h2>
-        <Badge variant="outline" className="text-[10px]">{rows.length}</Badge>
+        <Badge variant="outline" className="text-[10px]">{filtered.length}/{rows.length}</Badge>
       </div>
+
+      <div className="flex flex-wrap gap-2 mb-2">
+        <div className="relative flex-1 min-w-[140px]">
+          <Search className="h-4 w-4 absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="بحث بالاسم..." className="pr-8 h-8 text-xs" />
+        </div>
+        <Select value={rankF} onValueChange={setRankF}>
+          <SelectTrigger className="w-28 h-8 text-xs"><SelectValue placeholder="الرتبة" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">كل الرتب</SelectItem>
+            {RANK_ORDER.map((r) => <SelectItem key={r} value={r}>{RANK_LABELS[r]}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Select value={eduF} onValueChange={setEduF}>
+          <SelectTrigger className="w-28 h-8 text-xs"><SelectValue placeholder="المرحلة" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">كل المراحل</SelectItem>
+            {EDUCATION_ORDER.map((s) => <SelectItem key={s} value={s}>{EDUCATION_LABELS[s]}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Select value={confF} onValueChange={(v: any) => setConfF(v)}>
+          <SelectTrigger className="w-32 h-8 text-xs"><SelectValue placeholder="الاعتراف" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">آخر اعتراف: الكل</SelectItem>
+            <SelectItem value="recent">حديث (≤40 يوم)</SelectItem>
+            <SelectItem value="stale">قديم (&gt;40 يوم)</SelectItem>
+            <SelectItem value="missing">غير مسجل</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
       <Card className="overflow-x-auto p-0">
-        <table className="w-full text-sm border-collapse min-w-[1000px]">
+        <table className="w-full text-sm border-collapse min-w-[1100px]">
           <thead className="bg-secondary/50">
             <tr className="text-right">
               <th className="p-2 font-semibold">الصورة</th>
@@ -267,17 +337,17 @@ function SectionTable({
               <th className="p-2 font-semibold">تاريخ الميلاد</th>
               <th className="p-2 font-semibold">آخر اعتراف</th>
               <th className="p-2 font-semibold">العنوان</th>
-              <th className="p-2 font-semibold">رقم الهاتف</th>
+              <th className="p-2 font-semibold">الهاتف</th>
               <th className="p-2 font-semibold text-center">تواصل</th>
+              {showLinkedServant && <th className="p-2 font-semibold">الخادم المسؤول</th>}
               {isAdmin && <th className="p-2 font-semibold text-center">إجراءات</th>}
             </tr>
           </thead>
           <tbody>
-            {rows.map((u) => {
+            {filtered.map((u) => {
               const waNumber = normalizeWhatsapp(u.whatsapp);
-              const waDigits = whatsappDigits(u.whatsapp);
-              const callNumber = u.phone || waNumber;
               const map = mapsUrl(u.home_latitude, u.home_longitude);
+              const servant = showLinkedServant && u.linked_servant_id ? byId?.get(u.linked_servant_id) : null;
               return (
                 <tr key={u.id} className="border-t align-middle">
                   <td className="p-2">
@@ -317,23 +387,28 @@ function SectionTable({
                     {u.phone && <div className="text-[11px] text-muted-foreground">{u.phone}</div>}
                   </td>
                   <td className="p-2">
-                    <div className="flex items-center justify-center gap-1">
-                      {waDigits && (
-                        <a href={`https://wa.me/${waDigits}`} target="_blank" rel="noopener noreferrer">
-                          <Button size="icon" variant="ghost" className="h-8 w-8 text-success" title="واتساب">
-                            <MessageCircle className="h-4 w-4" />
-                          </Button>
-                        </a>
-                      )}
-                      {callNumber && (
-                        <a href={`tel:${callNumber}`}>
-                          <Button size="icon" variant="ghost" className="h-8 w-8" title="اتصال">
-                            <Phone className="h-4 w-4" />
-                          </Button>
-                        </a>
-                      )}
-                    </div>
+                    <ContactButtons u={u} />
                   </td>
+                  {showLinkedServant && (
+                    <td className="p-2 min-w-[160px]">
+                      {servant ? (
+                        <div className="flex items-center gap-2">
+                          <div className="h-7 w-7 rounded-full bg-secondary overflow-hidden grid place-items-center text-[11px] font-semibold shrink-0">
+                            {servant.profile_image_url
+                              ? <img src={servant.profile_image_url} className="h-full w-full object-cover" alt="" />
+                              : servant.full_name?.charAt(0)}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs font-semibold truncate">{servant.full_name}</p>
+                            <p className="text-[10px] text-muted-foreground truncate">
+                              {servant.rank ? RANK_LABELS[servant.rank as keyof typeof RANK_LABELS] : "خادم"}
+                            </p>
+                          </div>
+                          <ContactButtons u={servant} />
+                        </div>
+                      ) : <span className="text-xs text-muted-foreground">—</span>}
+                    </td>
+                  )}
                   {isAdmin && (
                     <td className="p-2">
                       {u.status === "pending" ? (
@@ -362,8 +437,8 @@ function SectionTable({
                 </tr>
               );
             })}
-            {rows.length === 0 && (
-              <tr><td colSpan={isAdmin ? 11 : 10} className="p-6 text-center text-sm text-muted-foreground">لا يوجد</td></tr>
+            {filtered.length === 0 && (
+              <tr><td colSpan={colCount} className="p-6 text-center text-sm text-muted-foreground">لا يوجد</td></tr>
             )}
           </tbody>
         </table>
