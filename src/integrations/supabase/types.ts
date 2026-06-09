@@ -76,6 +76,7 @@ export type Database = {
           home_longitude: number | null
           id: string
           last_confession_date: string | null
+          linked_servant_id: string | null
           phone: string | null
           profile_image_url: string | null
           rank: Database["public"]["Enums"]["deacon_rank"] | null
@@ -101,6 +102,7 @@ export type Database = {
           home_longitude?: number | null
           id: string
           last_confession_date?: string | null
+          linked_servant_id?: string | null
           phone?: string | null
           profile_image_url?: string | null
           rank?: Database["public"]["Enums"]["deacon_rank"] | null
@@ -126,6 +128,7 @@ export type Database = {
           home_longitude?: number | null
           id?: string
           last_confession_date?: string | null
+          linked_servant_id?: string | null
           phone?: string | null
           profile_image_url?: string | null
           rank?: Database["public"]["Enums"]["deacon_rank"] | null
@@ -136,7 +139,15 @@ export type Database = {
           updated_at?: string
           whatsapp?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_linked_servant_id_fkey"
+            columns: ["linked_servant_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       schedule_assignments: {
         Row: {
@@ -254,6 +265,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_approved: { Args: { _uid: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "deacon" | "servant"
