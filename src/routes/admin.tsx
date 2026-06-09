@@ -8,17 +8,17 @@ export const Route = createFileRoute("/admin")({
 });
 
 function AdminLayout() {
-  const { loading, session, isAdmin, profile } = useAuth();
+  const { loading, session, isStaff, profile } = useAuth();
   const navigate = useNavigate();
   useEffect(() => {
     if (loading) return;
     if (!session) navigate({ to: "/auth", replace: true });
-    else if (!isAdmin) {
+    else if (!isStaff) {
       if (profile?.status === "approved") navigate({ to: "/dashboard", replace: true });
       else navigate({ to: "/pending", replace: true });
     }
-  }, [loading, session, isAdmin, profile, navigate]);
-  if (loading || !isAdmin) {
+  }, [loading, session, isStaff, profile, navigate]);
+  if (loading || !isStaff) {
     return <div className="flex min-h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
   return <Outlet />;

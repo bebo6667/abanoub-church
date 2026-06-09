@@ -40,6 +40,8 @@ type AuthCtx = {
   profile: Profile | null;
   roles: string[];
   isAdmin: boolean;
+  isServant: boolean;
+  isStaff: boolean;
   loading: boolean;
   diagnostics: AuthDiagnostic[];
   profileMissing: boolean;
@@ -129,6 +131,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     profile,
     roles,
     isAdmin: roles.includes("admin"),
+    isServant: roles.includes("servant"),
+    isStaff: roles.includes("admin") || roles.includes("servant"),
     loading,
     diagnostics,
     profileMissing,

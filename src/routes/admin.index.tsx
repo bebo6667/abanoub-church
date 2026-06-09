@@ -28,7 +28,7 @@ function nextFriday() {
 }
 
 function AdminHome() {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const qc = useQueryClient();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -48,6 +48,7 @@ function AdminHome() {
       const { count } = await db.from("profiles").select("*", { count: "exact", head: true }).eq("status", "pending");
       return count ?? 0;
     },
+    enabled: isAdmin,
   });
 
   async function createSchedule() {
@@ -61,8 +62,8 @@ function AdminHome() {
   }
 
   return (
-    <AppShell title="لوحة الخادم" isAdmin>
-      {pendingCount && pendingCount > 0 ? (
+    <AppShell title="لوحة الخدمة" isAdmin>
+      {isAdmin && pendingCount && pendingCount > 0 ? (
         <Link to="/dashboard/members">
           <Card className="p-4 mb-4 bg-gold/20 border-gold flex items-center justify-between">
             <div>
