@@ -4,11 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Church, LogOut, LayoutDashboard, Calendar, Users, User } from "lucide-react";
 import type { ReactNode } from "react";
 
-export function AppShell({ children, title, isAdmin }: { children: ReactNode; title: string; isAdmin?: boolean }) {
-  const { signOut, profile } = useAuth();
+export function AppShell({ children, title, isAdmin: _isAdmin }: { children: ReactNode; title: string; isAdmin?: boolean }) {
+  const { signOut, profile, isStaff } = useAuth();
   const navigate = useNavigate();
 
-  const navItems = isAdmin
+  const navItems = isStaff
     ? [
         { to: "/dashboard", label: "الرئيسية", icon: LayoutDashboard },
         { to: "/dashboard/schedule", label: "الجدول", icon: Calendar },
