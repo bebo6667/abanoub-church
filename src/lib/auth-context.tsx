@@ -23,6 +23,7 @@ export type Profile = {
   last_confession_date: string | null;
   home_latitude: number | null;
   home_longitude: number | null;
+  linked_servant_id: string | null;
 };
 
 export type AuthDiagnostic = {
