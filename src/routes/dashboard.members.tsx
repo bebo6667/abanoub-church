@@ -500,6 +500,7 @@ function SectionTable({
           </tbody>
         </table>
       </Card>
+      )}
       </>)}
     </section>
   );
