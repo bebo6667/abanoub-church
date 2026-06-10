@@ -287,13 +287,26 @@ function SectionTable({
 
   const colCount = 10 + (showLinkedServant ? 1 : 0) + (isAdmin ? 1 : 0);
 
+  const [open, setOpen] = useState(false);
+
   return (
     <section>
       <div className="flex items-center gap-2 mb-2 px-1">
         {icon}
         <h2 className="font-bold text-sm">{title}</h2>
         <Badge variant="outline" className="text-[10px]">{filtered.length}/{rows.length}</Badge>
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-7 mr-auto gap-1"
+          onClick={() => setOpen((v) => !v)}
+        >
+          {open ? <><ChevronUp className="h-4 w-4" />طي</> : <><ChevronDown className="h-4 w-4" />توسيع</>}
+        </Button>
       </div>
+
+      {open && (<>
+
 
       <div className="flex flex-wrap gap-2 mb-2">
         <div className="relative flex-1 min-w-[140px]">
