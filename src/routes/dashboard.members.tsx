@@ -313,6 +313,7 @@ function SectionTable({
       {open && (<>
 
 
+      {isStaff && (
       <div className="flex flex-wrap gap-2 mb-2">
         <div className="relative flex-1 min-w-[140px]">
           <Search className="h-4 w-4 absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
@@ -342,6 +343,44 @@ function SectionTable({
           </SelectContent>
         </Select>
       </div>
+      )}
+
+      {!isStaff && (
+      <div className="relative mb-2">
+        <Search className="h-4 w-4 absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
+        <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="بحث بالاسم..." className="pr-8 h-8 text-xs" />
+      </div>
+      )}
+
+      {!isStaff ? (
+      <Card className="overflow-hidden p-0">
+        <ul className="divide-y">
+          {filtered.map((u) => (
+            <li key={u.id} className="p-3 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="h-10 w-10 rounded-full bg-secondary overflow-hidden grid place-items-center font-semibold shrink-0">
+                  {u.profile_image_url
+                    ? <img src={u.profile_image_url} className="h-full w-full object-cover" alt="" />
+                    : u.full_name?.charAt(0)}
+                </div>
+                <div className="min-w-0">
+                  <p className="font-semibold leading-tight truncate">{u.full_name}</p>
+                  {(u.phone || u.whatsapp) && (
+                    <p className="text-[11px] text-muted-foreground" dir="ltr">
+                      {u.phone || normalizeWhatsapp(u.whatsapp)}
+                    </p>
+                  )}
+                </div>
+              </div>
+              <ContactButtons u={u} />
+            </li>
+          ))}
+          {filtered.length === 0 && (
+            <li className="p-6 text-center text-sm text-muted-foreground">لا يوجد</li>
+          )}
+        </ul>
+      </Card>
+      ) : (
 
       <Card className="overflow-x-auto p-0">
         <table className="w-full text-sm border-collapse min-w-[1100px]">
