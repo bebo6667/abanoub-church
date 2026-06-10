@@ -252,13 +252,14 @@ function ContactButtons({ u }: { u: Row }) {
 }
 
 function SectionTable({
-  title, icon, rows, isAdmin, showLinkedServant, byId,
+  title, icon, rows, isAdmin, isStaff, showLinkedServant, byId,
   onApprove, onReject, onChangeRole,
 }: {
   title: string;
   icon?: React.ReactNode;
   rows: Row[];
   isAdmin: boolean;
+  isStaff: boolean;
   showLinkedServant?: boolean;
   byId?: Map<string, Row>;
   onApprove: (u: Row) => void;
@@ -289,7 +290,7 @@ function SectionTable({
     });
   }, [rows, q, rankF, eduF, confF]);
 
-  const colCount = 10 + (showLinkedServant ? 1 : 0) + (isAdmin ? 1 : 0);
+  const colCount = isStaff ? 10 + (showLinkedServant ? 1 : 0) + (isAdmin ? 1 : 0) : 4;
 
   const [open, setOpen] = useState(false);
 
