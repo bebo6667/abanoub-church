@@ -4,10 +4,14 @@ export type ServiceType =
   | "gospel_third"
   | "gospel_sixth"
   | "gospel_ninth"
+  | "gospel_vespers"
+  | "gospel_compline"
   | "paul_epistle"
   | "catholic_epistle"
   | "acts_reading"
   | "altar_service"
+  | "altar_service_pre_gospel"
+  | "altar_service_post_gospel"
   | "screen_service";
 
 export const SERVICE_LABELS: Record<ServiceType, string> = {
@@ -16,27 +20,38 @@ export const SERVICE_LABELS: Record<ServiceType, string> = {
   gospel_third: "إنجيل الساعة الثالثة",
   gospel_sixth: "إنجيل الساعة السادسة",
   gospel_ninth: "إنجيل الساعة التاسعة",
+  gospel_vespers: "إنجيل الغروب",
+  gospel_compline: "إنجيل النوم",
   paul_epistle: "البولس",
   catholic_epistle: "الكاثوليكون",
   acts_reading: "الإبركسيس",
   altar_service: "خدمة الهيكل",
+  altar_service_pre_gospel: "خدمة الهيكل (من الحمل إلى الإنجيل)",
+  altar_service_post_gospel: "خدمة الهيكل (من الإنجيل إلى نهاية القداس)",
   screen_service: "خدمة الشاشة",
 };
 
 export const SERVICE_ORDER: ServiceType[] = [
   "morning_incense",
-  "gospel_first",
   "gospel_third",
   "gospel_sixth",
   "gospel_ninth",
+  "gospel_vespers",
+  "gospel_compline",
   "paul_epistle",
   "catholic_epistle",
   "acts_reading",
-  "altar_service",
+  "altar_service_pre_gospel",
+  "altar_service_post_gospel",
   "screen_service",
 ];
 
-export const MULTI_SELECT_SERVICES: ServiceType[] = ["altar_service", "screen_service"];
+export const MULTI_SELECT_SERVICES: ServiceType[] = [
+  "morning_incense",
+  "altar_service_pre_gospel",
+  "altar_service_post_gospel",
+  "screen_service",
+];
 
 export const DECLINE_REASONS: Record<string, string> = {
   exams: "امتحانات",
