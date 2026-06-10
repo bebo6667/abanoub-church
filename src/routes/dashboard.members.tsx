@@ -19,7 +19,7 @@ import {
   normalizeWhatsapp, whatsappDigits, formatDate, mapsUrl,
 } from "@/lib/services";
 import { toast } from "sonner";
-import { Phone, MessageCircle, Check, X, Search, Shield, MapPin, Loader2 } from "lucide-react";
+import { Phone, MessageCircle, Check, X, Search, Shield, MapPin, Loader2, ChevronDown, ChevronUp } from "lucide-react";
 
 export const Route = createFileRoute("/dashboard/members")({
   component: MembersPage,
