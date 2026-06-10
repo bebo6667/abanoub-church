@@ -136,6 +136,7 @@ function MembersPage() {
           icon={<Shield className="h-4 w-4 text-primary" />}
           rows={groups.admins}
           isAdmin={isAdmin}
+          isStaff={isStaff}
           showLinkedServant={false}
           onApprove={(u) => { setApproveFor(u); setApproveRole("admin"); }}
           onReject={(u) => setRejectFor(u)}
@@ -145,6 +146,7 @@ function MembersPage() {
           title="الخدام"
           rows={groups.servants}
           isAdmin={isAdmin}
+          isStaff={isStaff}
           showLinkedServant={false}
           onApprove={(u) => { setApproveFor(u); setApproveRole("servant"); }}
           onReject={(u) => setRejectFor(u)}
@@ -154,7 +156,8 @@ function MembersPage() {
           title="الشمامسة"
           rows={groups.deacons}
           isAdmin={isAdmin}
-          showLinkedServant
+          isStaff={isStaff}
+          showLinkedServant={isStaff}
           byId={byId}
           onApprove={(u) => { setApproveFor(u); setApproveRole("deacon"); }}
           onReject={(u) => setRejectFor(u)}
@@ -165,6 +168,7 @@ function MembersPage() {
             title="بدون دور / قيد المراجعة"
             rows={groups.others}
             isAdmin={isAdmin}
+            isStaff={isStaff}
             showLinkedServant={false}
             onApprove={(u) => { setApproveFor(u); setApproveRole(u.requested_role === "servant" ? "servant" : "deacon"); }}
             onReject={(u) => setRejectFor(u)}
