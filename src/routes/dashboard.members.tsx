@@ -28,7 +28,7 @@ export const Route = createFileRoute("/dashboard/members")({
 type Row = any;
 
 function MembersPage() {
-  const { loading, session, profile, isAdmin } = useAuth();
+  const { loading, session, profile, isAdmin, isStaff } = useAuth();
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [tab, setTab] = useState<"approved" | "pending" | "rejected" | "all">("approved");
