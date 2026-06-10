@@ -66,17 +66,49 @@ function ScheduleDetail() {
       <div className="space-y-2">
         {SERVICE_ORDER.map((svc) => {
           const list = data.assignments.filter((a) => a.service_type === svc);
-          if (list.length === 0) return null;
           return (
             <Card key={svc} className="p-3">
               <div className="text-sm font-semibold text-primary mb-2">{SERVICE_LABELS[svc]}</div>
-              <div className="space-y-2">
-                {list.map((a) => <PersonRow key={a.id} a={a} />)}
-              </div>
+              {list.length === 0 ? (
+                <p className="text-xs text-muted-foreground">—</p>
+              ) : (
+                <div className="space-y-2">
+                  {list.map((a) => <PersonRow key={a.id} a={a} />)}
+                </div>
+              )}
             </Card>
           );
         })}
       </div>
+
+      <h3 className="text-base font-bold mt-6 mb-2">كل المخدومين</h3>
+      <div className="space-y-2">
+        {(() => {
+          const byUser = new Map<string, { profile: any; services: string[] }>();
+          for (const a of data.assignments) {
+            if (!a.profiles) continue;
+            const entry = byUser.get(a.user_id) ?? { profile: a.profiles, services: [] };
+            entry.services.push(SERVICE_LABELS[a.service_type as ServiceType] ?? a.service_type);
+            byUser.set(a.user_id, entry);
+          }
+          const rows = Array.from(byUser.values());
+          if (rows.length === 0) return <Card className="p-4 text-center text-xs text-muted-foreground">لا يوجد مخدومون بعد</Card>;
+          return rows.map(({ profile, services }) => (
+            <Card key={profile.id} className="p-3 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="h-9 w-9 rounded-full bg-secondary overflow-hidden grid place-items-center text-xs font-semibold shrink-0">
+                  {profile.profile_image_url ? <img src={profile.profile_image_url} className="h-full w-full object-cover" /> : profile.full_name?.charAt(0)}
+                </div>
+                <div className="min-w-0">
+                  <p className="font-semibold text-sm truncate">{profile.full_name}</p>
+                  <p className="text-[11px] text-muted-foreground truncate">{services.join("، ")}</p>
+                </div>
+              </div>
+            </Card>
+          ));
+        })()}
+      </div>
+
     </AppShell>
   );
 }
