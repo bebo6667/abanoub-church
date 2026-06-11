@@ -130,3 +130,26 @@ function DashboardHome() {
     </AppShell>
   );
 }
+
+function NotificationsBanner() {
+  const [perm, setPerm] = useState<NotifPermission>("default");
+  useEffect(() => { setPerm(getPermission()); }, []);
+  if (perm === "granted" || perm === "unsupported") return null;
+  return (
+    <Card className="p-3 mb-3 flex items-center gap-2 border-primary/40 bg-primary/5">
+      {perm === "denied" ? <BellOff className="h-5 w-5 text-muted-foreground" /> : <Bell className="h-5 w-5 text-primary" />}
+      <div className="flex-1 text-xs">
+        {perm === "denied"
+          ? "الإشعارات معطّلة من المتصفح. فعّلها من إعدادات الموقع لتصلك تنبيهات الخدمة."
+          : "فعّل الإشعارات ليصلك تنبيه فور إسناد خدمة جديدة إليك."}
+      </div>
+      {perm !== "denied" && (
+        <Button size="sm" onClick={async () => {
+          const r = await requestPermission();
+          setPerm(r);
+          if (r === "granted") toast.success("تم تفعيل الإشعارات");
+        }}>تفعيل</Button>
+      )}
+    </Card>
+  );
+}
