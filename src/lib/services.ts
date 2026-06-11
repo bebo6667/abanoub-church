@@ -134,5 +134,6 @@ export function formatDate(d?: string | null) {
 
 export function mapsUrl(lat?: number | null, lng?: number | null): string | null {
   if (lat == null || lng == null) return null;
-  return `https://www.google.com/maps?q=${lat},${lng}`;
+  // Opens Google Maps directly in navigation/directions mode to the location.
+  return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
 }
