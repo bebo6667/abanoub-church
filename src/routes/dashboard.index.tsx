@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SERVICE_LABELS, formatFridayDate } from "@/lib/services";
-import { CalendarDays, ChevronLeft } from "lucide-react";
+import { CalendarDays, ChevronLeft, BellRing, Eye } from "lucide-react";
 
 export const Route = createFileRoute("/dashboard/")({
   component: DashboardHome,
@@ -34,38 +34,70 @@ function DashboardHome() {
     queryFn: async () => {
       const { data } = await db
         .from("schedule_assignments")
-        .select("*, schedules(friday_date,status)")
+        .select("*, schedules(friday_date,status), attendance_responses!attendance_responses_assignment_id_fkey(status,reason)")
         .eq("user_id", user!.id)
         .order("created_at", { ascending: false });
-      return ((data ?? []) as any[]).filter((a) => a.schedules?.status === "published");
+      const todayIso = new Date().toISOString().slice(0, 10);
+      return ((data ?? []) as any[])
+        .filter((a) => a.schedules?.status === "published" && a.schedules?.friday_date >= todayIso);
     },
     enabled: !!user,
   });
 
+  const pending = (assignments ?? []).filter((a) => !a.attendance_responses?.[0]);
+
   return (
     <AppShell title="خدمة قداس الجمعة">
+      {pending.length > 0 && (
+        <Card className="p-4 mb-4 border-gold/60 bg-gold/10">
+          <div className="flex items-start gap-2">
+            <BellRing className="h-5 w-5 text-primary mt-0.5" />
+            <div className="flex-1">
+              <p className="font-bold text-sm">لديك {pending.length} خدمة بانتظار ردّك</p>
+              <p className="text-xs text-muted-foreground mb-2">افتح الجدول لتأكيد الحضور أو الاعتذار</p>
+              <div className="flex flex-col gap-1">
+                {pending.map((a) => (
+                  <Link key={a.id} to="/dashboard/schedule/$id" params={{ id: a.schedule_id }}
+                    className="text-xs underline text-primary">
+                    {formatFridayDate(a.schedules.friday_date)} — {SERVICE_LABELS[a.service_type as keyof typeof SERVICE_LABELS]}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
+
       <section className="space-y-3">
         <h2 className="text-lg font-bold">خدماتي القادمة</h2>
         {assignments && assignments.length > 0 ? (
-          assignments.map((a) => (
-            <Link
-              key={a.id}
-              to="/dashboard/schedule/$id"
-              params={{ id: a.schedule_id }}
-              className="block"
-            >
-              <Card className="p-4 flex items-center justify-between hover:bg-accent/30 transition">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <CalendarDays className="h-4 w-4 text-primary" />
-                    <span className="font-semibold">{formatFridayDate(a.schedules.friday_date)}</span>
+          assignments.map((a) => {
+            const resp = a.attendance_responses?.[0];
+            return (
+              <Link
+                key={a.id}
+                to="/dashboard/schedule/$id"
+                params={{ id: a.schedule_id }}
+                className="block"
+              >
+                <Card className="p-4 flex items-center justify-between hover:bg-accent/30 transition">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <CalendarDays className="h-4 w-4 text-primary" />
+                      <span className="font-semibold">{formatFridayDate(a.schedules.friday_date)}</span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-1 mt-2">
+                      <Badge variant="secondary">{SERVICE_LABELS[a.service_type as keyof typeof SERVICE_LABELS]}</Badge>
+                      {resp?.status === "attend" && <Badge className="bg-success text-success-foreground">مؤكد الحضور</Badge>}
+                      {resp?.status === "decline" && <Badge variant="destructive">اعتذار</Badge>}
+                      {!resp && <Badge variant="outline" className="border-gold text-gold">لم ترد بعد</Badge>}
+                    </div>
                   </div>
-                  <Badge variant="secondary" className="mt-2">{SERVICE_LABELS[a.service_type as keyof typeof SERVICE_LABELS]}</Badge>
-                </div>
-                <ChevronLeft className="h-5 w-5 text-muted-foreground" />
-              </Card>
-            </Link>
-          ))
+                  <ChevronLeft className="h-5 w-5 text-muted-foreground" />
+                </Card>
+              </Link>
+            );
+          })
         ) : (
           <Card className="p-6 text-center text-sm text-muted-foreground">
             لا توجد خدمات مسندة إليك بعد
@@ -79,12 +111,12 @@ function DashboardHome() {
         </div>
         {schedules && schedules.length > 0 ? (
           schedules.map((s) => (
-            <Link key={s.id} to="/dashboard/schedule/$id" params={{ id: s.id }}>
-              <Card className="p-4 flex items-center justify-between">
-                <span>{formatFridayDate(s.friday_date)}</span>
-                <Button variant="ghost" size="sm">عرض</Button>
-              </Card>
-            </Link>
+            <Card key={s.id} className="p-4 flex items-center justify-between gap-2">
+              <span className="flex-1 truncate">{formatFridayDate(s.friday_date)}</span>
+              <Link to="/dashboard/schedule/$id" params={{ id: s.id }}>
+                <Button size="sm" className="gap-1"><Eye className="h-4 w-4" />عرض</Button>
+              </Link>
+            </Card>
           ))
         ) : (
           <Card className="p-6 text-center text-sm text-muted-foreground">لا توجد جداول منشورة</Card>
