@@ -51,6 +51,8 @@ function DashboardHome() {
 
   return (
     <AppShell title="خدمة قداس الجمعة">
+      <NotificationsBanner />
+
       {pending.length > 0 && (
         <Card className="p-4 mb-4 border-gold/60 bg-gold/10">
           <div className="flex items-start gap-2">
