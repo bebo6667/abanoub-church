@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { db } from "@/lib/db";
 import { AppShell } from "@/components/AppShell";
@@ -7,7 +8,9 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SERVICE_LABELS, formatFridayDate } from "@/lib/services";
-import { CalendarDays, ChevronLeft, BellRing, Eye } from "lucide-react";
+import { CalendarDays, ChevronLeft, BellRing, Eye, Bell, BellOff } from "lucide-react";
+import { getPermission, requestPermission, type NotifPermission } from "@/lib/notifications";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/dashboard/")({
   component: DashboardHome,
@@ -48,6 +51,8 @@ function DashboardHome() {
 
   return (
     <AppShell title="خدمة قداس الجمعة">
+      <NotificationsBanner />
+
       {pending.length > 0 && (
         <Card className="p-4 mb-4 border-gold/60 bg-gold/10">
           <div className="flex items-start gap-2">
@@ -123,5 +128,28 @@ function DashboardHome() {
         )}
       </section>
     </AppShell>
+  );
+}
+
+function NotificationsBanner() {
+  const [perm, setPerm] = useState<NotifPermission>("default");
+  useEffect(() => { setPerm(getPermission()); }, []);
+  if (perm === "granted" || perm === "unsupported") return null;
+  return (
+    <Card className="p-3 mb-3 flex items-center gap-2 border-primary/40 bg-primary/5">
+      {perm === "denied" ? <BellOff className="h-5 w-5 text-muted-foreground" /> : <Bell className="h-5 w-5 text-primary" />}
+      <div className="flex-1 text-xs">
+        {perm === "denied"
+          ? "الإشعارات معطّلة من المتصفح. فعّلها من إعدادات الموقع لتصلك تنبيهات الخدمة."
+          : "فعّل الإشعارات ليصلك تنبيه فور إسناد خدمة جديدة إليك."}
+      </div>
+      {perm !== "denied" && (
+        <Button size="sm" onClick={async () => {
+          const r = await requestPermission();
+          setPerm(r);
+          if (r === "granted") toast.success("تم تفعيل الإشعارات");
+        }}>تفعيل</Button>
+      )}
+    </Card>
   );
 }
