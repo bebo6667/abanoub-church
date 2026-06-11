@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { db } from "@/lib/db";
 import { AppShell } from "@/components/AppShell";
@@ -7,7 +8,9 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SERVICE_LABELS, formatFridayDate } from "@/lib/services";
-import { CalendarDays, ChevronLeft, BellRing, Eye } from "lucide-react";
+import { CalendarDays, ChevronLeft, BellRing, Eye, Bell, BellOff } from "lucide-react";
+import { getPermission, requestPermission, type NotifPermission } from "@/lib/notifications";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/dashboard/")({
   component: DashboardHome,
