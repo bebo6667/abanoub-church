@@ -10,7 +10,9 @@ import { Badge } from "@/components/ui/badge";
 import { SERVICE_LABELS, formatFridayDate } from "@/lib/services";
 import { CalendarDays, ChevronLeft, BellRing, Eye, Bell, BellOff } from "lucide-react";
 import { getPermission, requestPermission, type NotifPermission } from "@/lib/notifications";
+import { AnnouncementsFeed } from "@/components/AnnouncementsFeed";
 import { toast } from "sonner";
+
 
 export const Route = createFileRoute("/dashboard/")({
   component: DashboardHome,
@@ -127,9 +129,14 @@ function DashboardHome() {
           <Card className="p-6 text-center text-sm text-muted-foreground">لا توجد جداول منشورة</Card>
         )}
       </section>
+
+      <div className="mt-8">
+        <AnnouncementsFeed />
+      </div>
     </AppShell>
   );
 }
+
 
 function NotificationsBanner() {
   const [perm, setPerm] = useState<NotifPermission>("default");

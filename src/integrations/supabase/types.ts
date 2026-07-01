@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      announcements: {
+        Row: {
+          attachments: Json
+          body: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          is_published: boolean
+          link_url: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          attachments?: Json
+          body?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_published?: boolean
+          link_url?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          attachments?: Json
+          body?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_published?: boolean
+          link_url?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       attendance_responses: {
         Row: {
           assignment_id: string
@@ -61,6 +97,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          id: string
+          read: boolean
+          title: string
+          type: string
+          url: string | null
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          read?: boolean
+          title: string
+          type: string
+          url?: string | null
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          read?: boolean
+          title?: string
+          type?: string
+          url?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {

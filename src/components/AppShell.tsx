@@ -2,7 +2,9 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { Church, LogOut, LayoutDashboard, Calendar, Users, User } from "lucide-react";
+import { NotificationsBell } from "@/components/NotificationsBell";
 import type { ReactNode } from "react";
+
 
 export function AppShell({ children, title, isAdmin: _isAdmin }: { children: ReactNode; title: string; isAdmin?: boolean }) {
   const { signOut, profile, isStaff } = useAuth();
@@ -36,13 +38,17 @@ export function AppShell({ children, title, isAdmin: _isAdmin }: { children: Rea
               {profile && <p className="text-xs text-muted-foreground leading-tight">{profile.full_name}</p>}
             </div>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={async () => { await signOut(); navigate({ to: "/auth" }); }}
-          >
-            <LogOut className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-1">
+            <NotificationsBell />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={async () => { await signOut(); navigate({ to: "/auth" }); }}
+            >
+              <LogOut className="h-4 w-4" />
+            </Button>
+          </div>
+
         </div>
       </header>
       <main className="max-w-3xl mx-auto px-4 py-4">{children}</main>
