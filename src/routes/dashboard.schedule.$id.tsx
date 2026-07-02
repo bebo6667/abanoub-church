@@ -68,6 +68,7 @@ function ScheduleDetail() {
                         key={a.id}
                         a={a}
                         isMine={a.user_id === user!.id}
+                        canManage={isStaff}
                         onSaved={refresh}
                       />
                     ))}
