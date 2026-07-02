@@ -22,8 +22,9 @@ export const Route = createFileRoute("/dashboard/schedule/$id")({
 
 function ScheduleDetail() {
   const { id } = useParams({ from: "/dashboard/schedule/$id" });
-  const { user } = useAuth();
+  const { user, isStaff } = useAuth();
   const qc = useQueryClient();
+
 
   const { data, isLoading } = useQuery({
     queryKey: ["schedule", id, user?.id],
@@ -67,6 +68,7 @@ function ScheduleDetail() {
                         key={a.id}
                         a={a}
                         isMine={a.user_id === user!.id}
+                        canManage={isStaff}
                         onSaved={refresh}
                       />
                     ))}
@@ -124,32 +126,35 @@ function ScheduleDetail() {
   );
 }
 
-function AssignmentLine({ a, isMine, onSaved }: { a: any; isMine: boolean; onSaved: () => void }) {
+function AssignmentLine({ a, isMine, canManage, onSaved }: { a: any; isMine: boolean; canManage?: boolean; onSaved: () => void }) {
   const { user } = useAuth();
   const p = a.profiles;
   const resp = a.attendance_responses?.[0];
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState("exams");
   const [text, setText] = useState("");
+  const canAct = isMine || !!canManage;
+  const actingUserId = isMine ? user!.id : a.user_id;
 
   async function attend() {
     const { error } = await db.from("attendance_responses").upsert({
-      user_id: user!.id, assignment_id: a.id, status: "attend", reason: null, note: null,
+      user_id: actingUserId, assignment_id: a.id, status: "attend", reason: null, note: null,
     }, { onConflict: "assignment_id,user_id" });
     if (error) return toast.error(error.message);
-    toast.success("تم تأكيد الحضور");
+    toast.success(isMine ? "تم تأكيد الحضور" : "تم تسجيل الحضور بالنيابة");
     onSaved();
   }
   async function submitDecline() {
     if (reason === "other" && !text.trim()) return toast.error("اكتب السبب");
     const { error } = await db.from("attendance_responses").upsert({
-      user_id: user!.id, assignment_id: a.id, status: "decline", reason, note: text || null,
+      user_id: actingUserId, assignment_id: a.id, status: "decline", reason, note: text || null,
     }, { onConflict: "assignment_id,user_id" });
     if (error) return toast.error(error.message);
     setOpen(false);
-    toast.success("تم تسجيل اعتذارك");
+    toast.success(isMine ? "تم تسجيل اعتذارك" : "تم تسجيل الاعتذار بالنيابة");
     onSaved();
   }
+
 
   return (
     <div className="flex items-center justify-between gap-2 flex-wrap">
@@ -158,7 +163,7 @@ function AssignmentLine({ a, isMine, onSaved }: { a: any; isMine: boolean; onSav
         {resp?.status === "attend" && <Badge className="bg-success text-success-foreground text-[10px]">حاضر</Badge>}
         {resp?.status === "decline" && <Badge variant="destructive" className="text-[10px]">اعتذر</Badge>}
       </div>
-      {isMine && (
+      {canAct && (
         <div className="flex items-center gap-1">
           <Button size="sm" variant={resp?.status === "attend" ? "default" : "outline"}
             className={resp?.status === "attend" ? "bg-success text-success-foreground h-7 px-2" : "h-7 px-2"}

@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SERVICE_LABELS, formatFridayDate } from "@/lib/services";
 import { CalendarDays, ChevronLeft, BellRing, Eye, Bell, BellOff } from "lucide-react";
-import { getPermission, requestPermission, type NotifPermission } from "@/lib/notifications";
+import { getPermission, type NotifPermission } from "@/lib/notifications";
+import { enablePush, pushSupported } from "@/lib/push";
 import { AnnouncementsFeed } from "@/components/AnnouncementsFeed";
 import { toast } from "sonner";
 
@@ -139,22 +140,30 @@ function DashboardHome() {
 
 
 function NotificationsBanner() {
+  const { user } = useAuth();
   const [perm, setPerm] = useState<NotifPermission>("default");
-  useEffect(() => { setPerm(getPermission()); }, []);
+  useEffect(() => {
+    setPerm(getPermission());
+    // If already granted, ensure this device is subscribed
+    if (user && pushSupported() && Notification.permission === "granted") {
+      enablePush(user.id).catch(() => {});
+    }
+  }, [user?.id]);
   if (perm === "granted" || perm === "unsupported") return null;
   return (
     <Card className="p-3 mb-3 flex items-center gap-2 border-primary/40 bg-primary/5">
       {perm === "denied" ? <BellOff className="h-5 w-5 text-muted-foreground" /> : <Bell className="h-5 w-5 text-primary" />}
       <div className="flex-1 text-xs">
         {perm === "denied"
-          ? "الإشعارات معطّلة من المتصفح. فعّلها من إعدادات الموقع لتصلك تنبيهات الخدمة."
-          : "فعّل الإشعارات ليصلك تنبيه فور إسناد خدمة جديدة إليك."}
+          ? "الإشعارات معطّلة من المتصفح. فعّلها من إعدادات الموقع لتصلك تنبيهات الخدمة على هاتفك حتى وأنت خارج التطبيق."
+          : "فعّل الإشعارات ليصلك تنبيه على هاتفك فور نشر جدول أو إسناد خدمة، حتى لو التطبيق مغلق."}
       </div>
-      {perm !== "denied" && (
+      {perm !== "denied" && user && (
         <Button size="sm" onClick={async () => {
-          const r = await requestPermission();
-          setPerm(r);
-          if (r === "granted") toast.success("تم تفعيل الإشعارات");
+          const r = await enablePush(user.id);
+          setPerm(r === "granted" ? "granted" : r as NotifPermission);
+          if (r === "granted") toast.success("تم تفعيل الإشعارات على هذا الجهاز");
+          else if (r === "denied") toast.error("رفضت الإشعارات — فعّلها من إعدادات المتصفح");
         }}>تفعيل</Button>
       )}
     </Card>
