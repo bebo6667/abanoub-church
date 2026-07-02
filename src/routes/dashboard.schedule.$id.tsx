@@ -22,8 +22,9 @@ export const Route = createFileRoute("/dashboard/schedule/$id")({
 
 function ScheduleDetail() {
   const { id } = useParams({ from: "/dashboard/schedule/$id" });
-  const { user } = useAuth();
+  const { user, isStaff } = useAuth();
   const qc = useQueryClient();
+
 
   const { data, isLoading } = useQuery({
     queryKey: ["schedule", id, user?.id],
