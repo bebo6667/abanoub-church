@@ -163,7 +163,7 @@ function AssignmentLine({ a, isMine, canManage, onSaved }: { a: any; isMine: boo
         {resp?.status === "attend" && <Badge className="bg-success text-success-foreground text-[10px]">حاضر</Badge>}
         {resp?.status === "decline" && <Badge variant="destructive" className="text-[10px]">اعتذر</Badge>}
       </div>
-      {isMine && (
+      {canAct && (
         <div className="flex items-center gap-1">
           <Button size="sm" variant={resp?.status === "attend" ? "default" : "outline"}
             className={resp?.status === "attend" ? "bg-success text-success-foreground h-7 px-2" : "h-7 px-2"}
