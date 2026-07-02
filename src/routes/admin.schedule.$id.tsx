@@ -1,4 +1,4 @@
-import { createFileRoute, useParams, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useParams, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { db } from "@/lib/db";
@@ -15,7 +15,7 @@ import {
   SERVICE_LABELS, SERVICE_ORDER, MULTI_SELECT_SERVICES,
   formatFridayDate, DECLINE_REASONS, type ServiceType,
 } from "@/lib/services";
-import { Loader2, UserPlus, Send, Trash2, X, Search } from "lucide-react";
+import { Loader2, UserPlus, Send, Trash2, X, Search, ClipboardList } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/schedule/$id")({
@@ -123,6 +123,9 @@ function AdminScheduleEditor() {
           ) : (
             <Button size="sm" variant="secondary" onClick={publish}><Send className="h-4 w-4" />نشر للأعضاء</Button>
           )}
+          <Link to="/admin/schedule/$id/responses" params={{ id }}>
+            <Button size="sm" variant="secondary"><ClipboardList className="h-4 w-4" />الردود</Button>
+          </Link>
           <Button size="sm" variant="ghost" className="text-primary-foreground hover:bg-white/10" onClick={deleteSchedule}>
             <Trash2 className="h-4 w-4" />حذف
           </Button>
