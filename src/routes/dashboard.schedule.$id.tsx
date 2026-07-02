@@ -126,32 +126,35 @@ function ScheduleDetail() {
   );
 }
 
-function AssignmentLine({ a, isMine, onSaved }: { a: any; isMine: boolean; onSaved: () => void }) {
+function AssignmentLine({ a, isMine, canManage, onSaved }: { a: any; isMine: boolean; canManage?: boolean; onSaved: () => void }) {
   const { user } = useAuth();
   const p = a.profiles;
   const resp = a.attendance_responses?.[0];
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState("exams");
   const [text, setText] = useState("");
+  const canAct = isMine || !!canManage;
+  const actingUserId = isMine ? user!.id : a.user_id;
 
   async function attend() {
     const { error } = await db.from("attendance_responses").upsert({
-      user_id: user!.id, assignment_id: a.id, status: "attend", reason: null, note: null,
+      user_id: actingUserId, assignment_id: a.id, status: "attend", reason: null, note: null,
     }, { onConflict: "assignment_id,user_id" });
     if (error) return toast.error(error.message);
-    toast.success("تم تأكيد الحضور");
+    toast.success(isMine ? "تم تأكيد الحضور" : "تم تسجيل الحضور بالنيابة");
     onSaved();
   }
   async function submitDecline() {
     if (reason === "other" && !text.trim()) return toast.error("اكتب السبب");
     const { error } = await db.from("attendance_responses").upsert({
-      user_id: user!.id, assignment_id: a.id, status: "decline", reason, note: text || null,
+      user_id: actingUserId, assignment_id: a.id, status: "decline", reason, note: text || null,
     }, { onConflict: "assignment_id,user_id" });
     if (error) return toast.error(error.message);
     setOpen(false);
-    toast.success("تم تسجيل اعتذارك");
+    toast.success(isMine ? "تم تسجيل اعتذارك" : "تم تسجيل الاعتذار بالنيابة");
     onSaved();
   }
+
 
   return (
     <div className="flex items-center justify-between gap-2 flex-wrap">
