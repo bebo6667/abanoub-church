@@ -22,6 +22,7 @@ import { Route as DashboardMembersRouteImport } from './routes/dashboard.members
 import { Route as AdminAnnouncementsRouteImport } from './routes/admin.announcements'
 import { Route as DashboardScheduleIdRouteImport } from './routes/dashboard.schedule.$id'
 import { Route as AdminScheduleIdRouteImport } from './routes/admin.schedule.$id'
+import { Route as ApiPublicHooksSendPushRouteImport } from './routes/api/public/hooks/send-push'
 import { Route as AdminScheduleIdResponsesRouteImport } from './routes/admin.schedule.$id.responses'
 
 const PendingRoute = PendingRouteImport.update({
@@ -89,6 +90,11 @@ const AdminScheduleIdRoute = AdminScheduleIdRouteImport.update({
   path: '/schedule/$id',
   getParentRoute: () => AdminRoute,
 } as any)
+const ApiPublicHooksSendPushRoute = ApiPublicHooksSendPushRouteImport.update({
+  id: '/api/public/hooks/send-push',
+  path: '/api/public/hooks/send-push',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminScheduleIdResponsesRoute =
   AdminScheduleIdResponsesRouteImport.update({
     id: '/responses',
@@ -111,6 +117,7 @@ export interface FileRoutesByFullPath {
   '/admin/schedule/$id': typeof AdminScheduleIdRouteWithChildren
   '/dashboard/schedule/$id': typeof DashboardScheduleIdRoute
   '/admin/schedule/$id/responses': typeof AdminScheduleIdResponsesRoute
+  '/api/public/hooks/send-push': typeof ApiPublicHooksSendPushRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -125,6 +132,7 @@ export interface FileRoutesByTo {
   '/admin/schedule/$id': typeof AdminScheduleIdRouteWithChildren
   '/dashboard/schedule/$id': typeof DashboardScheduleIdRoute
   '/admin/schedule/$id/responses': typeof AdminScheduleIdResponsesRoute
+  '/api/public/hooks/send-push': typeof ApiPublicHooksSendPushRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -142,6 +150,7 @@ export interface FileRoutesById {
   '/admin/schedule/$id': typeof AdminScheduleIdRouteWithChildren
   '/dashboard/schedule/$id': typeof DashboardScheduleIdRoute
   '/admin/schedule/$id/responses': typeof AdminScheduleIdResponsesRoute
+  '/api/public/hooks/send-push': typeof ApiPublicHooksSendPushRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -160,6 +169,7 @@ export interface FileRouteTypes {
     | '/admin/schedule/$id'
     | '/dashboard/schedule/$id'
     | '/admin/schedule/$id/responses'
+    | '/api/public/hooks/send-push'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -174,6 +184,7 @@ export interface FileRouteTypes {
     | '/admin/schedule/$id'
     | '/dashboard/schedule/$id'
     | '/admin/schedule/$id/responses'
+    | '/api/public/hooks/send-push'
   id:
     | '__root__'
     | '/'
@@ -190,6 +201,7 @@ export interface FileRouteTypes {
     | '/admin/schedule/$id'
     | '/dashboard/schedule/$id'
     | '/admin/schedule/$id/responses'
+    | '/api/public/hooks/send-push'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -198,6 +210,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   DashboardRoute: typeof DashboardRouteWithChildren
   PendingRoute: typeof PendingRoute
+  ApiPublicHooksSendPushRoute: typeof ApiPublicHooksSendPushRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -293,6 +306,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminScheduleIdRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/api/public/hooks/send-push': {
+      id: '/api/public/hooks/send-push'
+      path: '/api/public/hooks/send-push'
+      fullPath: '/api/public/hooks/send-push'
+      preLoaderRoute: typeof ApiPublicHooksSendPushRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/schedule/$id/responses': {
       id: '/admin/schedule/$id/responses'
       path: '/responses'
@@ -364,6 +384,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   DashboardRoute: DashboardRouteWithChildren,
   PendingRoute: PendingRoute,
+  ApiPublicHooksSendPushRoute: ApiPublicHooksSendPushRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
