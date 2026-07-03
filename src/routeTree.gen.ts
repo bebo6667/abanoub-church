@@ -16,10 +16,10 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
-import { Route as DashboardScheduleRouteImport } from './routes/dashboard.schedule'
 import { Route as DashboardProfileRouteImport } from './routes/dashboard.profile'
 import { Route as DashboardMembersRouteImport } from './routes/dashboard.members'
 import { Route as AdminAnnouncementsRouteImport } from './routes/admin.announcements'
+import { Route as DashboardScheduleIndexRouteImport } from './routes/dashboard.schedule.index'
 import { Route as DashboardScheduleIdRouteImport } from './routes/dashboard.schedule.$id'
 import { Route as AdminScheduleIdRouteImport } from './routes/admin.schedule.$id'
 import { Route as ApiPublicHooksSendPushRouteImport } from './routes/api/public/hooks/send-push'
@@ -60,11 +60,6 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminRoute,
 } as any)
-const DashboardScheduleRoute = DashboardScheduleRouteImport.update({
-  id: '/schedule',
-  path: '/schedule',
-  getParentRoute: () => DashboardRoute,
-} as any)
 const DashboardProfileRoute = DashboardProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -80,10 +75,15 @@ const AdminAnnouncementsRoute = AdminAnnouncementsRouteImport.update({
   path: '/announcements',
   getParentRoute: () => AdminRoute,
 } as any)
+const DashboardScheduleIndexRoute = DashboardScheduleIndexRouteImport.update({
+  id: '/schedule/',
+  path: '/schedule/',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardScheduleIdRoute = DashboardScheduleIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => DashboardScheduleRoute,
+  id: '/schedule/$id',
+  path: '/schedule/$id',
+  getParentRoute: () => DashboardRoute,
 } as any)
 const AdminScheduleIdRoute = AdminScheduleIdRouteImport.update({
   id: '/schedule/$id',
@@ -111,11 +111,11 @@ export interface FileRoutesByFullPath {
   '/admin/announcements': typeof AdminAnnouncementsRoute
   '/dashboard/members': typeof DashboardMembersRoute
   '/dashboard/profile': typeof DashboardProfileRoute
-  '/dashboard/schedule': typeof DashboardScheduleRouteWithChildren
   '/admin/': typeof AdminIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/admin/schedule/$id': typeof AdminScheduleIdRouteWithChildren
   '/dashboard/schedule/$id': typeof DashboardScheduleIdRoute
+  '/dashboard/schedule/': typeof DashboardScheduleIndexRoute
   '/admin/schedule/$id/responses': typeof AdminScheduleIdResponsesRoute
   '/api/public/hooks/send-push': typeof ApiPublicHooksSendPushRoute
 }
@@ -126,11 +126,11 @@ export interface FileRoutesByTo {
   '/admin/announcements': typeof AdminAnnouncementsRoute
   '/dashboard/members': typeof DashboardMembersRoute
   '/dashboard/profile': typeof DashboardProfileRoute
-  '/dashboard/schedule': typeof DashboardScheduleRouteWithChildren
   '/admin': typeof AdminIndexRoute
   '/dashboard': typeof DashboardIndexRoute
   '/admin/schedule/$id': typeof AdminScheduleIdRouteWithChildren
   '/dashboard/schedule/$id': typeof DashboardScheduleIdRoute
+  '/dashboard/schedule': typeof DashboardScheduleIndexRoute
   '/admin/schedule/$id/responses': typeof AdminScheduleIdResponsesRoute
   '/api/public/hooks/send-push': typeof ApiPublicHooksSendPushRoute
 }
@@ -144,11 +144,11 @@ export interface FileRoutesById {
   '/admin/announcements': typeof AdminAnnouncementsRoute
   '/dashboard/members': typeof DashboardMembersRoute
   '/dashboard/profile': typeof DashboardProfileRoute
-  '/dashboard/schedule': typeof DashboardScheduleRouteWithChildren
   '/admin/': typeof AdminIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/admin/schedule/$id': typeof AdminScheduleIdRouteWithChildren
   '/dashboard/schedule/$id': typeof DashboardScheduleIdRoute
+  '/dashboard/schedule/': typeof DashboardScheduleIndexRoute
   '/admin/schedule/$id/responses': typeof AdminScheduleIdResponsesRoute
   '/api/public/hooks/send-push': typeof ApiPublicHooksSendPushRoute
 }
@@ -163,11 +163,11 @@ export interface FileRouteTypes {
     | '/admin/announcements'
     | '/dashboard/members'
     | '/dashboard/profile'
-    | '/dashboard/schedule'
     | '/admin/'
     | '/dashboard/'
     | '/admin/schedule/$id'
     | '/dashboard/schedule/$id'
+    | '/dashboard/schedule/'
     | '/admin/schedule/$id/responses'
     | '/api/public/hooks/send-push'
   fileRoutesByTo: FileRoutesByTo
@@ -178,11 +178,11 @@ export interface FileRouteTypes {
     | '/admin/announcements'
     | '/dashboard/members'
     | '/dashboard/profile'
-    | '/dashboard/schedule'
     | '/admin'
     | '/dashboard'
     | '/admin/schedule/$id'
     | '/dashboard/schedule/$id'
+    | '/dashboard/schedule'
     | '/admin/schedule/$id/responses'
     | '/api/public/hooks/send-push'
   id:
@@ -195,11 +195,11 @@ export interface FileRouteTypes {
     | '/admin/announcements'
     | '/dashboard/members'
     | '/dashboard/profile'
-    | '/dashboard/schedule'
     | '/admin/'
     | '/dashboard/'
     | '/admin/schedule/$id'
     | '/dashboard/schedule/$id'
+    | '/dashboard/schedule/'
     | '/admin/schedule/$id/responses'
     | '/api/public/hooks/send-push'
   fileRoutesById: FileRoutesById
@@ -264,13 +264,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/dashboard/schedule': {
-      id: '/dashboard/schedule'
-      path: '/schedule'
-      fullPath: '/dashboard/schedule'
-      preLoaderRoute: typeof DashboardScheduleRouteImport
-      parentRoute: typeof DashboardRoute
-    }
     '/dashboard/profile': {
       id: '/dashboard/profile'
       path: '/profile'
@@ -292,12 +285,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAnnouncementsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/dashboard/schedule/': {
+      id: '/dashboard/schedule/'
+      path: '/schedule'
+      fullPath: '/dashboard/schedule/'
+      preLoaderRoute: typeof DashboardScheduleIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/schedule/$id': {
       id: '/dashboard/schedule/$id'
-      path: '/$id'
+      path: '/schedule/$id'
       fullPath: '/dashboard/schedule/$id'
       preLoaderRoute: typeof DashboardScheduleIdRouteImport
-      parentRoute: typeof DashboardScheduleRoute
+      parentRoute: typeof DashboardRoute
     }
     '/admin/schedule/$id': {
       id: '/admin/schedule/$id'
@@ -349,29 +349,20 @@ const AdminRouteChildren: AdminRouteChildren = {
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
-interface DashboardScheduleRouteChildren {
-  DashboardScheduleIdRoute: typeof DashboardScheduleIdRoute
-}
-
-const DashboardScheduleRouteChildren: DashboardScheduleRouteChildren = {
-  DashboardScheduleIdRoute: DashboardScheduleIdRoute,
-}
-
-const DashboardScheduleRouteWithChildren =
-  DashboardScheduleRoute._addFileChildren(DashboardScheduleRouteChildren)
-
 interface DashboardRouteChildren {
   DashboardMembersRoute: typeof DashboardMembersRoute
   DashboardProfileRoute: typeof DashboardProfileRoute
-  DashboardScheduleRoute: typeof DashboardScheduleRouteWithChildren
   DashboardIndexRoute: typeof DashboardIndexRoute
+  DashboardScheduleIdRoute: typeof DashboardScheduleIdRoute
+  DashboardScheduleIndexRoute: typeof DashboardScheduleIndexRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardMembersRoute: DashboardMembersRoute,
   DashboardProfileRoute: DashboardProfileRoute,
-  DashboardScheduleRoute: DashboardScheduleRouteWithChildren,
   DashboardIndexRoute: DashboardIndexRoute,
+  DashboardScheduleIdRoute: DashboardScheduleIdRoute,
+  DashboardScheduleIndexRoute: DashboardScheduleIndexRoute,
 }
 
 const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
