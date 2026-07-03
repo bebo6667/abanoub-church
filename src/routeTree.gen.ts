@@ -24,6 +24,7 @@ import { Route as DashboardScheduleIdRouteImport } from './routes/dashboard.sche
 import { Route as AdminScheduleIdRouteImport } from './routes/admin.schedule.$id'
 import { Route as ApiPublicHooksSendPushRouteImport } from './routes/api/public/hooks/send-push'
 import { Route as AdminScheduleIdResponsesRouteImport } from './routes/admin.schedule.$id.responses'
+import { Route as AdminScheduleIdCheckinRouteImport } from './routes/admin.schedule.$id.checkin'
 
 const PendingRoute = PendingRouteImport.update({
   id: '/pending',
@@ -101,6 +102,11 @@ const AdminScheduleIdResponsesRoute =
     path: '/responses',
     getParentRoute: () => AdminScheduleIdRoute,
   } as any)
+const AdminScheduleIdCheckinRoute = AdminScheduleIdCheckinRouteImport.update({
+  id: '/checkin',
+  path: '/checkin',
+  getParentRoute: () => AdminScheduleIdRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -116,6 +122,7 @@ export interface FileRoutesByFullPath {
   '/admin/schedule/$id': typeof AdminScheduleIdRouteWithChildren
   '/dashboard/schedule/$id': typeof DashboardScheduleIdRoute
   '/dashboard/schedule/': typeof DashboardScheduleIndexRoute
+  '/admin/schedule/$id/checkin': typeof AdminScheduleIdCheckinRoute
   '/admin/schedule/$id/responses': typeof AdminScheduleIdResponsesRoute
   '/api/public/hooks/send-push': typeof ApiPublicHooksSendPushRoute
 }
@@ -131,6 +138,7 @@ export interface FileRoutesByTo {
   '/admin/schedule/$id': typeof AdminScheduleIdRouteWithChildren
   '/dashboard/schedule/$id': typeof DashboardScheduleIdRoute
   '/dashboard/schedule': typeof DashboardScheduleIndexRoute
+  '/admin/schedule/$id/checkin': typeof AdminScheduleIdCheckinRoute
   '/admin/schedule/$id/responses': typeof AdminScheduleIdResponsesRoute
   '/api/public/hooks/send-push': typeof ApiPublicHooksSendPushRoute
 }
@@ -149,6 +157,7 @@ export interface FileRoutesById {
   '/admin/schedule/$id': typeof AdminScheduleIdRouteWithChildren
   '/dashboard/schedule/$id': typeof DashboardScheduleIdRoute
   '/dashboard/schedule/': typeof DashboardScheduleIndexRoute
+  '/admin/schedule/$id/checkin': typeof AdminScheduleIdCheckinRoute
   '/admin/schedule/$id/responses': typeof AdminScheduleIdResponsesRoute
   '/api/public/hooks/send-push': typeof ApiPublicHooksSendPushRoute
 }
@@ -168,6 +177,7 @@ export interface FileRouteTypes {
     | '/admin/schedule/$id'
     | '/dashboard/schedule/$id'
     | '/dashboard/schedule/'
+    | '/admin/schedule/$id/checkin'
     | '/admin/schedule/$id/responses'
     | '/api/public/hooks/send-push'
   fileRoutesByTo: FileRoutesByTo
@@ -183,6 +193,7 @@ export interface FileRouteTypes {
     | '/admin/schedule/$id'
     | '/dashboard/schedule/$id'
     | '/dashboard/schedule'
+    | '/admin/schedule/$id/checkin'
     | '/admin/schedule/$id/responses'
     | '/api/public/hooks/send-push'
   id:
@@ -200,6 +211,7 @@ export interface FileRouteTypes {
     | '/admin/schedule/$id'
     | '/dashboard/schedule/$id'
     | '/dashboard/schedule/'
+    | '/admin/schedule/$id/checkin'
     | '/admin/schedule/$id/responses'
     | '/api/public/hooks/send-push'
   fileRoutesById: FileRoutesById
@@ -320,14 +332,23 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminScheduleIdResponsesRouteImport
       parentRoute: typeof AdminScheduleIdRoute
     }
+    '/admin/schedule/$id/checkin': {
+      id: '/admin/schedule/$id/checkin'
+      path: '/checkin'
+      fullPath: '/admin/schedule/$id/checkin'
+      preLoaderRoute: typeof AdminScheduleIdCheckinRouteImport
+      parentRoute: typeof AdminScheduleIdRoute
+    }
   }
 }
 
 interface AdminScheduleIdRouteChildren {
+  AdminScheduleIdCheckinRoute: typeof AdminScheduleIdCheckinRoute
   AdminScheduleIdResponsesRoute: typeof AdminScheduleIdResponsesRoute
 }
 
 const AdminScheduleIdRouteChildren: AdminScheduleIdRouteChildren = {
+  AdminScheduleIdCheckinRoute: AdminScheduleIdCheckinRoute,
   AdminScheduleIdResponsesRoute: AdminScheduleIdResponsesRoute,
 }
 
