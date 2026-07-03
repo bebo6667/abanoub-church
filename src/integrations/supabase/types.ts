@@ -50,6 +50,50 @@ export type Database = {
         }
         Relationships: []
       }
+      attendance_checkins: {
+        Row: {
+          checked_at: string
+          checked_by: string
+          created_at: string
+          id: string
+          note: string | null
+          present: boolean
+          schedule_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          checked_at?: string
+          checked_by: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          present?: boolean
+          schedule_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          checked_at?: string
+          checked_by?: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          present?: boolean
+          schedule_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_checkins_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "schedules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       attendance_responses: {
         Row: {
           assignment_id: string

@@ -15,7 +15,7 @@ import {
   SERVICE_LABELS, SERVICE_ORDER, MULTI_SELECT_SERVICES,
   formatFridayDate, DECLINE_REASONS, type ServiceType,
 } from "@/lib/services";
-import { Loader2, UserPlus, Send, Trash2, X, Search, ClipboardList } from "lucide-react";
+import { Loader2, UserPlus, Send, Trash2, X, Search, ClipboardList, UserCheck } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/schedule/$id")({
@@ -125,6 +125,9 @@ function AdminScheduleEditor() {
           )}
           <Link to="/admin/schedule/$id/responses" params={{ id }}>
             <Button size="sm" variant="secondary"><ClipboardList className="h-4 w-4" />الردود</Button>
+          </Link>
+          <Link to="/admin/schedule/$id/checkin" params={{ id }}>
+            <Button size="sm" variant="secondary"><UserCheck className="h-4 w-4" />تسجيل الحضور</Button>
           </Link>
           <Button size="sm" variant="ghost" className="text-primary-foreground hover:bg-white/10" onClick={deleteSchedule}>
             <Trash2 className="h-4 w-4" />حذف
