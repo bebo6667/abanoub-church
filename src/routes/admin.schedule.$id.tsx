@@ -15,7 +15,7 @@ import {
   SERVICE_LABELS, SERVICE_ORDER, MULTI_SELECT_SERVICES,
   formatFridayDate, DECLINE_REASONS, type ServiceType,
 } from "@/lib/services";
-import { Loader2, UserPlus, Send, Trash2, X, Search, ClipboardList } from "lucide-react";
+import { Loader2, UserPlus, Send, Trash2, X, Search, ClipboardList, UserCheck } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/schedule/$id")({
