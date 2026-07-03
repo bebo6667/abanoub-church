@@ -126,6 +126,9 @@ function AdminScheduleEditor() {
           <Link to="/admin/schedule/$id/responses" params={{ id }}>
             <Button size="sm" variant="secondary"><ClipboardList className="h-4 w-4" />الردود</Button>
           </Link>
+          <Link to="/admin/schedule/$id/checkin" params={{ id }}>
+            <Button size="sm" variant="secondary"><UserCheck className="h-4 w-4" />تسجيل الحضور</Button>
+          </Link>
           <Button size="sm" variant="ghost" className="text-primary-foreground hover:bg-white/10" onClick={deleteSchedule}>
             <Trash2 className="h-4 w-4" />حذف
           </Button>
