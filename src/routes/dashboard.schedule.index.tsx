@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { formatFridayDate } from "@/lib/services";
 import { CalendarDays, Eye } from "lucide-react";
 
-export const Route = createFileRoute("/dashboard/schedule")({
+export const Route = createFileRoute("/dashboard/schedule/")({
   component: ScheduleList,
 });
 
