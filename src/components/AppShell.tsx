@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
-import { Church, LogOut, LayoutDashboard, Calendar, Users, User } from "lucide-react";
+import { Church, LogOut, LayoutDashboard, Calendar, Users, User, UserCheck } from "lucide-react";
 import { NotificationsBell } from "@/components/NotificationsBell";
 import type { ReactNode } from "react";
 
@@ -14,6 +14,7 @@ export function AppShell({ children, title, isAdmin: _isAdmin }: { children: Rea
     ? [
         { to: "/dashboard", label: "الرئيسية", icon: LayoutDashboard },
         { to: "/dashboard/schedule", label: "الجدول", icon: Calendar },
+        { to: "/dashboard/checkin", label: "الحضور", icon: UserCheck },
         { to: "/admin", label: "إدارة", icon: Church },
         { to: "/dashboard/members", label: "الأعضاء", icon: Users },
         { to: "/dashboard/profile", label: "حسابي", icon: User },
