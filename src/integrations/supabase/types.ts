@@ -396,6 +396,51 @@ export type Database = {
           },
         ]
       }
+      visitations: {
+        Row: {
+          by_user_id: string
+          created_at: string
+          deacon_id: string
+          id: string
+          note: string
+          updated_at: string
+          visited_at: string
+        }
+        Insert: {
+          by_user_id: string
+          created_at?: string
+          deacon_id: string
+          id?: string
+          note: string
+          updated_at?: string
+          visited_at?: string
+        }
+        Update: {
+          by_user_id?: string
+          created_at?: string
+          deacon_id?: string
+          id?: string
+          note?: string
+          updated_at?: string
+          visited_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visitations_by_user_id_fkey"
+            columns: ["by_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "visitations_deacon_id_fkey"
+            columns: ["deacon_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
