@@ -18,6 +18,7 @@ import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as DashboardProfileRouteImport } from './routes/dashboard.profile'
 import { Route as DashboardMembersRouteImport } from './routes/dashboard.members'
+import { Route as DashboardCheckinRouteImport } from './routes/dashboard.checkin'
 import { Route as AdminAnnouncementsRouteImport } from './routes/admin.announcements'
 import { Route as DashboardScheduleIndexRouteImport } from './routes/dashboard.schedule.index'
 import { Route as DashboardScheduleIdRouteImport } from './routes/dashboard.schedule.$id'
@@ -71,6 +72,11 @@ const DashboardMembersRoute = DashboardMembersRouteImport.update({
   path: '/members',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardCheckinRoute = DashboardCheckinRouteImport.update({
+  id: '/checkin',
+  path: '/checkin',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const AdminAnnouncementsRoute = AdminAnnouncementsRouteImport.update({
   id: '/announcements',
   path: '/announcements',
@@ -115,6 +121,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRouteWithChildren
   '/pending': typeof PendingRoute
   '/admin/announcements': typeof AdminAnnouncementsRoute
+  '/dashboard/checkin': typeof DashboardCheckinRoute
   '/dashboard/members': typeof DashboardMembersRoute
   '/dashboard/profile': typeof DashboardProfileRoute
   '/admin/': typeof AdminIndexRoute
@@ -131,6 +138,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/pending': typeof PendingRoute
   '/admin/announcements': typeof AdminAnnouncementsRoute
+  '/dashboard/checkin': typeof DashboardCheckinRoute
   '/dashboard/members': typeof DashboardMembersRoute
   '/dashboard/profile': typeof DashboardProfileRoute
   '/admin': typeof AdminIndexRoute
@@ -150,6 +158,7 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRouteWithChildren
   '/pending': typeof PendingRoute
   '/admin/announcements': typeof AdminAnnouncementsRoute
+  '/dashboard/checkin': typeof DashboardCheckinRoute
   '/dashboard/members': typeof DashboardMembersRoute
   '/dashboard/profile': typeof DashboardProfileRoute
   '/admin/': typeof AdminIndexRoute
@@ -170,6 +179,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/pending'
     | '/admin/announcements'
+    | '/dashboard/checkin'
     | '/dashboard/members'
     | '/dashboard/profile'
     | '/admin/'
@@ -186,6 +196,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/pending'
     | '/admin/announcements'
+    | '/dashboard/checkin'
     | '/dashboard/members'
     | '/dashboard/profile'
     | '/admin'
@@ -204,6 +215,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/pending'
     | '/admin/announcements'
+    | '/dashboard/checkin'
     | '/dashboard/members'
     | '/dashboard/profile'
     | '/admin/'
@@ -290,6 +302,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardMembersRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/checkin': {
+      id: '/dashboard/checkin'
+      path: '/checkin'
+      fullPath: '/dashboard/checkin'
+      preLoaderRoute: typeof DashboardCheckinRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/admin/announcements': {
       id: '/admin/announcements'
       path: '/announcements'
@@ -371,6 +390,7 @@ const AdminRouteChildren: AdminRouteChildren = {
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface DashboardRouteChildren {
+  DashboardCheckinRoute: typeof DashboardCheckinRoute
   DashboardMembersRoute: typeof DashboardMembersRoute
   DashboardProfileRoute: typeof DashboardProfileRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
@@ -379,6 +399,7 @@ interface DashboardRouteChildren {
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardCheckinRoute: DashboardCheckinRoute,
   DashboardMembersRoute: DashboardMembersRoute,
   DashboardProfileRoute: DashboardProfileRoute,
   DashboardIndexRoute: DashboardIndexRoute,
