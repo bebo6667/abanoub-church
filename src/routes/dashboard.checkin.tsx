@@ -86,14 +86,18 @@ function StatsTab() {
     queryFn: async () => {
       const [{ data: members }, { data: schedules }, { data: checkins }] = await Promise.all([
         db.from("profiles")
-          .select("id, full_name, profile_image_url")
+          .select("id, full_name, profile_image_url, user_roles!user_roles_user_id_fkey(role)")
           .eq("status", "approved")
           .order("full_name"),
         db.from("schedules").select("id, friday_date"),
         db.from("attendance_checkins").select("user_id, present, schedule_id"),
       ]);
+      const deaconsOnly = (members ?? []).filter((m: any) => {
+        const roles = (m.user_roles ?? []).map((r: any) => r.role);
+        return roles.includes("deacon") && !roles.includes("admin") && !roles.includes("servant");
+      });
       return {
-        members: (members ?? []) as any[],
+        members: deaconsOnly as any[],
         totalMasses: (schedules ?? []).length,
         checkins: (checkins ?? []) as any[],
       };
