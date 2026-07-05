@@ -86,7 +86,7 @@ function StatsTab() {
     queryFn: async () => {
       const [{ data: members }, { data: schedules }, { data: checkins }] = await Promise.all([
         db.from("profiles")
-          .select("id, full_name, profile_image_url, user_roles!user_roles_user_id_fkey(role)")
+          .select("id, full_name, profile_image_url, phone, whatsapp, user_roles!user_roles_user_id_fkey(role)")
           .eq("status", "approved")
           .order("full_name"),
         db.from("schedules").select("id, friday_date"),
