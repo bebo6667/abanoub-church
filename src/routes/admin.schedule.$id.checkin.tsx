@@ -72,14 +72,22 @@ function CheckinPage() {
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return (data?.members ?? []).filter((m) => !q || m.full_name?.toLowerCase().includes(q));
+    return (data?.members ?? []).filter((m) => {
+      const roles = (m.user_roles ?? []).map((r: any) => r.role);
+      const isDeacon = roles.includes("deacon") && !roles.includes("admin") && !roles.includes("servant");
+      if (!isDeacon) return false;
+      return !q || m.full_name?.toLowerCase().includes(q);
+    });
   }, [data, search]);
 
   const assignedList = filtered.filter((m) => services.has(m.id));
   const othersList = filtered.filter((m) => !services.has(m.id));
 
-  const presentCount = (data?.checkins ?? []).filter((c) => c.present).length;
-  const absentCount = (data?.checkins ?? []).filter((c) => !c.present).length;
+  const deaconIds = useMemo(() => new Set(filtered.map((m) => m.id)), [filtered]);
+  const deaconCheckins = (data?.checkins ?? []).filter((c) => deaconIds.has(c.user_id));
+  const presentCount = deaconCheckins.filter((c) => c.present).length;
+  const absentCount = deaconCheckins.filter((c) => !c.present).length;
+  const unmarkedCount = filtered.length - presentCount - absentCount;
 
   async function mark(userId: string, present: boolean, note?: string | null) {
     const existing = checkinMap.get(userId);
@@ -171,7 +179,7 @@ function CheckinPage() {
         <div className="flex gap-2 mt-2">
           <Badge className="bg-success text-success-foreground">حاضر: {presentCount}</Badge>
           <Badge variant="destructive">غائب: {absentCount}</Badge>
-          <Badge variant="secondary">لم يُسجّل: {(data.members.length - presentCount - absentCount)}</Badge>
+          <Badge variant="secondary">لم يُسجّل: {unmarkedCount}</Badge>
         </div>
       </Card>
 
