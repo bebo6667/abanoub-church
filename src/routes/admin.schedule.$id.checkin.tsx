@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { formatFridayDate, SERVICE_LABELS, type ServiceType } from "@/lib/services";
-import { Loader2, Check, X, Search, ChevronRight, Save } from "lucide-react";
+import { Loader2, Check, X, Search, ChevronRight, Save, Phone, MessageCircle, BarChart3 } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/schedule/$id/checkin")({
@@ -22,12 +22,19 @@ type Member = {
   id: string;
   full_name: string;
   profile_image_url: string | null;
+  phone?: string | null;
+  whatsapp?: string | null;
   user_roles?: { role: string }[];
 };
 
+function normalizePhone(v?: string | null) {
+  if (!v) return null;
+  return v.replace(/[^\d+]/g, "");
+}
+
 function CheckinPage() {
   const { id } = useParams({ from: "/admin/schedule/$id/checkin" });
-  const { user } = useAuth();
+  const { user, isStaff } = useAuth();
   const qc = useQueryClient();
   const [search, setSearch] = useState("");
   const [noteFor, setNoteFor] = useState<string | null>(null);
@@ -40,7 +47,7 @@ function CheckinPage() {
         db.from("schedules").select("*").eq("id", id).maybeSingle(),
         db.from("schedule_assignments").select("user_id, service_type").eq("schedule_id", id),
         db.from("profiles")
-          .select("id,full_name,profile_image_url,user_roles!user_roles_user_id_fkey(role)")
+          .select("id,full_name,profile_image_url,phone,whatsapp,user_roles!user_roles_user_id_fkey(role)")
           .eq("status", "approved")
           .order("full_name"),
         db.from("attendance_checkins").select("*").eq("schedule_id", id),
@@ -112,6 +119,10 @@ function CheckinPage() {
     qc.invalidateQueries({ queryKey: ["schedule-checkin", id] });
   }
 
+  if (!isStaff) {
+    return <AppShell title="تسجيل الحضور"><Card className="p-6 text-center text-sm text-muted-foreground">هذه الصفحة للخدام والأدمن فقط</Card></AppShell>;
+  }
+
   if (isLoading || !data?.schedule) {
     return <AppShell title="تسجيل الحضور" isAdmin><div className="grid place-items-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div></AppShell>;
   }
@@ -120,6 +131,8 @@ function CheckinPage() {
     const c = checkinMap.get(m.id);
     const svc = services.get(m.id);
     const editing = noteFor === m.id;
+    const wa = normalizePhone(m.whatsapp || m.phone);
+    const tel = normalizePhone(m.phone || m.whatsapp);
     return (
       <Card className="p-3">
         <div className="flex items-center gap-2">
@@ -132,16 +145,29 @@ function CheckinPage() {
             {c?.note && !editing && <p className="text-[11px] mt-0.5 text-primary">📝 {c.note}</p>}
           </div>
           <div className="flex items-center gap-1 shrink-0">
-            <Button size="sm" variant={c?.present ? "default" : "outline"}
-              className={c?.present ? "bg-success text-success-foreground h-8 px-2" : "h-8 px-2"}
-              onClick={() => mark(m.id, true)}>
-              <Check className="h-4 w-4" />حاضر
-            </Button>
-            <Button size="sm" variant={c && !c.present ? "destructive" : "outline"} className="h-8 px-2"
-              onClick={() => mark(m.id, false)}>
-              <X className="h-4 w-4" />غائب
-            </Button>
+            {wa && (
+              <a href={`https://wa.me/${wa.replace(/^\+/, "")}`} target="_blank" rel="noopener"
+                className="h-8 w-8 grid place-items-center rounded-md bg-success/10 text-success hover:bg-success/20" aria-label="واتساب">
+                <MessageCircle className="h-4 w-4" />
+              </a>
+            )}
+            {tel && (
+              <a href={`tel:${tel}`} className="h-8 w-8 grid place-items-center rounded-md bg-primary/10 text-primary hover:bg-primary/20" aria-label="اتصال">
+                <Phone className="h-4 w-4" />
+              </a>
+            )}
           </div>
+        </div>
+        <div className="mt-2 grid grid-cols-2 gap-2">
+          <Button size="sm" variant={c?.present ? "default" : "outline"}
+            className={c?.present ? "bg-success text-success-foreground h-9" : "h-9"}
+            onClick={() => mark(m.id, true)}>
+            <Check className="h-4 w-4 ml-1" />حاضر
+          </Button>
+          <Button size="sm" variant={c && !c.present ? "destructive" : "outline"} className="h-9"
+            onClick={() => mark(m.id, false)}>
+            <X className="h-4 w-4 ml-1" />غائب
+          </Button>
         </div>
         {editing ? (
           <div className="mt-2 flex gap-2">
@@ -180,6 +206,11 @@ function CheckinPage() {
           <Badge className="bg-success text-success-foreground">حاضر: {presentCount}</Badge>
           <Badge variant="destructive">غائب: {absentCount}</Badge>
           <Badge variant="secondary">لم يُسجّل: {unmarkedCount}</Badge>
+        </div>
+        <div className="mt-2">
+          <Link to="/dashboard/checkin" className="text-xs underline flex items-center gap-1 opacity-90">
+            <BarChart3 className="h-3 w-3" />عرض نِسَب المواظبة لكل شماس
+          </Link>
         </div>
       </Card>
 
