@@ -83,8 +83,11 @@ function CheckinPage() {
   const assignedList = filtered.filter((m) => services.has(m.id));
   const othersList = filtered.filter((m) => !services.has(m.id));
 
-  const presentCount = (data?.checkins ?? []).filter((c) => c.present).length;
-  const absentCount = (data?.checkins ?? []).filter((c) => !c.present).length;
+  const deaconIds = useMemo(() => new Set(filtered.map((m) => m.id)), [filtered]);
+  const deaconCheckins = (data?.checkins ?? []).filter((c) => deaconIds.has(c.user_id));
+  const presentCount = deaconCheckins.filter((c) => c.present).length;
+  const absentCount = deaconCheckins.filter((c) => !c.present).length;
+  const unmarkedCount = filtered.length - presentCount - absentCount;
 
   async function mark(userId: string, present: boolean, note?: string | null) {
     const existing = checkinMap.get(userId);
