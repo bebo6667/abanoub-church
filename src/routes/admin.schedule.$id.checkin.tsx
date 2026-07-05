@@ -207,6 +207,11 @@ function CheckinPage() {
           <Badge variant="destructive">غائب: {absentCount}</Badge>
           <Badge variant="secondary">لم يُسجّل: {unmarkedCount}</Badge>
         </div>
+        <div className="mt-2">
+          <Link to="/dashboard/checkin" className="text-xs underline flex items-center gap-1 opacity-90">
+            <BarChart3 className="h-3 w-3" />عرض نِسَب المواظبة لكل شماس
+          </Link>
+        </div>
       </Card>
 
       <div className="relative mb-3">
