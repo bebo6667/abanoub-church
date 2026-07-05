@@ -47,7 +47,7 @@ function CheckinPage() {
         db.from("schedules").select("*").eq("id", id).maybeSingle(),
         db.from("schedule_assignments").select("user_id, service_type").eq("schedule_id", id),
         db.from("profiles")
-          .select("id,full_name,profile_image_url,user_roles!user_roles_user_id_fkey(role)")
+          .select("id,full_name,profile_image_url,phone,whatsapp,user_roles!user_roles_user_id_fkey(role)")
           .eq("status", "approved")
           .order("full_name"),
         db.from("attendance_checkins").select("*").eq("schedule_id", id),
