@@ -179,7 +179,7 @@ function CheckinPage() {
         <div className="flex gap-2 mt-2">
           <Badge className="bg-success text-success-foreground">حاضر: {presentCount}</Badge>
           <Badge variant="destructive">غائب: {absentCount}</Badge>
-          <Badge variant="secondary">لم يُسجّل: {(data.members.length - presentCount - absentCount)}</Badge>
+          <Badge variant="secondary">لم يُسجّل: {unmarkedCount}</Badge>
         </div>
       </Card>
 
