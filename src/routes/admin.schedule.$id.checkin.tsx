@@ -72,7 +72,12 @@ function CheckinPage() {
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return (data?.members ?? []).filter((m) => !q || m.full_name?.toLowerCase().includes(q));
+    return (data?.members ?? []).filter((m) => {
+      const roles = (m.user_roles ?? []).map((r: any) => r.role);
+      const isDeacon = roles.includes("deacon") && !roles.includes("admin") && !roles.includes("servant");
+      if (!isDeacon) return false;
+      return !q || m.full_name?.toLowerCase().includes(q);
+    });
   }, [data, search]);
 
   const assignedList = filtered.filter((m) => services.has(m.id));
