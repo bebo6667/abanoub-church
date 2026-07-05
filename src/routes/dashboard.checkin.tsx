@@ -15,7 +15,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import { formatFridayDate } from "@/lib/services";
-import { CalendarDays, UserCheck, Search, HeartHandshake, Loader2, Trash2, Plus } from "lucide-react";
+import { CalendarDays, UserCheck, Search, HeartHandshake, Loader2, Trash2, Plus, MessageCircle, Phone } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/dashboard/checkin")({
