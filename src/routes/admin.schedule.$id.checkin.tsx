@@ -22,8 +22,15 @@ type Member = {
   id: string;
   full_name: string;
   profile_image_url: string | null;
+  phone?: string | null;
+  whatsapp?: string | null;
   user_roles?: { role: string }[];
 };
+
+function normalizePhone(v?: string | null) {
+  if (!v) return null;
+  return v.replace(/[^\d+]/g, "");
+}
 
 function CheckinPage() {
   const { id } = useParams({ from: "/admin/schedule/$id/checkin" });
