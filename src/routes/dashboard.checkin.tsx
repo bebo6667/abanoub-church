@@ -149,7 +149,22 @@ function StatsTab() {
               </Badge>
             </div>
             <Progress value={m.pct} className="h-2" />
-            <div className="mt-2 flex justify-end">
+            <div className="mt-2 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-1">
+                {(m.whatsapp || m.phone) && (
+                  <a href={`https://wa.me/${String(m.whatsapp || m.phone).replace(/[^\d+]/g, "").replace(/^\+/, "")}`}
+                    target="_blank" rel="noopener"
+                    className="h-8 w-8 grid place-items-center rounded-md bg-success/10 text-success hover:bg-success/20" aria-label="واتساب">
+                    <MessageCircle className="h-4 w-4" />
+                  </a>
+                )}
+                {(m.phone || m.whatsapp) && (
+                  <a href={`tel:${String(m.phone || m.whatsapp).replace(/[^\d+]/g, "")}`}
+                    className="h-8 w-8 grid place-items-center rounded-md bg-primary/10 text-primary hover:bg-primary/20" aria-label="اتصال">
+                    <Phone className="h-4 w-4" />
+                  </a>
+                )}
+              </div>
               <Button size="sm" variant="outline" className="gap-1"
                 onClick={() => setSelected({ id: m.id, name: m.full_name })}>
                 <HeartHandshake className="h-4 w-4" />افتقاد
