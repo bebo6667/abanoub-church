@@ -119,6 +119,10 @@ function CheckinPage() {
     qc.invalidateQueries({ queryKey: ["schedule-checkin", id] });
   }
 
+  if (!isStaff) {
+    return <AppShell title="تسجيل الحضور"><Card className="p-6 text-center text-sm text-muted-foreground">هذه الصفحة للخدام والأدمن فقط</Card></AppShell>;
+  }
+
   if (isLoading || !data?.schedule) {
     return <AppShell title="تسجيل الحضور" isAdmin><div className="grid place-items-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div></AppShell>;
   }
