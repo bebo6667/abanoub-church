@@ -131,6 +131,8 @@ function CheckinPage() {
     const c = checkinMap.get(m.id);
     const svc = services.get(m.id);
     const editing = noteFor === m.id;
+    const wa = normalizePhone(m.whatsapp || m.phone);
+    const tel = normalizePhone(m.phone || m.whatsapp);
     return (
       <Card className="p-3">
         <div className="flex items-center gap-2">
@@ -143,16 +145,29 @@ function CheckinPage() {
             {c?.note && !editing && <p className="text-[11px] mt-0.5 text-primary">📝 {c.note}</p>}
           </div>
           <div className="flex items-center gap-1 shrink-0">
-            <Button size="sm" variant={c?.present ? "default" : "outline"}
-              className={c?.present ? "bg-success text-success-foreground h-8 px-2" : "h-8 px-2"}
-              onClick={() => mark(m.id, true)}>
-              <Check className="h-4 w-4" />حاضر
-            </Button>
-            <Button size="sm" variant={c && !c.present ? "destructive" : "outline"} className="h-8 px-2"
-              onClick={() => mark(m.id, false)}>
-              <X className="h-4 w-4" />غائب
-            </Button>
+            {wa && (
+              <a href={`https://wa.me/${wa.replace(/^\+/, "")}`} target="_blank" rel="noopener"
+                className="h-8 w-8 grid place-items-center rounded-md bg-success/10 text-success hover:bg-success/20" aria-label="واتساب">
+                <MessageCircle className="h-4 w-4" />
+              </a>
+            )}
+            {tel && (
+              <a href={`tel:${tel}`} className="h-8 w-8 grid place-items-center rounded-md bg-primary/10 text-primary hover:bg-primary/20" aria-label="اتصال">
+                <Phone className="h-4 w-4" />
+              </a>
+            )}
           </div>
+        </div>
+        <div className="mt-2 grid grid-cols-2 gap-2">
+          <Button size="sm" variant={c?.present ? "default" : "outline"}
+            className={c?.present ? "bg-success text-success-foreground h-9" : "h-9"}
+            onClick={() => mark(m.id, true)}>
+            <Check className="h-4 w-4 ml-1" />حاضر
+          </Button>
+          <Button size="sm" variant={c && !c.present ? "destructive" : "outline"} className="h-9"
+            onClick={() => mark(m.id, false)}>
+            <X className="h-4 w-4 ml-1" />غائب
+          </Button>
         </div>
         {editing ? (
           <div className="mt-2 flex gap-2">
