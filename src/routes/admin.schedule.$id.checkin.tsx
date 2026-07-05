@@ -34,7 +34,7 @@ function normalizePhone(v?: string | null) {
 
 function CheckinPage() {
   const { id } = useParams({ from: "/admin/schedule/$id/checkin" });
-  const { user } = useAuth();
+  const { user, isStaff } = useAuth();
   const qc = useQueryClient();
   const [search, setSearch] = useState("");
   const [noteFor, setNoteFor] = useState<string | null>(null);
