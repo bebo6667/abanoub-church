@@ -175,11 +175,11 @@ function CheckinPage() {
         <div className="mt-2 grid grid-cols-2 gap-2">
           <Button size="sm" variant={c?.present ? "default" : "outline"}
             className={c?.present ? "bg-success text-success-foreground h-9" : "h-9"}
-            onClick={() => mark(m.id, true)}>
+            onClick={() => mark(m.id, true, undefined, m.full_name)}>
             <Check className="h-4 w-4 ml-1" />حاضر
           </Button>
           <Button size="sm" variant={c && !c.present ? "destructive" : "outline"} className="h-9"
-            onClick={() => mark(m.id, false)}>
+            onClick={() => mark(m.id, false, undefined, m.full_name)}>
             <X className="h-4 w-4 ml-1" />غائب
           </Button>
         </div>
