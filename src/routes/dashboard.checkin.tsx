@@ -226,7 +226,7 @@ function AttendanceDetailDialog({ deacon, onClose }: { deacon: { id: string; nam
               </div>
             </div>
             <div className="space-y-1">
-              {data.rows.map((r) => (
+              {data.rows.map((r: any) => (
                 <div key={r.id} className="flex items-center gap-2 border rounded p-2 text-xs">
                   <CalendarDays className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                   <span className="flex-1">{formatFridayDate(r.friday_date)}</span>
