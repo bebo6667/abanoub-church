@@ -96,8 +96,18 @@ function CheckinPage() {
   const absentCount = deaconCheckins.filter((c) => !c.present).length;
   const unmarkedCount = filtered.length - presentCount - absentCount;
 
-  async function mark(userId: string, present: boolean, note?: string | null) {
+  async function mark(userId: string, present: boolean, note?: string | null, memberName?: string) {
     const existing = checkinMap.get(userId);
+    // Duplicate guard: same status already saved
+    if (existing && existing.present === present && note === undefined) {
+      toast.info(`تم تسجيل ${present ? "الحضور" : "الغياب"} مسبقاً لهذا الشماس`);
+      return;
+    }
+    // Confirm overwrite when changing status
+    if (existing && existing.present !== present && note === undefined) {
+      const ok = confirm(`الشماس مسجّل حالياً ${existing.present ? "حاضر" : "غائب"}. هل تريد تغيير الحالة إلى ${present ? "حاضر" : "غائب"}؟`);
+      if (!ok) return;
+    }
     const payload: any = {
       schedule_id: id,
       user_id: userId,
@@ -110,13 +120,17 @@ function CheckinPage() {
 
     const { error } = await db.from("attendance_checkins").upsert(payload, { onConflict: "schedule_id,user_id" });
     if (error) return toast.error(error.message);
+    toast.success(`تم حفظ ${present ? "حضور" : "غياب"}${memberName ? ` ${memberName}` : ""} بنجاح`);
     qc.invalidateQueries({ queryKey: ["schedule-checkin", id] });
+    qc.invalidateQueries({ queryKey: ["attendance-stats"] });
   }
 
   async function clearMark(userId: string) {
     const { error } = await db.from("attendance_checkins").delete().eq("schedule_id", id).eq("user_id", userId);
     if (error) return toast.error(error.message);
+    toast.success("تم مسح التسجيل");
     qc.invalidateQueries({ queryKey: ["schedule-checkin", id] });
+    qc.invalidateQueries({ queryKey: ["attendance-stats"] });
   }
 
   if (!isStaff) {
