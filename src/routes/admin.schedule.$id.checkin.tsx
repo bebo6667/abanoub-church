@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { formatFridayDate, SERVICE_LABELS, type ServiceType } from "@/lib/services";
 import { Loader2, Check, X, Search, ChevronRight, Save, Phone, MessageCircle, BarChart3 } from "lucide-react";
 import { toast } from "sonner";
