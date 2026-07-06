@@ -80,6 +80,7 @@ function DatesTab() {
 function StatsTab() {
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<{ id: string; name: string } | null>(null);
+  const [detailFor, setDetailFor] = useState<{ id: string; name: string } | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["attendance-stats"],
