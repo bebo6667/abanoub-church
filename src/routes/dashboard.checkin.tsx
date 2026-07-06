@@ -197,8 +197,8 @@ function AttendanceDetailDialog({ deacon, onClose }: { deacon: { id: string; nam
       ]);
       const map = new Map((checkins ?? []).map((c: any) => [c.schedule_id, c]));
       const rows = (schedules ?? []).map((s: any) => ({ ...s, c: map.get(s.id) as any }));
-      const present = rows.filter((r) => r.c?.present).length;
-      const absent = rows.filter((r) => r.c && !r.c.present).length;
+      const present = rows.filter((r: any) => r.c?.present).length;
+      const absent = rows.filter((r: any) => r.c && !r.c.present).length;
       const unmarked = rows.length - present - absent;
       return { rows, present, absent, unmarked, total: rows.length };
     },
