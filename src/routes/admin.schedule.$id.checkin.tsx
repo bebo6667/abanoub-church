@@ -233,20 +233,11 @@ function CheckinPage() {
         <Input placeholder="ابحث بالاسم..." value={search} onChange={(e) => setSearch(e.target.value)} className="pr-9" />
       </div>
 
-      <Tabs defaultValue="assigned">
-        <TabsList className="w-full grid grid-cols-2">
-          <TabsTrigger value="assigned">المسندون ({assignedList.length})</TabsTrigger>
-          <TabsTrigger value="others">أعضاء آخرون ({othersList.length})</TabsTrigger>
-        </TabsList>
-        <TabsContent value="assigned" className="space-y-2 mt-3">
-          {assignedList.length === 0 && <Card className="p-4 text-center text-xs text-muted-foreground">لا يوجد مسندون</Card>}
-          {assignedList.map((m) => <Row key={m.id} m={m} />)}
-        </TabsContent>
-        <TabsContent value="others" className="space-y-2 mt-3">
-          {othersList.length === 0 && <Card className="p-4 text-center text-xs text-muted-foreground">لا يوجد</Card>}
-          {othersList.map((m) => <Row key={m.id} m={m} />)}
-        </TabsContent>
-      </Tabs>
+      <p className="text-xs text-muted-foreground mb-2">إجمالي الشمامسة: {filtered.length}</p>
+      <div className="space-y-2">
+        {filtered.length === 0 && <Card className="p-4 text-center text-xs text-muted-foreground">لا يوجد شمامسة</Card>}
+        {[...assignedList, ...othersList].map((m) => <Row key={m.id} m={m} />)}
+      </div>
     </AppShell>
   );
 }
