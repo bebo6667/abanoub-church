@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { formatFridayDate, SERVICE_LABELS, type ServiceType } from "@/lib/services";
 import { Loader2, Check, X, Search, ChevronRight, Save, Phone, MessageCircle, BarChart3 } from "lucide-react";
 import { toast } from "sonner";
@@ -233,20 +232,11 @@ function CheckinPage() {
         <Input placeholder="ابحث بالاسم..." value={search} onChange={(e) => setSearch(e.target.value)} className="pr-9" />
       </div>
 
-      <Tabs defaultValue="assigned">
-        <TabsList className="w-full grid grid-cols-2">
-          <TabsTrigger value="assigned">المسندون ({assignedList.length})</TabsTrigger>
-          <TabsTrigger value="others">أعضاء آخرون ({othersList.length})</TabsTrigger>
-        </TabsList>
-        <TabsContent value="assigned" className="space-y-2 mt-3">
-          {assignedList.length === 0 && <Card className="p-4 text-center text-xs text-muted-foreground">لا يوجد مسندون</Card>}
-          {assignedList.map((m) => <Row key={m.id} m={m} />)}
-        </TabsContent>
-        <TabsContent value="others" className="space-y-2 mt-3">
-          {othersList.length === 0 && <Card className="p-4 text-center text-xs text-muted-foreground">لا يوجد</Card>}
-          {othersList.map((m) => <Row key={m.id} m={m} />)}
-        </TabsContent>
-      </Tabs>
+      <p className="text-xs text-muted-foreground mb-2">إجمالي الشمامسة: {filtered.length}</p>
+      <div className="space-y-2">
+        {filtered.length === 0 && <Card className="p-4 text-center text-xs text-muted-foreground">لا يوجد شمامسة</Card>}
+        {[...assignedList, ...othersList].map((m) => <Row key={m.id} m={m} />)}
+      </div>
     </AppShell>
   );
 }
