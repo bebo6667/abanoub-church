@@ -166,17 +166,87 @@ function StatsTab() {
                   </a>
                 )}
               </div>
-              <Button size="sm" variant="outline" className="gap-1"
-                onClick={() => setSelected({ id: m.id, name: m.full_name })}>
-                <HeartHandshake className="h-4 w-4" />افتقاد
-              </Button>
+              <div className="flex items-center gap-1">
+                <Button size="sm" variant="outline" className="gap-1"
+                  onClick={() => setDetailFor({ id: m.id, name: m.full_name })}>
+                  <ListChecks className="h-4 w-4" />تفاصيل
+                </Button>
+                <Button size="sm" variant="outline" className="gap-1"
+                  onClick={() => setSelected({ id: m.id, name: m.full_name })}>
+                  <HeartHandshake className="h-4 w-4" />افتقاد
+                </Button>
+              </div>
             </div>
           </Card>
         ))}
         {stats.length === 0 && <Card className="p-6 text-center text-xs text-muted-foreground">لا توجد بيانات</Card>}
       </div>
       <VisitDialog deacon={selected} onClose={() => setSelected(null)} />
+      <AttendanceDetailDialog deacon={detailFor} onClose={() => setDetailFor(null)} />
     </>
+  );
+}
+
+function AttendanceDetailDialog({ deacon, onClose }: { deacon: { id: string; name: string } | null; onClose: () => void }) {
+  const { data, isLoading } = useQuery({
+    queryKey: ["attendance-detail", deacon?.id],
+    queryFn: async () => {
+      const [{ data: schedules }, { data: checkins }] = await Promise.all([
+        db.from("schedules").select("id, friday_date").order("friday_date", { ascending: false }),
+        db.from("attendance_checkins").select("schedule_id, present, note, checked_at").eq("user_id", deacon!.id),
+      ]);
+      const map = new Map((checkins ?? []).map((c: any) => [c.schedule_id, c]));
+      const rows = (schedules ?? []).map((s: any) => ({ ...s, c: map.get(s.id) as any }));
+      const present = rows.filter((r) => r.c?.present).length;
+      const absent = rows.filter((r) => r.c && !r.c.present).length;
+      const unmarked = rows.length - present - absent;
+      return { rows, present, absent, unmarked, total: rows.length };
+    },
+    enabled: !!deacon?.id,
+  });
+
+  return (
+    <Dialog open={!!deacon} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="max-h-[85vh] overflow-y-auto">
+        <DialogHeader><DialogTitle>سِجل الحضور — {deacon?.name}</DialogTitle></DialogHeader>
+        {isLoading || !data ? <Loader /> : (
+          <>
+            <div className="grid grid-cols-3 gap-2 text-center text-xs mb-3">
+              <div className="rounded-md bg-success/10 text-success p-2">
+                <p className="font-bold text-lg">{data.present}</p>
+                <p>حضور</p>
+              </div>
+              <div className="rounded-md bg-destructive/10 text-destructive p-2">
+                <p className="font-bold text-lg">{data.absent}</p>
+                <p>غياب</p>
+              </div>
+              <div className="rounded-md bg-muted p-2">
+                <p className="font-bold text-lg">{data.unmarked}</p>
+                <p>لم يُسجّل</p>
+              </div>
+            </div>
+            <div className="space-y-1">
+              {data.rows.map((r) => (
+                <div key={r.id} className="flex items-center gap-2 border rounded p-2 text-xs">
+                  <CalendarDays className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                  <span className="flex-1">{formatFridayDate(r.friday_date)}</span>
+                  {r.c ? (
+                    r.c.present ? (
+                      <Badge className="bg-success text-success-foreground gap-1"><Check className="h-3 w-3" />حاضر</Badge>
+                    ) : (
+                      <Badge variant="destructive" className="gap-1"><X className="h-3 w-3" />غائب</Badge>
+                    )
+                  ) : (
+                    <Badge variant="secondary">—</Badge>
+                  )}
+                </div>
+              ))}
+              {data.rows.length === 0 && <p className="text-xs text-muted-foreground text-center py-4">لا توجد قداسات</p>}
+            </div>
+          </>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }
 
