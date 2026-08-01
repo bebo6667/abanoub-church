@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { Card } from "@/components/ui/card";
 import { attachmentUrl, type Announcement, type Attachment } from "@/lib/announcements";
 import { FileText, ExternalLink, Megaphone, Download } from "lucide-react";
+import { PollView } from "@/components/PollView";
 
 export function AnnouncementsFeed() {
   const { data } = useQuery({
