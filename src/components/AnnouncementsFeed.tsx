@@ -44,6 +44,9 @@ function AnnouncementCard({ a }: { a: Announcement }) {
           <ExternalLink className="h-3.5 w-3.5" />{a.link_url}
         </a>
       )}
+      {a.poll && Array.isArray(a.poll.options) && a.poll.options.length > 0 && (
+        <PollView announcementId={a.id} poll={a.poll} />
+      )}
       {(a.attachments ?? []).length > 0 && (
         <div className="grid grid-cols-1 gap-2 mt-2">
           {(a.attachments ?? []).map((att, i) => <AttachmentView key={i} att={att} />)}
