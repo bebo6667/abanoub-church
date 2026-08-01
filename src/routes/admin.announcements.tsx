@@ -9,9 +9,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
-import { uploadAnnouncementFile, type Announcement, type Attachment } from "@/lib/announcements";
+import { uploadAnnouncementFile, type Announcement, type Attachment, type Poll } from "@/lib/announcements";
 import { AnnouncementsFeed } from "@/components/AnnouncementsFeed";
-import { Plus, Loader2, Trash2, Paperclip, X } from "lucide-react";
+import { AudioRecorderButton } from "@/components/AudioRecorderButton";
+import { Plus, Loader2, Trash2, Paperclip, X, Image as ImageIcon, LinkIcon, BarChart3 } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/announcements")({
@@ -28,7 +29,12 @@ function AdminAnnouncementsPage() {
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [showLink, setShowLink] = useState(false);
+  const [pollOn, setPollOn] = useState(false);
+  const [pollQuestion, setPollQuestion] = useState("");
+  const [pollOptions, setPollOptions] = useState<string[]>(["", ""]);
   const fileRef = useRef<HTMLInputElement>(null);
+  const imageRef = useRef<HTMLInputElement>(null);
 
   const { data: list } = useQuery({
     queryKey: ["admin-announcements"],
@@ -41,6 +47,7 @@ function AdminAnnouncementsPage() {
 
   function reset() {
     setTitle(""); setBody(""); setLink(""); setAttachments([]);
+    setShowLink(false); setPollOn(false); setPollQuestion(""); setPollOptions(["", ""]);
   }
 
   async function handleFiles(files: FileList | null) {
@@ -58,17 +65,25 @@ function AdminAnnouncementsPage() {
     } finally {
       setUploading(false);
       if (fileRef.current) fileRef.current.value = "";
+      if (imageRef.current) imageRef.current.value = "";
     }
   }
 
   async function submit() {
     if (!title.trim()) return toast.error("العنوان مطلوب");
+    let poll: Poll | null = null;
+    if (pollOn) {
+      const opts = pollOptions.map((o) => o.trim()).filter(Boolean);
+      if (opts.length < 2) return toast.error("التصويت يحتاج خيارين على الأقل");
+      poll = { question: pollQuestion.trim() || title.trim(), options: opts };
+    }
     setSaving(true);
     const { error } = await db.from("announcements").insert({
       title: title.trim(),
       body: body.trim() || null,
       link_url: link.trim() || null,
       attachments: attachments as any,
+      poll: poll as any,
       created_by: user!.id,
       is_published: true,
     });
@@ -102,25 +117,70 @@ function AdminAnnouncementsPage() {
               <div>
                 <label className="text-sm mb-1 block">العنوان</label>
                 <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="عنوان الإعلان" />
+                <div className="mt-2">
+                  <AudioRecorderButton
+                    label="تسجيل صوتي للعنوان"
+                    fileName="title-voice"
+                    onRecorded={(a) => setAttachments((p) => [...p, { ...a, name: "تسجيل العنوان" }])}
+                  />
+                </div>
               </div>
               <div>
                 <label className="text-sm mb-1 block">النص</label>
                 <Textarea value={body} onChange={(e) => setBody(e.target.value)} rows={4} placeholder="محتوى الإعلان..." />
               </div>
-              <div>
-                <label className="text-sm mb-1 block">رابط (اختياري)</label>
-                <Input value={link} onChange={(e) => setLink(e.target.value)} placeholder="https://..." />
+
+              <div className="flex flex-wrap gap-2">
+                <Button type="button" size="sm" variant="outline" onClick={() => imageRef.current?.click()}>
+                  <ImageIcon className="h-4 w-4" />صورة / فيديو
+                </Button>
+                <Button type="button" size="sm" variant="outline" onClick={() => fileRef.current?.click()}>
+                  <Paperclip className="h-4 w-4" />ملف
+                </Button>
+                <AudioRecorderButton fileName="voice" onRecorded={(a) => setAttachments((p) => [...p, a])} />
+                <Button type="button" size="sm" variant={showLink ? "secondary" : "outline"} onClick={() => setShowLink((v) => !v)}>
+                  <LinkIcon className="h-4 w-4" />لينك
+                </Button>
+                <Button type="button" size="sm" variant={pollOn ? "secondary" : "outline"} onClick={() => setPollOn((v) => !v)}>
+                  <BarChart3 className="h-4 w-4" />تصويت
+                </Button>
               </div>
+
+              <input ref={imageRef} type="file" multiple accept="image/*,video/*" onChange={(e) => handleFiles(e.target.files)} className="hidden" />
+              <input ref={fileRef} type="file" multiple accept="*/*" onChange={(e) => handleFiles(e.target.files)} className="hidden" />
+
+              {showLink && (
+                <div>
+                  <label className="text-sm mb-1 block">رابط</label>
+                  <Input value={link} onChange={(e) => setLink(e.target.value)} placeholder="https://..." />
+                </div>
+              )}
+
+              {pollOn && (
+                <div className="rounded-lg border p-3 space-y-2">
+                  <label className="text-sm block">سؤال التصويت</label>
+                  <Input value={pollQuestion} onChange={(e) => setPollQuestion(e.target.value)} placeholder="مثال: هل ستحضر الاجتماع؟" />
+                  {pollOptions.map((o, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <Input
+                        value={o}
+                        onChange={(e) => setPollOptions((p) => p.map((x, j) => (j === i ? e.target.value : x)))}
+                        placeholder={`الخيار ${i + 1}`}
+                      />
+                      {pollOptions.length > 2 && (
+                        <button type="button" onClick={() => setPollOptions((p) => p.filter((_, j) => j !== i))}>
+                          <X className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  <Button type="button" size="sm" variant="outline" onClick={() => setPollOptions((p) => [...p, ""])}>
+                    <Plus className="h-4 w-4" />إضافة خيار
+                  </Button>
+                </div>
+              )}
+
               <div>
-                <label className="text-sm mb-1 block">المرفقات (صور، فيديو، صوت، PDF)</label>
-                <input
-                  ref={fileRef}
-                  type="file"
-                  multiple
-                  accept="image/*,video/*,audio/*,application/pdf"
-                  onChange={(e) => handleFiles(e.target.files)}
-                  className="text-xs"
-                />
                 {uploading && <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1"><Loader2 className="h-3 w-3 animate-spin" />جاري الرفع...</p>}
                 {attachments.length > 0 && (
                   <div className="space-y-1 mt-2">

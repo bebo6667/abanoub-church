@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { Card } from "@/components/ui/card";
 import { attachmentUrl, type Announcement, type Attachment } from "@/lib/announcements";
 import { FileText, ExternalLink, Megaphone, Download } from "lucide-react";
+import { PollView } from "@/components/PollView";
 
 export function AnnouncementsFeed() {
   const { data } = useQuery({
@@ -43,6 +44,9 @@ function AnnouncementCard({ a }: { a: Announcement }) {
         <a href={a.link_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm text-primary underline">
           <ExternalLink className="h-3.5 w-3.5" />{a.link_url}
         </a>
+      )}
+      {a.poll && Array.isArray(a.poll.options) && a.poll.options.length > 0 && (
+        <PollView announcementId={a.id} poll={a.poll} />
       )}
       {(a.attachments ?? []).length > 0 && (
         <div className="grid grid-cols-1 gap-2 mt-2">

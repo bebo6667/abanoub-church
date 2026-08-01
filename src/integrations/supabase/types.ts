@@ -14,6 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      announcement_votes: {
+        Row: {
+          announcement_id: string
+          created_at: string
+          id: string
+          option_index: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          announcement_id: string
+          created_at?: string
+          id?: string
+          option_index: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          announcement_id?: string
+          created_at?: string
+          id?: string
+          option_index?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "announcement_votes_announcement_id_fkey"
+            columns: ["announcement_id"]
+            isOneToOne: false
+            referencedRelation: "announcements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       announcements: {
         Row: {
           attachments: Json
@@ -23,6 +58,7 @@ export type Database = {
           id: string
           is_published: boolean
           link_url: string | null
+          poll: Json | null
           title: string
           updated_at: string
         }
@@ -34,6 +70,7 @@ export type Database = {
           id?: string
           is_published?: boolean
           link_url?: string | null
+          poll?: Json | null
           title: string
           updated_at?: string
         }
@@ -45,6 +82,7 @@ export type Database = {
           id?: string
           is_published?: boolean
           link_url?: string | null
+          poll?: Json | null
           title?: string
           updated_at?: string
         }
