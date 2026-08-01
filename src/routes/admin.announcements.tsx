@@ -9,9 +9,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
-import { uploadAnnouncementFile, type Announcement, type Attachment } from "@/lib/announcements";
+import { uploadAnnouncementFile, type Announcement, type Attachment, type Poll } from "@/lib/announcements";
 import { AnnouncementsFeed } from "@/components/AnnouncementsFeed";
-import { Plus, Loader2, Trash2, Paperclip, X } from "lucide-react";
+import { AudioRecorderButton } from "@/components/AudioRecorderButton";
+import { Plus, Loader2, Trash2, Paperclip, X, Image as ImageIcon, LinkIcon, BarChart3 } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/announcements")({
