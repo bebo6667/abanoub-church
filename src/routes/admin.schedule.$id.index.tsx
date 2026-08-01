@@ -18,12 +18,12 @@ import {
 import { Loader2, UserPlus, Send, Trash2, X, Search, ClipboardList, UserCheck } from "lucide-react";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/admin/schedule/$id")({
+export const Route = createFileRoute("/admin/schedule/$id/")({
   component: AdminScheduleEditor,
 });
 
 function AdminScheduleEditor() {
-  const { id } = useParams({ from: "/admin/schedule/$id" });
+  const { id } = useParams({ from: "/admin/schedule/$id/" });
   const qc = useQueryClient();
   const navigate = useNavigate();
   const [pickerFor, setPickerFor] = useState<ServiceType | null>(null);
