@@ -117,25 +117,70 @@ function AdminAnnouncementsPage() {
               <div>
                 <label className="text-sm mb-1 block">العنوان</label>
                 <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="عنوان الإعلان" />
+                <div className="mt-2">
+                  <AudioRecorderButton
+                    label="تسجيل صوتي للعنوان"
+                    fileName="title-voice"
+                    onRecorded={(a) => setAttachments((p) => [...p, { ...a, name: "تسجيل العنوان" }])}
+                  />
+                </div>
               </div>
               <div>
                 <label className="text-sm mb-1 block">النص</label>
                 <Textarea value={body} onChange={(e) => setBody(e.target.value)} rows={4} placeholder="محتوى الإعلان..." />
               </div>
-              <div>
-                <label className="text-sm mb-1 block">رابط (اختياري)</label>
-                <Input value={link} onChange={(e) => setLink(e.target.value)} placeholder="https://..." />
+
+              <div className="flex flex-wrap gap-2">
+                <Button type="button" size="sm" variant="outline" onClick={() => imageRef.current?.click()}>
+                  <ImageIcon className="h-4 w-4" />صورة / فيديو
+                </Button>
+                <Button type="button" size="sm" variant="outline" onClick={() => fileRef.current?.click()}>
+                  <Paperclip className="h-4 w-4" />ملف
+                </Button>
+                <AudioRecorderButton fileName="voice" onRecorded={(a) => setAttachments((p) => [...p, a])} />
+                <Button type="button" size="sm" variant={showLink ? "secondary" : "outline"} onClick={() => setShowLink((v) => !v)}>
+                  <LinkIcon className="h-4 w-4" />لينك
+                </Button>
+                <Button type="button" size="sm" variant={pollOn ? "secondary" : "outline"} onClick={() => setPollOn((v) => !v)}>
+                  <BarChart3 className="h-4 w-4" />تصويت
+                </Button>
               </div>
+
+              <input ref={imageRef} type="file" multiple accept="image/*,video/*" onChange={(e) => handleFiles(e.target.files)} className="hidden" />
+              <input ref={fileRef} type="file" multiple accept="*/*" onChange={(e) => handleFiles(e.target.files)} className="hidden" />
+
+              {showLink && (
+                <div>
+                  <label className="text-sm mb-1 block">رابط</label>
+                  <Input value={link} onChange={(e) => setLink(e.target.value)} placeholder="https://..." />
+                </div>
+              )}
+
+              {pollOn && (
+                <div className="rounded-lg border p-3 space-y-2">
+                  <label className="text-sm block">سؤال التصويت</label>
+                  <Input value={pollQuestion} onChange={(e) => setPollQuestion(e.target.value)} placeholder="مثال: هل ستحضر الاجتماع؟" />
+                  {pollOptions.map((o, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <Input
+                        value={o}
+                        onChange={(e) => setPollOptions((p) => p.map((x, j) => (j === i ? e.target.value : x)))}
+                        placeholder={`الخيار ${i + 1}`}
+                      />
+                      {pollOptions.length > 2 && (
+                        <button type="button" onClick={() => setPollOptions((p) => p.filter((_, j) => j !== i))}>
+                          <X className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  <Button type="button" size="sm" variant="outline" onClick={() => setPollOptions((p) => [...p, ""])}>
+                    <Plus className="h-4 w-4" />إضافة خيار
+                  </Button>
+                </div>
+              )}
+
               <div>
-                <label className="text-sm mb-1 block">المرفقات (صور، فيديو، صوت، PDF)</label>
-                <input
-                  ref={fileRef}
-                  type="file"
-                  multiple
-                  accept="image/*,video/*,audio/*,application/pdf"
-                  onChange={(e) => handleFiles(e.target.files)}
-                  className="text-xs"
-                />
                 {uploading && <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1"><Loader2 className="h-3 w-3 animate-spin" />جاري الرفع...</p>}
                 {attachments.length > 0 && (
                   <div className="space-y-1 mt-2">
