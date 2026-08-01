@@ -29,7 +29,12 @@ function AdminAnnouncementsPage() {
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [showLink, setShowLink] = useState(false);
+  const [pollOn, setPollOn] = useState(false);
+  const [pollQuestion, setPollQuestion] = useState("");
+  const [pollOptions, setPollOptions] = useState<string[]>(["", ""]);
   const fileRef = useRef<HTMLInputElement>(null);
+  const imageRef = useRef<HTMLInputElement>(null);
 
   const { data: list } = useQuery({
     queryKey: ["admin-announcements"],
@@ -42,6 +47,7 @@ function AdminAnnouncementsPage() {
 
   function reset() {
     setTitle(""); setBody(""); setLink(""); setAttachments([]);
+    setShowLink(false); setPollOn(false); setPollQuestion(""); setPollOptions(["", ""]);
   }
 
   async function handleFiles(files: FileList | null) {
@@ -59,17 +65,25 @@ function AdminAnnouncementsPage() {
     } finally {
       setUploading(false);
       if (fileRef.current) fileRef.current.value = "";
+      if (imageRef.current) imageRef.current.value = "";
     }
   }
 
   async function submit() {
     if (!title.trim()) return toast.error("العنوان مطلوب");
+    let poll: Poll | null = null;
+    if (pollOn) {
+      const opts = pollOptions.map((o) => o.trim()).filter(Boolean);
+      if (opts.length < 2) return toast.error("التصويت يحتاج خيارين على الأقل");
+      poll = { question: pollQuestion.trim() || title.trim(), options: opts };
+    }
     setSaving(true);
     const { error } = await db.from("announcements").insert({
       title: title.trim(),
       body: body.trim() || null,
       link_url: link.trim() || null,
       attachments: attachments as any,
+      poll: poll as any,
       created_by: user!.id,
       is_published: true,
     });
