@@ -2,12 +2,15 @@ import { supabase } from "@/integrations/supabase/client";
 
 export type Attachment = { path: string; name: string; mime: string; kind: "image" | "video" | "audio" | "pdf" | "file" };
 
+export type Poll = { question: string; options: string[] };
+
 export type Announcement = {
   id: string;
   title: string;
   body: string | null;
   link_url: string | null;
   attachments: Attachment[];
+  poll: Poll | null;
   created_by: string | null;
   is_published: boolean;
   created_at: string;
