@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { db } from "@/lib/db";
 import { Card } from "@/components/ui/card";
-import { attachmentUrl, type Announcement, type Attachment } from "@/lib/announcements";
-import { FileText, ExternalLink, Megaphone, Download } from "lucide-react";
+import type { Announcement } from "@/lib/announcements";
+import { ExternalLink, Megaphone, LinkIcon } from "lucide-react";
 import { PollView } from "@/components/PollView";
+import { AttachmentPreview } from "@/components/AttachmentPreview";
 
 export function AnnouncementsFeed() {
   const { data } = useQuery({
@@ -33,6 +33,7 @@ export function AnnouncementsFeed() {
 }
 
 function AnnouncementCard({ a }: { a: Announcement }) {
+  const atts = a.attachments ?? [];
   return (
     <Card className="p-4 space-y-2">
       <div>
@@ -41,46 +42,28 @@ function AnnouncementCard({ a }: { a: Announcement }) {
       </div>
       {a.body && <p className="text-sm whitespace-pre-wrap leading-relaxed">{a.body}</p>}
       {a.link_url && (
-        <a href={a.link_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm text-primary underline">
-          <ExternalLink className="h-3.5 w-3.5" />{a.link_url}
+        <a
+          href={a.link_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 rounded-md border p-2 hover:bg-accent/30"
+        >
+          <LinkIcon className="h-4 w-4 text-primary shrink-0" />
+          <span className="flex-1 min-w-0">
+            <span className="block text-[11px] text-muted-foreground">رابط خارجي</span>
+            <span className="block text-sm text-primary truncate">{a.link_url}</span>
+          </span>
+          <ExternalLink className="h-4 w-4 text-muted-foreground shrink-0" />
         </a>
       )}
       {a.poll && Array.isArray(a.poll.options) && a.poll.options.length > 0 && (
         <PollView announcementId={a.id} poll={a.poll} />
       )}
-      {(a.attachments ?? []).length > 0 && (
+      {atts.length > 0 && (
         <div className="grid grid-cols-1 gap-2 mt-2">
-          {(a.attachments ?? []).map((att, i) => <AttachmentView key={i} att={att} />)}
+          {atts.map((att, i) => <AttachmentPreview key={`${att.path}-${i}`} att={att} />)}
         </div>
       )}
     </Card>
-  );
-}
-
-function AttachmentView({ att }: { att: Attachment }) {
-  const [url, setUrl] = useState<string | null>(null);
-  useEffect(() => {
-    let alive = true;
-    attachmentUrl(att.path).then((u) => { if (alive) setUrl(u); });
-    return () => { alive = false; };
-  }, [att.path]);
-
-  if (!url) return <div className="h-24 rounded bg-muted animate-pulse" />;
-  if (att.kind === "image") return <img src={url} alt={att.name} className="w-full rounded max-h-96 object-contain bg-muted" />;
-  if (att.kind === "video") return <video src={url} controls className="w-full rounded max-h-96 bg-black" />;
-  if (att.kind === "audio") return <audio src={url} controls className="w-full" />;
-  if (att.kind === "pdf") return (
-    <a href={url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 p-3 rounded border hover:bg-accent/30">
-      <FileText className="h-5 w-5 text-destructive" />
-      <span className="text-sm flex-1 truncate">{att.name}</span>
-      <Download className="h-4 w-4 text-muted-foreground" />
-    </a>
-  );
-  return (
-    <a href={url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 p-3 rounded border hover:bg-accent/30">
-      <FileText className="h-5 w-5" />
-      <span className="text-sm flex-1 truncate">{att.name}</span>
-      <Download className="h-4 w-4 text-muted-foreground" />
-    </a>
   );
 }
