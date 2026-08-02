@@ -12,7 +12,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogT
 import { uploadAnnouncementFile, type Announcement, type Attachment, type Poll } from "@/lib/announcements";
 import { AnnouncementsFeed } from "@/components/AnnouncementsFeed";
 import { AudioRecorderButton } from "@/components/AudioRecorderButton";
-import { Plus, Loader2, Trash2, Paperclip, X, Image as ImageIcon, LinkIcon, BarChart3 } from "lucide-react";
+import { AttachmentPreview } from "@/components/AttachmentPreview";
+import { Plus, Loader2, Trash2, Paperclip, X, Image as ImageIcon, LinkIcon, BarChart3, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/announcements")({
@@ -33,8 +34,29 @@ function AdminAnnouncementsPage() {
   const [pollOn, setPollOn] = useState(false);
   const [pollQuestion, setPollQuestion] = useState("");
   const [pollOptions, setPollOptions] = useState<string[]>(["", ""]);
+  const [replaceIndex, setReplaceIndex] = useState<number | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const imageRef = useRef<HTMLInputElement>(null);
+  const replaceRef = useRef<HTMLInputElement>(null);
+
+  async function handleReplace(files: FileList | null) {
+    const f = files?.[0];
+    const idx = replaceIndex;
+    if (replaceRef.current) replaceRef.current.value = "";
+    setReplaceIndex(null);
+    if (!f || idx === null) return;
+    if (f.size > 50 * 1024 * 1024) return toast.error("الملف أكبر من 50 ميجا");
+    setUploading(true);
+    try {
+      const uploaded = await uploadAnnouncementFile(f);
+      setAttachments((p) => p.map((x, j) => (j === idx ? uploaded : x)));
+      toast.success("تم استبدال المرفق");
+    } catch (e: any) {
+      toast.error(e?.message ?? "تعذر الاستبدال");
+    } finally {
+      setUploading(false);
+    }
+  }
 
   const { data: list } = useQuery({
     queryKey: ["admin-announcements"],
@@ -148,6 +170,7 @@ function AdminAnnouncementsPage() {
 
               <input ref={imageRef} type="file" multiple accept="image/*,video/*" onChange={(e) => handleFiles(e.target.files)} className="hidden" />
               <input ref={fileRef} type="file" multiple accept="*/*" onChange={(e) => handleFiles(e.target.files)} className="hidden" />
+              <input ref={replaceRef} type="file" accept="*/*" onChange={(e) => handleReplace(e.target.files)} className="hidden" />
 
               {showLink && (
                 <div>
@@ -183,17 +206,32 @@ function AdminAnnouncementsPage() {
               <div>
                 {uploading && <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1"><Loader2 className="h-3 w-3 animate-spin" />جاري الرفع...</p>}
                 {attachments.length > 0 && (
-                  <div className="space-y-1 mt-2">
+                  <div className="space-y-2 mt-2">
+                    <p className="text-xs text-muted-foreground">المرفقات ({attachments.length}) — يمكنك المعاينة أو الاستبدال أو الحذف قبل النشر</p>
                     {attachments.map((a, i) => (
-                      <div key={i} className="flex items-center gap-2 text-xs bg-secondary/40 rounded p-2">
-                        <Paperclip className="h-3.5 w-3.5" />
-                        <span className="flex-1 truncate">{a.name}</span>
-                        <button onClick={() => setAttachments((p) => p.filter((_, j) => j !== i))}><X className="h-3.5 w-3.5" /></button>
+                      <div key={`${a.path}-${i}`} className="space-y-1">
+                        <AttachmentPreview att={a} compact />
+                        <div className="flex items-center gap-2">
+                          <Button type="button" size="sm" variant="outline" onClick={() => { setReplaceIndex(i); replaceRef.current?.click(); }}>
+                            <RefreshCw className="h-3.5 w-3.5" />استبدال
+                          </Button>
+                          {a.kind === "audio" && (
+                            <AudioRecorderButton
+                              label="إعادة التسجيل"
+                              fileName="voice"
+                              onRecorded={(n) => setAttachments((p) => p.map((x, j) => (j === i ? { ...n, name: x.name } : x)))}
+                            />
+                          )}
+                          <Button type="button" size="sm" variant="ghost" onClick={() => setAttachments((p) => p.filter((_, j) => j !== i))}>
+                            <X className="h-3.5 w-3.5 text-destructive" />حذف
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>
                 )}
               </div>
+
             </div>
             <DialogFooter>
               <Button variant="ghost" onClick={() => setOpen(false)}>إلغاء</Button>
