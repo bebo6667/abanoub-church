@@ -36,7 +36,7 @@ export function AudioRecorderButton({
           const blob = new Blob(chunksRef.current, { type: mime });
           const ext = mime.includes("webm") ? "webm" : "m4a";
           const file = new File([blob], `${fileName}-${Date.now()}.${ext}`, { type: mime });
-          onRecorded(await uploadAnnouncementFile(file));
+          onRecorded(await uploadAnnouncementFile(file, setPercent));
           toast.success("تم رفع التسجيل الصوتي");
         } catch (e: any) {
           toast.error(e?.message ?? "تعذر رفع التسجيل");
