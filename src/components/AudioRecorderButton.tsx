@@ -16,6 +16,7 @@ export function AudioRecorderButton({
   const [recording, setRecording] = useState(false);
   const [busy, setBusy] = useState(false);
   const [seconds, setSeconds] = useState(0);
+  const [percent, setPercent] = useState(0);
   const recRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
