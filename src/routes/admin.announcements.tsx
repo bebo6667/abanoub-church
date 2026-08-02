@@ -170,6 +170,7 @@ function AdminAnnouncementsPage() {
 
               <input ref={imageRef} type="file" multiple accept="image/*,video/*" onChange={(e) => handleFiles(e.target.files)} className="hidden" />
               <input ref={fileRef} type="file" multiple accept="*/*" onChange={(e) => handleFiles(e.target.files)} className="hidden" />
+              <input ref={replaceRef} type="file" accept="*/*" onChange={(e) => handleReplace(e.target.files)} className="hidden" />
 
               {showLink && (
                 <div>
