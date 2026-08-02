@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import { Mic, Square, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { uploadAnnouncementFile, type Attachment } from "@/lib/announcements";
