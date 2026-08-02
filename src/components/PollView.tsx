@@ -24,13 +24,23 @@ export function PollView({ announcementId, poll }: { announcementId: string; pol
 
   async function vote(index: number) {
     if (!user) return;
+    const key = ["announcement-votes", announcementId];
+    const prev = qc.getQueryData<{ user_id: string; option_index: number }[]>(key) ?? [];
+    // تحديث فوري للنِّسب بدون إعادة تحميل
+    qc.setQueryData(key, [
+      ...prev.filter((v) => v.user_id !== user.id),
+      { user_id: user.id, option_index: index },
+    ]);
     const { error } = await db.from("announcement_votes").upsert(
       { announcement_id: announcementId, user_id: user.id, option_index: index },
       { onConflict: "announcement_id,user_id" },
     );
-    if (error) return toast.error(error.message);
-    toast.success("تم تسجيل صوتك");
-    qc.invalidateQueries({ queryKey: ["announcement-votes", announcementId] });
+    if (error) {
+      qc.setQueryData(key, prev);
+      return toast.error("تعذر تسجيل صوتك: " + error.message);
+    }
+    toast.success(`تم تسجيل صوتك: ${poll.options[index]}`);
+    qc.invalidateQueries({ queryKey: key });
   }
 
   return (
