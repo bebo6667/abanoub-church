@@ -35,9 +35,14 @@ function AdminAnnouncementsPage() {
   const [pollQuestion, setPollQuestion] = useState("");
   const [pollOptions, setPollOptions] = useState<string[]>(["", ""]);
   const [replaceIndex, setReplaceIndex] = useState<number | null>(null);
+  const [progress, setProgress] = useState<{ name: string; percent: number }[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
   const imageRef = useRef<HTMLInputElement>(null);
   const replaceRef = useRef<HTMLInputElement>(null);
+
+  function setPercent(name: string, percent: number) {
+    setProgress((p) => p.map((x) => (x.name === name ? { ...x, percent } : x)));
+  }
 
   async function handleReplace(files: FileList | null) {
     const f = files?.[0];
@@ -47,14 +52,16 @@ function AdminAnnouncementsPage() {
     if (!f || idx === null) return;
     if (f.size > 50 * 1024 * 1024) return toast.error("الملف أكبر من 50 ميجا");
     setUploading(true);
+    setProgress([{ name: f.name, percent: 0 }]);
     try {
-      const uploaded = await uploadAnnouncementFile(f);
+      const uploaded = await uploadAnnouncementFile(f, (p) => setPercent(f.name, p));
       setAttachments((p) => p.map((x, j) => (j === idx ? uploaded : x)));
       toast.success("تم استبدال المرفق");
     } catch (e: any) {
       toast.error(e?.message ?? "تعذر الاستبدال");
     } finally {
       setUploading(false);
+      setProgress([]);
     }
   }
 
@@ -70,26 +77,35 @@ function AdminAnnouncementsPage() {
   function reset() {
     setTitle(""); setBody(""); setLink(""); setAttachments([]);
     setShowLink(false); setPollOn(false); setPollQuestion(""); setPollOptions(["", ""]);
+    setProgress([]);
   }
 
   async function handleFiles(files: FileList | null) {
     if (!files || !files.length) return;
+    const picked = Array.from(files).filter((f) => {
+      if (f.size > 50 * 1024 * 1024) { toast.error(`${f.name}: أكبر من 50 ميجا`); return false; }
+      return true;
+    });
+    if (!picked.length) return;
     setUploading(true);
+    setProgress(picked.map((f) => ({ name: f.name, percent: 0 })));
     try {
       const uploaded: Attachment[] = [];
-      for (const f of Array.from(files)) {
-        if (f.size > 50 * 1024 * 1024) { toast.error(`${f.name}: أكبر من 50 ميجا`); continue; }
-        uploaded.push(await uploadAnnouncementFile(f));
+      for (const f of picked) {
+        uploaded.push(await uploadAnnouncementFile(f, (p) => setPercent(f.name, p)));
       }
       setAttachments((p) => [...p, ...uploaded]);
+      toast.success(`تم رفع ${uploaded.length} ملف`);
     } catch (e: any) {
       toast.error(e.message ?? "خطأ في الرفع");
     } finally {
       setUploading(false);
+      setProgress([]);
       if (fileRef.current) fileRef.current.value = "";
       if (imageRef.current) imageRef.current.value = "";
     }
   }
+
 
   async function submit() {
     if (!title.trim()) return toast.error("العنوان مطلوب");
