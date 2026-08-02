@@ -13,6 +13,7 @@ import { uploadAnnouncementFile, type Announcement, type Attachment, type Poll }
 import { AnnouncementsFeed } from "@/components/AnnouncementsFeed";
 import { AudioRecorderButton } from "@/components/AudioRecorderButton";
 import { AttachmentPreview } from "@/components/AttachmentPreview";
+import { Progress } from "@/components/ui/progress";
 import { Plus, Loader2, Trash2, Paperclip, X, Image as ImageIcon, LinkIcon, BarChart3, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 
