@@ -34,8 +34,29 @@ function AdminAnnouncementsPage() {
   const [pollOn, setPollOn] = useState(false);
   const [pollQuestion, setPollQuestion] = useState("");
   const [pollOptions, setPollOptions] = useState<string[]>(["", ""]);
+  const [replaceIndex, setReplaceIndex] = useState<number | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const imageRef = useRef<HTMLInputElement>(null);
+  const replaceRef = useRef<HTMLInputElement>(null);
+
+  async function handleReplace(files: FileList | null) {
+    const f = files?.[0];
+    const idx = replaceIndex;
+    if (replaceRef.current) replaceRef.current.value = "";
+    setReplaceIndex(null);
+    if (!f || idx === null) return;
+    if (f.size > 50 * 1024 * 1024) return toast.error("الملف أكبر من 50 ميجا");
+    setUploading(true);
+    try {
+      const uploaded = await uploadAnnouncementFile(f);
+      setAttachments((p) => p.map((x, j) => (j === idx ? uploaded : x)));
+      toast.success("تم استبدال المرفق");
+    } catch (e: any) {
+      toast.error(e?.message ?? "تعذر الاستبدال");
+    } finally {
+      setUploading(false);
+    }
+  }
 
   const { data: list } = useQuery({
     queryKey: ["admin-announcements"],
