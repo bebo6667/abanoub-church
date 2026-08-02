@@ -183,17 +183,32 @@ function AdminAnnouncementsPage() {
               <div>
                 {uploading && <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1"><Loader2 className="h-3 w-3 animate-spin" />جاري الرفع...</p>}
                 {attachments.length > 0 && (
-                  <div className="space-y-1 mt-2">
+                  <div className="space-y-2 mt-2">
+                    <p className="text-xs text-muted-foreground">المرفقات ({attachments.length}) — يمكنك المعاينة أو الاستبدال أو الحذف قبل النشر</p>
                     {attachments.map((a, i) => (
-                      <div key={i} className="flex items-center gap-2 text-xs bg-secondary/40 rounded p-2">
-                        <Paperclip className="h-3.5 w-3.5" />
-                        <span className="flex-1 truncate">{a.name}</span>
-                        <button onClick={() => setAttachments((p) => p.filter((_, j) => j !== i))}><X className="h-3.5 w-3.5" /></button>
+                      <div key={`${a.path}-${i}`} className="space-y-1">
+                        <AttachmentPreview att={a} compact />
+                        <div className="flex items-center gap-2">
+                          <Button type="button" size="sm" variant="outline" onClick={() => { setReplaceIndex(i); replaceRef.current?.click(); }}>
+                            <RefreshCw className="h-3.5 w-3.5" />استبدال
+                          </Button>
+                          {a.kind === "audio" && (
+                            <AudioRecorderButton
+                              label="إعادة التسجيل"
+                              fileName="voice"
+                              onRecorded={(n) => setAttachments((p) => p.map((x, j) => (j === i ? { ...n, name: x.name } : x)))}
+                            />
+                          )}
+                          <Button type="button" size="sm" variant="ghost" onClick={() => setAttachments((p) => p.filter((_, j) => j !== i))}>
+                            <X className="h-3.5 w-3.5 text-destructive" />حذف
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>
                 )}
               </div>
+
             </div>
             <DialogFooter>
               <Button variant="ghost" onClick={() => setOpen(false)}>إلغاء</Button>
