@@ -220,7 +220,23 @@ function AdminAnnouncementsPage() {
               )}
 
               <div>
-                {uploading && <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1"><Loader2 className="h-3 w-3 animate-spin" />جاري الرفع...</p>}
+                {progress.length > 0 && (
+                  <div className="space-y-2 mt-2 rounded-md border p-2">
+                    <p className="text-xs text-muted-foreground flex items-center gap-1"><Loader2 className="h-3 w-3 animate-spin" />جاري الرفع...</p>
+                    {progress.map((f) => (
+                      <div key={f.name} className="space-y-1">
+                        <div className="flex items-center justify-between gap-2 text-[11px]">
+                          <span className="truncate flex-1">{f.name}</span>
+                          <span className="text-muted-foreground">{f.percent}%</span>
+                        </div>
+                        <Progress value={f.percent} className="h-1.5" />
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {uploading && progress.length === 0 && (
+                  <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1"><Loader2 className="h-3 w-3 animate-spin" />جاري الرفع...</p>
+                )}
                 {attachments.length > 0 && (
                   <div className="space-y-2 mt-2">
                     <p className="text-xs text-muted-foreground">المرفقات ({attachments.length}) — يمكنك المعاينة أو الاستبدال أو الحذف قبل النشر</p>
