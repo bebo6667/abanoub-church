@@ -61,15 +61,18 @@ export function AudioRecorderButton({
   }
 
   return (
-    <Button
-      type="button"
-      size="sm"
-      variant={recording ? "destructive" : "outline"}
-      disabled={busy}
-      onClick={recording ? stop : start}
-    >
-      {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : recording ? <Square className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-      {busy ? "جاري الرفع..." : recording ? `إيقاف (${seconds}ث)` : label}
-    </Button>
+    <div className="space-y-1">
+      <Button
+        type="button"
+        size="sm"
+        variant={recording ? "destructive" : "outline"}
+        disabled={busy}
+        onClick={recording ? stop : start}
+      >
+        {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : recording ? <Square className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+        {busy ? `جاري الرفع... ${percent}%` : recording ? `إيقاف (${seconds}ث)` : label}
+      </Button>
+      {busy && <Progress value={percent} className="h-1.5 w-40" />}
+    </div>
   );
 }
