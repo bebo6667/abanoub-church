@@ -24,6 +24,16 @@ export function kindFromMime(mime: string): Attachment["kind"] {
   return "file";
 }
 
+export function kindLabel(kind: Attachment["kind"]): string {
+  switch (kind) {
+    case "image": return "صورة";
+    case "video": return "فيديو";
+    case "audio": return "تسجيل صوتي";
+    case "pdf": return "ملف PDF";
+    default: return "ملف";
+  }
+}
+
 export async function uploadAnnouncementFile(file: File): Promise<Attachment> {
   const ext = file.name.split(".").pop() ?? "bin";
   const path = `${crypto.randomUUID()}.${ext}`;
