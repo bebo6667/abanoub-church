@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import { Mic, Square, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { uploadAnnouncementFile, type Attachment } from "@/lib/announcements";
@@ -16,6 +17,7 @@ export function AudioRecorderButton({
   const [recording, setRecording] = useState(false);
   const [busy, setBusy] = useState(false);
   const [seconds, setSeconds] = useState(0);
+  const [percent, setPercent] = useState(0);
   const recRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -36,7 +38,7 @@ export function AudioRecorderButton({
           const blob = new Blob(chunksRef.current, { type: mime });
           const ext = mime.includes("webm") ? "webm" : "m4a";
           const file = new File([blob], `${fileName}-${Date.now()}.${ext}`, { type: mime });
-          onRecorded(await uploadAnnouncementFile(file));
+          onRecorded(await uploadAnnouncementFile(file, setPercent));
           toast.success("تم رفع التسجيل الصوتي");
         } catch (e: any) {
           toast.error(e?.message ?? "تعذر رفع التسجيل");
@@ -60,15 +62,18 @@ export function AudioRecorderButton({
   }
 
   return (
-    <Button
-      type="button"
-      size="sm"
-      variant={recording ? "destructive" : "outline"}
-      disabled={busy}
-      onClick={recording ? stop : start}
-    >
-      {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : recording ? <Square className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-      {busy ? "جاري الرفع..." : recording ? `إيقاف (${seconds}ث)` : label}
-    </Button>
+    <div className="space-y-1">
+      <Button
+        type="button"
+        size="sm"
+        variant={recording ? "destructive" : "outline"}
+        disabled={busy}
+        onClick={recording ? stop : start}
+      >
+        {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : recording ? <Square className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+        {busy ? `جاري الرفع... ${percent}%` : recording ? `إيقاف (${seconds}ث)` : label}
+      </Button>
+      {busy && <Progress value={percent} className="h-1.5 w-40" />}
+    </div>
   );
 }
