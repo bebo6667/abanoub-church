@@ -12,7 +12,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogT
 import { uploadAnnouncementFile, type Announcement, type Attachment, type Poll } from "@/lib/announcements";
 import { AnnouncementsFeed } from "@/components/AnnouncementsFeed";
 import { AudioRecorderButton } from "@/components/AudioRecorderButton";
-import { Plus, Loader2, Trash2, Paperclip, X, Image as ImageIcon, LinkIcon, BarChart3 } from "lucide-react";
+import { AttachmentPreview } from "@/components/AttachmentPreview";
+import { Plus, Loader2, Trash2, Paperclip, X, Image as ImageIcon, LinkIcon, BarChart3, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/announcements")({
