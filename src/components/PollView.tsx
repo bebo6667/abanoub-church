@@ -1,14 +1,17 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { db } from "@/lib/db";
+import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
-import { BarChart3, Check } from "lucide-react";
+import { BarChart3, Check, Radio } from "lucide-react";
 import { toast } from "sonner";
 import type { Poll } from "@/lib/announcements";
 
 export function PollView({ announcementId, poll }: { announcementId: string; poll: Poll }) {
   const { user } = useAuth();
   const qc = useQueryClient();
+  const [live, setLive] = useState(false);
 
   const { data: votes } = useQuery({
     queryKey: ["announcement-votes", announcementId],
@@ -17,6 +20,22 @@ export function PollView({ announcementId, poll }: { announcementId: string; pol
       return (data ?? []) as { user_id: string; option_index: number }[];
     },
   });
+
+  // بث مباشر: أي صوت جديد أو تعديل يحدث النِّسب فورًا لكل المشاهدين
+  useEffect(() => {
+    const channel = supabase
+      .channel(`poll-${announcementId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "announcement_votes", filter: `announcement_id=eq.${announcementId}` },
+        () => qc.invalidateQueries({ queryKey: ["announcement-votes", announcementId] }),
+      )
+      .subscribe((status) => setLive(status === "SUBSCRIBED"));
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [announcementId, qc]);
+
 
   const all = votes ?? [];
   const total = all.length;
@@ -72,7 +91,11 @@ export function PollView({ announcementId, poll }: { announcementId: string; pol
           );
         })}
       </div>
-      <p className="text-[11px] text-muted-foreground">إجمالي الأصوات: {total}</p>
+      <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+        إجمالي الأصوات: {total}
+        {live && <span className="inline-flex items-center gap-0.5 text-primary"><Radio className="h-3 w-3" />مباشر</span>}
+      </p>
+
     </div>
   );
 }
