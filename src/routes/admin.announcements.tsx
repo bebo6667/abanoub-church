@@ -45,25 +45,65 @@ function AdminAnnouncementsPage() {
     setProgress((p) => p.map((x) => (x.name === name ? { ...x, percent } : x)));
   }
 
+  async function uploadInto(list: File[], replaceIdx: number | null) {
+    setUploading(true);
+    setProgress(list.map((f) => ({ name: f.name, percent: 0 })));
+    try {
+      const uploaded: Attachment[] = [];
+      for (const f of list) uploaded.push(await uploadAnnouncementFile(f, (p) => setPercent(f.name, p)));
+      if (replaceIdx !== null) {
+        setAttachments((p) => p.map((x, j) => (j === replaceIdx ? uploaded[0] : x)));
+        toast.success("تم استبدال المرفق");
+      } else {
+        setAttachments((p) => [...p, ...uploaded]);
+        toast.success(`تم رفع ${uploaded.length} ملف`);
+      }
+    } catch (e: any) {
+      toast.error(e?.message ?? "خطأ في الرفع");
+    } finally {
+      setUploading(false);
+      setProgress([]);
+    }
+  }
+
+  /** Split by size limit: oversized files go to the compression suggestion dialog. */
+  function triage(files: File[], replaceIdx: number | null) {
+    const ok: File[] = [];
+    const big: OversizedFile[] = [];
+    for (const f of files) {
+      if (f.size > MAX_UPLOAD_BYTES) big.push({ file: f, replaceIndex: replaceIdx });
+      else ok.push(f);
+    }
+    if (big.length) setOversized((p) => [...p, ...big]);
+    return ok;
+  }
+
+  async function compressAndUpload(item: OversizedFile) {
+    setOversized((p) => p.filter((x) => x !== item));
+    if (!canCompress(item.file)) return toast.error("لا يمكن ضغط هذا النوع، اختر ملفًا أصغر من 50 ميجا");
+    setUploading(true);
+    setProgress([{ name: `ضغط ${item.file.name}`, percent: 0 }]);
+    try {
+      const smaller = await compressFile(item.file, (p) => setPercent(`ضغط ${item.file.name}`, p));
+      toast.success(`تم الضغط: ${formatBytes(item.file.size)} ← ${formatBytes(smaller.size)}`);
+      setUploading(false);
+      setProgress([]);
+      await uploadInto([smaller], item.replaceIndex);
+    } catch (e: any) {
+      setUploading(false);
+      setProgress([]);
+      toast.error(e?.message ?? "تعذر ضغط الملف");
+    }
+  }
+
   async function handleReplace(files: FileList | null) {
     const f = files?.[0];
     const idx = replaceIndex;
     if (replaceRef.current) replaceRef.current.value = "";
     setReplaceIndex(null);
     if (!f || idx === null) return;
-    if (f.size > 50 * 1024 * 1024) return toast.error("الملف أكبر من 50 ميجا");
-    setUploading(true);
-    setProgress([{ name: f.name, percent: 0 }]);
-    try {
-      const uploaded = await uploadAnnouncementFile(f, (p) => setPercent(f.name, p));
-      setAttachments((p) => p.map((x, j) => (j === idx ? uploaded : x)));
-      toast.success("تم استبدال المرفق");
-    } catch (e: any) {
-      toast.error(e?.message ?? "تعذر الاستبدال");
-    } finally {
-      setUploading(false);
-      setProgress([]);
-    }
+    const ok = triage([f], idx);
+    if (ok.length) await uploadInto(ok, idx);
   }
 
   const { data: list } = useQuery({
@@ -78,34 +118,17 @@ function AdminAnnouncementsPage() {
   function reset() {
     setTitle(""); setBody(""); setLink(""); setAttachments([]);
     setShowLink(false); setPollOn(false); setPollQuestion(""); setPollOptions(["", ""]);
-    setProgress([]);
+    setProgress([]); setOversized([]);
   }
 
   async function handleFiles(files: FileList | null) {
     if (!files || !files.length) return;
-    const picked = Array.from(files).filter((f) => {
-      if (f.size > 50 * 1024 * 1024) { toast.error(`${f.name}: أكبر من 50 ميجا`); return false; }
-      return true;
-    });
-    if (!picked.length) return;
-    setUploading(true);
-    setProgress(picked.map((f) => ({ name: f.name, percent: 0 })));
-    try {
-      const uploaded: Attachment[] = [];
-      for (const f of picked) {
-        uploaded.push(await uploadAnnouncementFile(f, (p) => setPercent(f.name, p)));
-      }
-      setAttachments((p) => [...p, ...uploaded]);
-      toast.success(`تم رفع ${uploaded.length} ملف`);
-    } catch (e: any) {
-      toast.error(e.message ?? "خطأ في الرفع");
-    } finally {
-      setUploading(false);
-      setProgress([]);
-      if (fileRef.current) fileRef.current.value = "";
-      if (imageRef.current) imageRef.current.value = "";
-    }
+    const ok = triage(Array.from(files), null);
+    if (fileRef.current) fileRef.current.value = "";
+    if (imageRef.current) imageRef.current.value = "";
+    if (ok.length) await uploadInto(ok, null);
   }
+
 
 
   async function submit() {
