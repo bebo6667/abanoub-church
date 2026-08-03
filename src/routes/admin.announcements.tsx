@@ -303,7 +303,39 @@ function AdminAnnouncementsPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        <Dialog open={oversized.length > 0} onOpenChange={(v) => { if (!v) setOversized([]); }}>
+          <DialogContent>
+            <DialogHeader><DialogTitle>الملف أكبر من 50 ميجا</DialogTitle></DialogHeader>
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                يمكن ضغط الملف داخل المتصفح قبل الإرسال. ضغط الفيديو يستغرق وقتًا بقدر مدة الفيديو تقريبًا.
+              </p>
+              {oversized.map((o, i) => (
+                <div key={`${o.file.name}-${i}`} className="rounded-md border p-2 space-y-2">
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="flex-1 truncate">{o.file.name}</span>
+                    <span className="text-xs text-muted-foreground">{formatBytes(o.file.size)}</span>
+                  </div>
+                  {canCompress(o.file) ? (
+                    <div className="flex gap-2">
+                      <Button size="sm" disabled={uploading} onClick={() => compressAndUpload(o)}>
+                        <FileArchive className="h-4 w-4" />ضغط وإرسال
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => setOversized((p) => p.filter((x) => x !== o))}>
+                        <X className="h-4 w-4" />تجاهل
+                      </Button>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-destructive">لا يمكن ضغط هذا النوع من الملفات، اختر ملفًا أصغر.</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
+
 
       <div className="space-y-2 mb-6">
         {(list ?? []).map((a) => (
