@@ -52,8 +52,12 @@ function AdminAnnouncementsPage() {
   }
 
   async function uploadInto(list: File[], replaceIdx: number | null) {
+    // حارس أخير قبل الحفظ: أي ملف غير مطابق يُرفض برسالة واضحة
+    const invalid = list.map((f) => validateFile(f)).find(Boolean);
+    if (invalid) return toast.error(invalid);
     setUploading(true);
     setProgress(list.map((f) => ({ name: f.name, percent: 0 })));
+
     try {
       const uploaded: Attachment[] = [];
       for (const f of list) uploaded.push(await uploadAnnouncementFile(f, (p) => setPercent(f.name, p)));
