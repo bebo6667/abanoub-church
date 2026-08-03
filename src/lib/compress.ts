@@ -2,6 +2,55 @@
 
 export const MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
 
+/** الصيغ المسموح برفعها في الإعلانات. */
+export const ALLOWED_EXTENSIONS = [
+  "jpg", "jpeg", "png", "gif", "webp", "heic", "bmp",
+  "mp4", "webm", "mov", "m4v",
+  "mp3", "wav", "m4a", "aac", "ogg", "oga",
+  "pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt", "csv", "zip",
+] as const;
+
+const ALLOWED_MIME_PREFIXES = ["image/", "video/", "audio/"];
+const ALLOWED_MIME_EXACT = [
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "application/vnd.ms-powerpoint",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  "text/plain",
+  "text/csv",
+  "application/zip",
+  "application/x-zip-compressed",
+];
+
+export function extensionOf(name: string): string {
+  return (name.split(".").pop() ?? "").toLowerCase();
+}
+
+/** يتحقق من الصيغة قبل الرفع؛ يعيد رسالة خطأ واضحة أو null إن كان الملف مقبولًا. */
+export function validateFileType(file: File): string | null {
+  const ext = extensionOf(file.name);
+  const mime = (file.type || "").toLowerCase();
+  const mimeOk = mime
+    ? ALLOWED_MIME_PREFIXES.some((p) => mime.startsWith(p)) || ALLOWED_MIME_EXACT.includes(mime)
+    : false;
+  const extOk = (ALLOWED_EXTENSIONS as readonly string[]).includes(ext);
+  if (mimeOk || extOk) return null;
+  return `${file.name}: صيغة غير مدعومة${ext ? ` (.${ext})` : ""} — المسموح: صور، فيديو، صوت، PDF، مستندات Office، نصوص، ZIP`;
+}
+
+/** تحقق كامل (صيغة + حجم). يعيد رسالة الخطأ أو null. */
+export function validateFile(file: File, maxBytes = MAX_UPLOAD_BYTES): string | null {
+  const typeError = validateFileType(file);
+  if (typeError) return typeError;
+  if (file.size === 0) return `${file.name}: الملف فارغ`;
+  if (file.size > maxBytes) return `${file.name}: الحجم ${formatBytes(file.size)} أكبر من الحد ${formatBytes(maxBytes)}`;
+  return null;
+}
+
+
 export function formatBytes(bytes: number): string {
   if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} ميجا`;
   return `${Math.max(1, Math.round(bytes / 1024))} كيلو`;

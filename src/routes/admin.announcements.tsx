@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { uploadAnnouncementFile, type Announcement, type Attachment, type Poll } from "@/lib/announcements";
-import { MAX_UPLOAD_BYTES, canCompress, compressFile, formatBytes } from "@/lib/compress";
+import { MAX_UPLOAD_BYTES, canCompress, compressFile, formatBytes, validateFileType, validateFile } from "@/lib/compress";
 
 import { AnnouncementsFeed } from "@/components/AnnouncementsFeed";
 import { AudioRecorderButton } from "@/components/AudioRecorderButton";
@@ -52,8 +52,12 @@ function AdminAnnouncementsPage() {
   }
 
   async function uploadInto(list: File[], replaceIdx: number | null) {
+    // حارس أخير قبل الحفظ: أي ملف غير مطابق يُرفض برسالة واضحة
+    const invalid = list.map((f) => validateFile(f)).find(Boolean);
+    if (invalid) return toast.error(invalid);
     setUploading(true);
     setProgress(list.map((f) => ({ name: f.name, percent: 0 })));
+
     try {
       const uploaded: Attachment[] = [];
       for (const f of list) uploaded.push(await uploadAnnouncementFile(f, (p) => setPercent(f.name, p)));
@@ -72,17 +76,21 @@ function AdminAnnouncementsPage() {
     }
   }
 
-  /** Split by size limit: oversized files go to the compression suggestion dialog. */
+  /** يتحقق من الصيغة أولًا، ثم يفصل الملفات الكبيرة لاقتراح الضغط. */
   function triage(files: File[], replaceIdx: number | null) {
     const ok: File[] = [];
     const big: OversizedFile[] = [];
     for (const f of files) {
+      const typeError = validateFileType(f);
+      if (typeError) { toast.error(typeError); continue; }
+      if (f.size === 0) { toast.error(`${f.name}: الملف فارغ`); continue; }
       if (f.size > MAX_UPLOAD_BYTES) big.push({ file: f, replaceIndex: replaceIdx });
       else ok.push(f);
     }
     if (big.length) setOversized((p) => [...p, ...big]);
     return ok;
   }
+
 
   async function compressAndUpload(item: OversizedFile) {
     setOversized((p) => p.filter((x) => x !== item));
