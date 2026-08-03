@@ -10,6 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { uploadAnnouncementFile, type Announcement, type Attachment, type Poll } from "@/lib/announcements";
+import { MAX_UPLOAD_BYTES, canCompress, compressFile, formatBytes } from "@/lib/compress";
+
 import { AnnouncementsFeed } from "@/components/AnnouncementsFeed";
 import { AudioRecorderButton } from "@/components/AudioRecorderButton";
 import { AttachmentPreview } from "@/components/AttachmentPreview";
