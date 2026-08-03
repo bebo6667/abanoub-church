@@ -10,18 +10,22 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { uploadAnnouncementFile, type Announcement, type Attachment, type Poll } from "@/lib/announcements";
+import { MAX_UPLOAD_BYTES, canCompress, compressFile, formatBytes } from "@/lib/compress";
+
 import { AnnouncementsFeed } from "@/components/AnnouncementsFeed";
 import { AudioRecorderButton } from "@/components/AudioRecorderButton";
 import { AttachmentPreview } from "@/components/AttachmentPreview";
 import { Progress } from "@/components/ui/progress";
-import { Plus, Loader2, Trash2, Paperclip, X, Image as ImageIcon, LinkIcon, BarChart3, RefreshCw } from "lucide-react";
+import { Plus, Loader2, Trash2, Paperclip, X, Image as ImageIcon, LinkIcon, BarChart3, RefreshCw, FileArchive } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/announcements")({
   component: AdminAnnouncementsPage,
 });
+type OversizedFile = { file: File; replaceIndex: number | null };
 
 function AdminAnnouncementsPage() {
+
   const { user, isStaff } = useAuth();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -37,6 +41,8 @@ function AdminAnnouncementsPage() {
   const [pollOptions, setPollOptions] = useState<string[]>(["", ""]);
   const [replaceIndex, setReplaceIndex] = useState<number | null>(null);
   const [progress, setProgress] = useState<{ name: string; percent: number }[]>([]);
+  const [oversized, setOversized] = useState<OversizedFile[]>([]);
+
   const fileRef = useRef<HTMLInputElement>(null);
   const imageRef = useRef<HTMLInputElement>(null);
   const replaceRef = useRef<HTMLInputElement>(null);
@@ -45,25 +51,65 @@ function AdminAnnouncementsPage() {
     setProgress((p) => p.map((x) => (x.name === name ? { ...x, percent } : x)));
   }
 
+  async function uploadInto(list: File[], replaceIdx: number | null) {
+    setUploading(true);
+    setProgress(list.map((f) => ({ name: f.name, percent: 0 })));
+    try {
+      const uploaded: Attachment[] = [];
+      for (const f of list) uploaded.push(await uploadAnnouncementFile(f, (p) => setPercent(f.name, p)));
+      if (replaceIdx !== null) {
+        setAttachments((p) => p.map((x, j) => (j === replaceIdx ? uploaded[0] : x)));
+        toast.success("تم استبدال المرفق");
+      } else {
+        setAttachments((p) => [...p, ...uploaded]);
+        toast.success(`تم رفع ${uploaded.length} ملف`);
+      }
+    } catch (e: any) {
+      toast.error(e?.message ?? "خطأ في الرفع");
+    } finally {
+      setUploading(false);
+      setProgress([]);
+    }
+  }
+
+  /** Split by size limit: oversized files go to the compression suggestion dialog. */
+  function triage(files: File[], replaceIdx: number | null) {
+    const ok: File[] = [];
+    const big: OversizedFile[] = [];
+    for (const f of files) {
+      if (f.size > MAX_UPLOAD_BYTES) big.push({ file: f, replaceIndex: replaceIdx });
+      else ok.push(f);
+    }
+    if (big.length) setOversized((p) => [...p, ...big]);
+    return ok;
+  }
+
+  async function compressAndUpload(item: OversizedFile) {
+    setOversized((p) => p.filter((x) => x !== item));
+    if (!canCompress(item.file)) return toast.error("لا يمكن ضغط هذا النوع، اختر ملفًا أصغر من 50 ميجا");
+    setUploading(true);
+    setProgress([{ name: `ضغط ${item.file.name}`, percent: 0 }]);
+    try {
+      const smaller = await compressFile(item.file, (p) => setPercent(`ضغط ${item.file.name}`, p));
+      toast.success(`تم الضغط: ${formatBytes(item.file.size)} ← ${formatBytes(smaller.size)}`);
+      setUploading(false);
+      setProgress([]);
+      await uploadInto([smaller], item.replaceIndex);
+    } catch (e: any) {
+      setUploading(false);
+      setProgress([]);
+      toast.error(e?.message ?? "تعذر ضغط الملف");
+    }
+  }
+
   async function handleReplace(files: FileList | null) {
     const f = files?.[0];
     const idx = replaceIndex;
     if (replaceRef.current) replaceRef.current.value = "";
     setReplaceIndex(null);
     if (!f || idx === null) return;
-    if (f.size > 50 * 1024 * 1024) return toast.error("الملف أكبر من 50 ميجا");
-    setUploading(true);
-    setProgress([{ name: f.name, percent: 0 }]);
-    try {
-      const uploaded = await uploadAnnouncementFile(f, (p) => setPercent(f.name, p));
-      setAttachments((p) => p.map((x, j) => (j === idx ? uploaded : x)));
-      toast.success("تم استبدال المرفق");
-    } catch (e: any) {
-      toast.error(e?.message ?? "تعذر الاستبدال");
-    } finally {
-      setUploading(false);
-      setProgress([]);
-    }
+    const ok = triage([f], idx);
+    if (ok.length) await uploadInto(ok, idx);
   }
 
   const { data: list } = useQuery({
@@ -78,34 +124,17 @@ function AdminAnnouncementsPage() {
   function reset() {
     setTitle(""); setBody(""); setLink(""); setAttachments([]);
     setShowLink(false); setPollOn(false); setPollQuestion(""); setPollOptions(["", ""]);
-    setProgress([]);
+    setProgress([]); setOversized([]);
   }
 
   async function handleFiles(files: FileList | null) {
     if (!files || !files.length) return;
-    const picked = Array.from(files).filter((f) => {
-      if (f.size > 50 * 1024 * 1024) { toast.error(`${f.name}: أكبر من 50 ميجا`); return false; }
-      return true;
-    });
-    if (!picked.length) return;
-    setUploading(true);
-    setProgress(picked.map((f) => ({ name: f.name, percent: 0 })));
-    try {
-      const uploaded: Attachment[] = [];
-      for (const f of picked) {
-        uploaded.push(await uploadAnnouncementFile(f, (p) => setPercent(f.name, p)));
-      }
-      setAttachments((p) => [...p, ...uploaded]);
-      toast.success(`تم رفع ${uploaded.length} ملف`);
-    } catch (e: any) {
-      toast.error(e.message ?? "خطأ في الرفع");
-    } finally {
-      setUploading(false);
-      setProgress([]);
-      if (fileRef.current) fileRef.current.value = "";
-      if (imageRef.current) imageRef.current.value = "";
-    }
+    const ok = triage(Array.from(files), null);
+    if (fileRef.current) fileRef.current.value = "";
+    if (imageRef.current) imageRef.current.value = "";
+    if (ok.length) await uploadInto(ok, null);
   }
+
 
 
   async function submit() {
@@ -274,7 +303,39 @@ function AdminAnnouncementsPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        <Dialog open={oversized.length > 0} onOpenChange={(v) => { if (!v) setOversized([]); }}>
+          <DialogContent>
+            <DialogHeader><DialogTitle>الملف أكبر من 50 ميجا</DialogTitle></DialogHeader>
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                يمكن ضغط الملف داخل المتصفح قبل الإرسال. ضغط الفيديو يستغرق وقتًا بقدر مدة الفيديو تقريبًا.
+              </p>
+              {oversized.map((o, i) => (
+                <div key={`${o.file.name}-${i}`} className="rounded-md border p-2 space-y-2">
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="flex-1 truncate">{o.file.name}</span>
+                    <span className="text-xs text-muted-foreground">{formatBytes(o.file.size)}</span>
+                  </div>
+                  {canCompress(o.file) ? (
+                    <div className="flex gap-2">
+                      <Button size="sm" disabled={uploading} onClick={() => compressAndUpload(o)}>
+                        <FileArchive className="h-4 w-4" />ضغط وإرسال
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => setOversized((p) => p.filter((x) => x !== o))}>
+                        <X className="h-4 w-4" />تجاهل
+                      </Button>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-destructive">لا يمكن ضغط هذا النوع من الملفات، اختر ملفًا أصغر.</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
+
 
       <div className="space-y-2 mb-6">
         {(list ?? []).map((a) => (
