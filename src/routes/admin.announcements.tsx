@@ -72,17 +72,21 @@ function AdminAnnouncementsPage() {
     }
   }
 
-  /** Split by size limit: oversized files go to the compression suggestion dialog. */
+  /** يتحقق من الصيغة أولًا، ثم يفصل الملفات الكبيرة لاقتراح الضغط. */
   function triage(files: File[], replaceIdx: number | null) {
     const ok: File[] = [];
     const big: OversizedFile[] = [];
     for (const f of files) {
+      const typeError = validateFileType(f);
+      if (typeError) { toast.error(typeError); continue; }
+      if (f.size === 0) { toast.error(`${f.name}: الملف فارغ`); continue; }
       if (f.size > MAX_UPLOAD_BYTES) big.push({ file: f, replaceIndex: replaceIdx });
       else ok.push(f);
     }
     if (big.length) setOversized((p) => [...p, ...big]);
     return ok;
   }
+
 
   async function compressAndUpload(item: OversizedFile) {
     setOversized((p) => p.filter((x) => x !== item));
