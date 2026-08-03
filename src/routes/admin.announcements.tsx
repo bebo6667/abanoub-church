@@ -22,8 +22,10 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/admin/announcements")({
   component: AdminAnnouncementsPage,
 });
+type OversizedFile = { file: File; replaceIndex: number | null };
 
 function AdminAnnouncementsPage() {
+
   const { user, isStaff } = useAuth();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
