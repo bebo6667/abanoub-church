@@ -91,7 +91,11 @@ export function PollView({ announcementId, poll }: { announcementId: string; pol
           );
         })}
       </div>
-      <p className="text-[11px] text-muted-foreground">إجمالي الأصوات: {total}</p>
+      <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+        إجمالي الأصوات: {total}
+        {live && <span className="inline-flex items-center gap-0.5 text-primary"><Radio className="h-3 w-3" />مباشر</span>}
+      </p>
+
     </div>
   );
 }
