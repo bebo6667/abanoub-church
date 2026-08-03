@@ -41,6 +41,8 @@ function AdminAnnouncementsPage() {
   const [pollOptions, setPollOptions] = useState<string[]>(["", ""]);
   const [replaceIndex, setReplaceIndex] = useState<number | null>(null);
   const [progress, setProgress] = useState<{ name: string; percent: number }[]>([]);
+  const [oversized, setOversized] = useState<OversizedFile[]>([]);
+
   const fileRef = useRef<HTMLInputElement>(null);
   const imageRef = useRef<HTMLInputElement>(null);
   const replaceRef = useRef<HTMLInputElement>(null);
