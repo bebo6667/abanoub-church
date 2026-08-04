@@ -42,6 +42,7 @@ function AdminAnnouncementsPage() {
   const [replaceIndex, setReplaceIndex] = useState<number | null>(null);
   const [progress, setProgress] = useState<{ name: string; percent: number }[]>([]);
   const [oversized, setOversized] = useState<OversizedFile[]>([]);
+  const [fileStatus, setFileStatus] = useState<FileStatus[]>([]);
 
   const fileRef = useRef<HTMLInputElement>(null);
   const imageRef = useRef<HTMLInputElement>(null);
@@ -51,18 +52,35 @@ function AdminAnnouncementsPage() {
     setProgress((p) => p.map((x) => (x.name === name ? { ...x, percent } : x)));
   }
 
+  /** يضيف/يحدّث حالة ملف في ملخص الحالات. */
+  function upsertStatus(name: string, patch: Partial<FileStatus> & { state: FileStatus["state"] }) {
+    setFileStatus((p) => {
+      const i = p.findIndex((x) => x.name === name);
+      const next: FileStatus = { name, ...patch } as FileStatus;
+      if (i === -1) return [...p, next];
+      return p.map((x, j) => (j === i ? { ...x, ...patch } : x));
+    });
+  }
+
   async function uploadInto(list: File[], replaceIdx: number | null) {
     // حارس أخير قبل الحفظ: أي ملف غير مطابق أو تالف يُرفض برسالة واضحة
     for (const f of list) {
       const invalid = await validateFileDeep(f);
-      if (invalid) return toast.error(invalid);
+      if (invalid) {
+        upsertStatus(f.name, { state: "rejected", reason: invalid, size: f.size });
+        return toast.error(invalid);
+      }
     }
     setUploading(true);
     setProgress(list.map((f) => ({ name: f.name, percent: 0 })));
+    list.forEach((f) => upsertStatus(f.name, { state: "uploading", size: f.size }));
 
     try {
       const uploaded: Attachment[] = [];
-      for (const f of list) uploaded.push(await uploadAnnouncementFile(f, (p) => setPercent(f.name, p)));
+      for (const f of list) {
+        uploaded.push(await uploadAnnouncementFile(f, (p) => setPercent(f.name, p)));
+        upsertStatus(f.name, { state: "uploaded", size: f.size });
+      }
       if (replaceIdx !== null) {
         setAttachments((p) => p.map((x, j) => (j === replaceIdx ? uploaded[0] : x)));
         toast.success("تم استبدال المرفق");
@@ -71,7 +89,9 @@ function AdminAnnouncementsPage() {
         toast.success(`تم رفع ${uploaded.length} ملف`);
       }
     } catch (e: any) {
-      toast.error(e?.message ?? "خطأ في الرفع");
+      const msg = e?.message ?? "خطأ في الرفع";
+      list.forEach((f) => upsertStatus(f.name, { state: "rejected", reason: msg, size: f.size }));
+      toast.error(msg);
     } finally {
       setUploading(false);
       setProgress([]);
@@ -84,16 +104,20 @@ function AdminAnnouncementsPage() {
     const big: OversizedFile[] = [];
     for (const f of files) {
       const typeError = validateFileType(f);
-      if (typeError) { toast.error(typeError); continue; }
-      if (f.size === 0) { toast.error(`${f.name}: الملف فارغ`); continue; }
+      if (typeError) { upsertStatus(f.name, { state: "rejected", reason: typeError, size: f.size }); toast.error(typeError); continue; }
+      if (f.size === 0) { const m = `${f.name}: الملف فارغ`; upsertStatus(f.name, { state: "rejected", reason: m, size: f.size }); toast.error(m); continue; }
+      upsertStatus(f.name, { state: "checking", size: f.size });
       const corrupt = await verifyFileIntegrity(f);
-      if (corrupt) { toast.error(corrupt); continue; }
-      if (f.size > MAX_UPLOAD_BYTES) big.push({ file: f, replaceIndex: replaceIdx });
-      else ok.push(f);
+      if (corrupt) { upsertStatus(f.name, { state: "rejected", reason: corrupt, size: f.size }); toast.error(corrupt); continue; }
+      if (f.size > MAX_UPLOAD_BYTES) {
+        upsertStatus(f.name, { state: "awaiting-compress", reason: `الحجم ${formatBytes(f.size)} — يحتاج ضغطًا`, size: f.size });
+        big.push({ file: f, replaceIndex: replaceIdx });
+      } else ok.push(f);
     }
     if (big.length) setOversized((p) => [...p, ...big]);
     return ok;
   }
+
 
 
 
