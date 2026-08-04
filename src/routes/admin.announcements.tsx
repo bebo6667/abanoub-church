@@ -52,9 +52,11 @@ function AdminAnnouncementsPage() {
   }
 
   async function uploadInto(list: File[], replaceIdx: number | null) {
-    // حارس أخير قبل الحفظ: أي ملف غير مطابق يُرفض برسالة واضحة
-    const invalid = list.map((f) => validateFile(f)).find(Boolean);
-    if (invalid) return toast.error(invalid);
+    // حارس أخير قبل الحفظ: أي ملف غير مطابق أو تالف يُرفض برسالة واضحة
+    for (const f of list) {
+      const invalid = await validateFileDeep(f);
+      if (invalid) return toast.error(invalid);
+    }
     setUploading(true);
     setProgress(list.map((f) => ({ name: f.name, percent: 0 })));
 
@@ -76,20 +78,23 @@ function AdminAnnouncementsPage() {
     }
   }
 
-  /** يتحقق من الصيغة أولًا، ثم يفصل الملفات الكبيرة لاقتراح الضغط. */
-  function triage(files: File[], replaceIdx: number | null) {
+  /** يتحقق من الصيغة والسلامة أولًا، ثم يفصل الملفات الكبيرة لاقتراح الضغط. */
+  async function triage(files: File[], replaceIdx: number | null) {
     const ok: File[] = [];
     const big: OversizedFile[] = [];
     for (const f of files) {
       const typeError = validateFileType(f);
       if (typeError) { toast.error(typeError); continue; }
       if (f.size === 0) { toast.error(`${f.name}: الملف فارغ`); continue; }
+      const corrupt = await verifyFileIntegrity(f);
+      if (corrupt) { toast.error(corrupt); continue; }
       if (f.size > MAX_UPLOAD_BYTES) big.push({ file: f, replaceIndex: replaceIdx });
       else ok.push(f);
     }
     if (big.length) setOversized((p) => [...p, ...big]);
     return ok;
   }
+
 
 
   async function compressAndUpload(item: OversizedFile) {
