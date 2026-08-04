@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { uploadAnnouncementFile, type Announcement, type Attachment, type Poll } from "@/lib/announcements";
-import { MAX_UPLOAD_BYTES, canCompress, compressFile, formatBytes, validateFileType, validateFile } from "@/lib/compress";
+import { MAX_UPLOAD_BYTES, canCompress, compressFile, formatBytes, validateFileType, validateFileDeep, verifyFileIntegrity } from "@/lib/compress";
 
 import { AnnouncementsFeed } from "@/components/AnnouncementsFeed";
 import { AudioRecorderButton } from "@/components/AudioRecorderButton";
@@ -121,7 +121,7 @@ function AdminAnnouncementsPage() {
     if (replaceRef.current) replaceRef.current.value = "";
     setReplaceIndex(null);
     if (!f || idx === null) return;
-    const ok = triage([f], idx);
+    const ok = await triage([f], idx);
     if (ok.length) await uploadInto(ok, idx);
   }
 
@@ -142,7 +142,7 @@ function AdminAnnouncementsPage() {
 
   async function handleFiles(files: FileList | null) {
     if (!files || !files.length) return;
-    const ok = triage(Array.from(files), null);
+    const ok = await triage(Array.from(files), null);
     if (fileRef.current) fileRef.current.value = "";
     if (imageRef.current) imageRef.current.value = "";
     if (ok.length) await uploadInto(ok, null);
