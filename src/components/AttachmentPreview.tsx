@@ -64,7 +64,17 @@ export function AttachmentPreview({ att, compact = false }: { att: Attachment; c
         <img src={url} alt={att.name} loading="lazy" className={`w-full rounded object-contain bg-muted ${compact ? "max-h-40" : "max-h-96"}`} />
       )}
       {att.kind === "video" && <video src={url} controls className={`w-full rounded bg-black ${compact ? "max-h-40" : "max-h-96"}`} />}
-      {att.kind === "audio" && <audio src={url} controls className="w-full" />}
+      {att.kind === "audio" && (
+        <div className="flex items-center gap-3 rounded-md border bg-accent/20 p-2">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+            <Mic className="h-4 w-4" />
+          </span>
+          <div className="min-w-0 flex-1 space-y-1">
+            <p className="truncate text-xs text-muted-foreground">{att.name}</p>
+            <audio src={url} controls preload="metadata" controlsList="nodownload" className="w-full h-9" />
+          </div>
+        </div>
+      )}
       {(att.kind === "pdf" || att.kind === "file") && (
         <a href={url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 p-2 rounded border hover:bg-accent/30 text-sm">
           <KindIcon kind={att.kind} className="h-5 w-5" />
