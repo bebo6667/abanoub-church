@@ -16,13 +16,19 @@ import { AnnouncementsFeed } from "@/components/AnnouncementsFeed";
 import { AudioRecorderButton } from "@/components/AudioRecorderButton";
 import { AttachmentPreview } from "@/components/AttachmentPreview";
 import { Progress } from "@/components/ui/progress";
-import { Plus, Loader2, Trash2, Paperclip, X, Image as ImageIcon, LinkIcon, BarChart3, RefreshCw, FileArchive } from "lucide-react";
+import { Plus, Loader2, Trash2, Paperclip, X, Image as ImageIcon, LinkIcon, BarChart3, RefreshCw, FileArchive, CheckCircle2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/announcements")({
   component: AdminAnnouncementsPage,
 });
 type OversizedFile = { file: File; replaceIndex: number | null };
+type FileStatus = {
+  name: string;
+  size?: number;
+  state: "checking" | "awaiting-compress" | "compressing" | "uploading" | "uploaded" | "rejected";
+  reason?: string;
+};
 
 function AdminAnnouncementsPage() {
 
@@ -42,6 +48,7 @@ function AdminAnnouncementsPage() {
   const [replaceIndex, setReplaceIndex] = useState<number | null>(null);
   const [progress, setProgress] = useState<{ name: string; percent: number }[]>([]);
   const [oversized, setOversized] = useState<OversizedFile[]>([]);
+  const [fileStatus, setFileStatus] = useState<FileStatus[]>([]);
 
   const fileRef = useRef<HTMLInputElement>(null);
   const imageRef = useRef<HTMLInputElement>(null);
@@ -51,18 +58,35 @@ function AdminAnnouncementsPage() {
     setProgress((p) => p.map((x) => (x.name === name ? { ...x, percent } : x)));
   }
 
+  /** يضيف/يحدّث حالة ملف في ملخص الحالات. */
+  function upsertStatus(name: string, patch: Partial<FileStatus> & { state: FileStatus["state"] }) {
+    setFileStatus((p) => {
+      const i = p.findIndex((x) => x.name === name);
+      const next: FileStatus = { name, ...patch } as FileStatus;
+      if (i === -1) return [...p, next];
+      return p.map((x, j) => (j === i ? { ...x, ...patch } : x));
+    });
+  }
+
   async function uploadInto(list: File[], replaceIdx: number | null) {
     // حارس أخير قبل الحفظ: أي ملف غير مطابق أو تالف يُرفض برسالة واضحة
     for (const f of list) {
       const invalid = await validateFileDeep(f);
-      if (invalid) return toast.error(invalid);
+      if (invalid) {
+        upsertStatus(f.name, { state: "rejected", reason: invalid, size: f.size });
+        return toast.error(invalid);
+      }
     }
     setUploading(true);
     setProgress(list.map((f) => ({ name: f.name, percent: 0 })));
+    list.forEach((f) => upsertStatus(f.name, { state: "uploading", size: f.size }));
 
     try {
       const uploaded: Attachment[] = [];
-      for (const f of list) uploaded.push(await uploadAnnouncementFile(f, (p) => setPercent(f.name, p)));
+      for (const f of list) {
+        uploaded.push(await uploadAnnouncementFile(f, (p) => setPercent(f.name, p)));
+        upsertStatus(f.name, { state: "uploaded", size: f.size });
+      }
       if (replaceIdx !== null) {
         setAttachments((p) => p.map((x, j) => (j === replaceIdx ? uploaded[0] : x)));
         toast.success("تم استبدال المرفق");
@@ -71,7 +95,9 @@ function AdminAnnouncementsPage() {
         toast.success(`تم رفع ${uploaded.length} ملف`);
       }
     } catch (e: any) {
-      toast.error(e?.message ?? "خطأ في الرفع");
+      const msg = e?.message ?? "خطأ في الرفع";
+      list.forEach((f) => upsertStatus(f.name, { state: "rejected", reason: msg, size: f.size }));
+      toast.error(msg);
     } finally {
       setUploading(false);
       setProgress([]);
@@ -84,12 +110,15 @@ function AdminAnnouncementsPage() {
     const big: OversizedFile[] = [];
     for (const f of files) {
       const typeError = validateFileType(f);
-      if (typeError) { toast.error(typeError); continue; }
-      if (f.size === 0) { toast.error(`${f.name}: الملف فارغ`); continue; }
+      if (typeError) { upsertStatus(f.name, { state: "rejected", reason: typeError, size: f.size }); toast.error(typeError); continue; }
+      if (f.size === 0) { const m = `${f.name}: الملف فارغ`; upsertStatus(f.name, { state: "rejected", reason: m, size: f.size }); toast.error(m); continue; }
+      upsertStatus(f.name, { state: "checking", size: f.size });
       const corrupt = await verifyFileIntegrity(f);
-      if (corrupt) { toast.error(corrupt); continue; }
-      if (f.size > MAX_UPLOAD_BYTES) big.push({ file: f, replaceIndex: replaceIdx });
-      else ok.push(f);
+      if (corrupt) { upsertStatus(f.name, { state: "rejected", reason: corrupt, size: f.size }); toast.error(corrupt); continue; }
+      if (f.size > MAX_UPLOAD_BYTES) {
+        upsertStatus(f.name, { state: "awaiting-compress", reason: `الحجم ${formatBytes(f.size)} — يحتاج ضغطًا`, size: f.size });
+        big.push({ file: f, replaceIndex: replaceIdx });
+      } else ok.push(f);
     }
     if (big.length) setOversized((p) => [...p, ...big]);
     return ok;
@@ -97,23 +126,38 @@ function AdminAnnouncementsPage() {
 
 
 
+
   async function compressAndUpload(item: OversizedFile) {
     setOversized((p) => p.filter((x) => x !== item));
-    if (!canCompress(item.file)) return toast.error("لا يمكن ضغط هذا النوع، اختر ملفًا أصغر من 50 ميجا");
+    if (!canCompress(item.file)) {
+      const m = "لا يمكن ضغط هذا النوع، اختر ملفًا أصغر من 50 ميجا";
+      upsertStatus(item.file.name, { state: "rejected", reason: m, size: item.file.size });
+      return toast.error(m);
+    }
     setUploading(true);
     setProgress([{ name: `ضغط ${item.file.name}`, percent: 0 }]);
+    upsertStatus(item.file.name, { state: "compressing", size: item.file.size, reason: undefined });
     try {
       const smaller = await compressFile(item.file, (p) => setPercent(`ضغط ${item.file.name}`, p));
       toast.success(`تم الضغط: ${formatBytes(item.file.size)} ← ${formatBytes(smaller.size)}`);
+      upsertStatus(item.file.name, {
+        state: "uploading",
+        size: smaller.size,
+        reason: `تم الضغط: ${formatBytes(item.file.size)} ← ${formatBytes(smaller.size)}`,
+      });
       setUploading(false);
       setProgress([]);
       await uploadInto([smaller], item.replaceIndex);
+      upsertStatus(item.file.name, { state: "uploaded", size: smaller.size });
     } catch (e: any) {
       setUploading(false);
       setProgress([]);
-      toast.error(e?.message ?? "تعذر ضغط الملف");
+      const m = e?.message ?? "تعذر ضغط الملف";
+      upsertStatus(item.file.name, { state: "rejected", reason: m, size: item.file.size });
+      toast.error(m);
     }
   }
+
 
   async function handleReplace(files: FileList | null) {
     const f = files?.[0];
@@ -137,8 +181,9 @@ function AdminAnnouncementsPage() {
   function reset() {
     setTitle(""); setBody(""); setLink(""); setAttachments([]);
     setShowLink(false); setPollOn(false); setPollQuestion(""); setPollOptions(["", ""]);
-    setProgress([]); setOversized([]);
+    setProgress([]); setOversized([]); setFileStatus([]);
   }
+
 
   async function handleFiles(files: FileList | null) {
     if (!files || !files.length) return;
@@ -263,6 +308,15 @@ function AdminAnnouncementsPage() {
               )}
 
               <div>
+                {fileStatus.length > 0 && (
+                  <div className="mt-2 rounded-md border p-2 space-y-1.5">
+                    <p className="text-xs font-medium">ملخص حالة الملفات ({fileStatus.length})</p>
+                    {fileStatus.map((f) => (
+                      <FileStatusRow key={f.name} f={f} onDismiss={() => setFileStatus((p) => p.filter((x) => x.name !== f.name))} />
+                    ))}
+                  </div>
+                )}
+
                 {progress.length > 0 && (
                   <div className="space-y-2 mt-2 rounded-md border p-2">
                     <p className="text-xs text-muted-foreground flex items-center gap-1"><Loader2 className="h-3 w-3 animate-spin" />جاري الرفع...</p>
@@ -369,5 +423,43 @@ function AdminAnnouncementsPage() {
         <AnnouncementsFeed />
       </div>
     </AppShell>
+  );
+}
+
+const STATUS_META: Record<FileStatus["state"], { label: string; className: string }> = {
+  checking: { label: "جاري الفحص", className: "text-muted-foreground" },
+  "awaiting-compress": { label: "بانتظار الضغط", className: "text-amber-600" },
+  compressing: { label: "قيد الضغط", className: "text-amber-600" },
+  uploading: { label: "جاري الرفع", className: "text-primary" },
+  uploaded: { label: "تم الرفع", className: "text-emerald-600" },
+  rejected: { label: "مرفوض", className: "text-destructive" },
+};
+
+function FileStatusRow({ f, onDismiss }: { f: FileStatus; onDismiss: () => void }) {
+  const meta = STATUS_META[f.state];
+  const busy = f.state === "checking" || f.state === "compressing" || f.state === "uploading";
+  return (
+    <div className="flex items-start gap-2 rounded border p-2 text-[11px]">
+      {busy ? (
+        <Loader2 className="mt-0.5 h-3.5 w-3.5 shrink-0 animate-spin text-muted-foreground" />
+      ) : f.state === "uploaded" ? (
+        <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600" />
+      ) : (
+        <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-destructive" />
+      )}
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <span className="truncate flex-1 font-medium">{f.name}</span>
+          {typeof f.size === "number" && <span className="text-muted-foreground">{formatBytes(f.size)}</span>}
+          <span className={meta.className}>{meta.label}</span>
+        </div>
+        {f.reason && <p className={`mt-0.5 ${f.state === "rejected" ? "text-destructive" : "text-muted-foreground"}`}>{f.reason}</p>}
+      </div>
+      {!busy && (
+        <button type="button" onClick={onDismiss} aria-label="إخفاء">
+          <X className="h-3.5 w-3.5 text-muted-foreground" />
+        </button>
+      )}
+    </div>
   );
 }
