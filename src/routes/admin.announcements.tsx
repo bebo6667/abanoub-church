@@ -23,6 +23,12 @@ export const Route = createFileRoute("/admin/announcements")({
   component: AdminAnnouncementsPage,
 });
 type OversizedFile = { file: File; replaceIndex: number | null };
+type FileStatus = {
+  name: string;
+  size?: number;
+  state: "checking" | "awaiting-compress" | "compressing" | "uploading" | "uploaded" | "rejected";
+  reason?: string;
+};
 
 function AdminAnnouncementsPage() {
 
