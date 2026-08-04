@@ -308,6 +308,15 @@ function AdminAnnouncementsPage() {
               )}
 
               <div>
+                {fileStatus.length > 0 && (
+                  <div className="mt-2 rounded-md border p-2 space-y-1.5">
+                    <p className="text-xs font-medium">ملخص حالة الملفات ({fileStatus.length})</p>
+                    {fileStatus.map((f) => (
+                      <FileStatusRow key={f.name} f={f} onDismiss={() => setFileStatus((p) => p.filter((x) => x.name !== f.name))} />
+                    ))}
+                  </div>
+                )}
+
                 {progress.length > 0 && (
                   <div className="space-y-2 mt-2 rounded-md border p-2">
                     <p className="text-xs text-muted-foreground flex items-center gap-1"><Loader2 className="h-3 w-3 animate-spin" />جاري الرفع...</p>
