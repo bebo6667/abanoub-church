@@ -129,21 +129,35 @@ function AdminAnnouncementsPage() {
 
   async function compressAndUpload(item: OversizedFile) {
     setOversized((p) => p.filter((x) => x !== item));
-    if (!canCompress(item.file)) return toast.error("لا يمكن ضغط هذا النوع، اختر ملفًا أصغر من 50 ميجا");
+    if (!canCompress(item.file)) {
+      const m = "لا يمكن ضغط هذا النوع، اختر ملفًا أصغر من 50 ميجا";
+      upsertStatus(item.file.name, { state: "rejected", reason: m, size: item.file.size });
+      return toast.error(m);
+    }
     setUploading(true);
     setProgress([{ name: `ضغط ${item.file.name}`, percent: 0 }]);
+    upsertStatus(item.file.name, { state: "compressing", size: item.file.size, reason: undefined });
     try {
       const smaller = await compressFile(item.file, (p) => setPercent(`ضغط ${item.file.name}`, p));
       toast.success(`تم الضغط: ${formatBytes(item.file.size)} ← ${formatBytes(smaller.size)}`);
+      upsertStatus(item.file.name, {
+        state: "uploading",
+        size: smaller.size,
+        reason: `تم الضغط: ${formatBytes(item.file.size)} ← ${formatBytes(smaller.size)}`,
+      });
       setUploading(false);
       setProgress([]);
       await uploadInto([smaller], item.replaceIndex);
+      upsertStatus(item.file.name, { state: "uploaded", size: smaller.size });
     } catch (e: any) {
       setUploading(false);
       setProgress([]);
-      toast.error(e?.message ?? "تعذر ضغط الملف");
+      const m = e?.message ?? "تعذر ضغط الملف";
+      upsertStatus(item.file.name, { state: "rejected", reason: m, size: item.file.size });
+      toast.error(m);
     }
   }
+
 
   async function handleReplace(files: FileList | null) {
     const f = files?.[0];
