@@ -181,8 +181,9 @@ function AdminAnnouncementsPage() {
   function reset() {
     setTitle(""); setBody(""); setLink(""); setAttachments([]);
     setShowLink(false); setPollOn(false); setPollQuestion(""); setPollOptions(["", ""]);
-    setProgress([]); setOversized([]);
+    setProgress([]); setOversized([]); setFileStatus([]);
   }
+
 
   async function handleFiles(files: FileList | null) {
     if (!files || !files.length) return;
