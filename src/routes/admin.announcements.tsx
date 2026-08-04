@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { uploadAnnouncementFile, type Announcement, type Attachment, type Poll } from "@/lib/announcements";
-import { MAX_UPLOAD_BYTES, canCompress, compressFile, formatBytes, validateFileType, validateFile } from "@/lib/compress";
+import { MAX_UPLOAD_BYTES, canCompress, compressFile, formatBytes, validateFileType, validateFileDeep, verifyFileIntegrity } from "@/lib/compress";
 
 import { AnnouncementsFeed } from "@/components/AnnouncementsFeed";
 import { AudioRecorderButton } from "@/components/AudioRecorderButton";
@@ -52,9 +52,11 @@ function AdminAnnouncementsPage() {
   }
 
   async function uploadInto(list: File[], replaceIdx: number | null) {
-    // حارس أخير قبل الحفظ: أي ملف غير مطابق يُرفض برسالة واضحة
-    const invalid = list.map((f) => validateFile(f)).find(Boolean);
-    if (invalid) return toast.error(invalid);
+    // حارس أخير قبل الحفظ: أي ملف غير مطابق أو تالف يُرفض برسالة واضحة
+    for (const f of list) {
+      const invalid = await validateFileDeep(f);
+      if (invalid) return toast.error(invalid);
+    }
     setUploading(true);
     setProgress(list.map((f) => ({ name: f.name, percent: 0 })));
 
@@ -76,20 +78,23 @@ function AdminAnnouncementsPage() {
     }
   }
 
-  /** يتحقق من الصيغة أولًا، ثم يفصل الملفات الكبيرة لاقتراح الضغط. */
-  function triage(files: File[], replaceIdx: number | null) {
+  /** يتحقق من الصيغة والسلامة أولًا، ثم يفصل الملفات الكبيرة لاقتراح الضغط. */
+  async function triage(files: File[], replaceIdx: number | null) {
     const ok: File[] = [];
     const big: OversizedFile[] = [];
     for (const f of files) {
       const typeError = validateFileType(f);
       if (typeError) { toast.error(typeError); continue; }
       if (f.size === 0) { toast.error(`${f.name}: الملف فارغ`); continue; }
+      const corrupt = await verifyFileIntegrity(f);
+      if (corrupt) { toast.error(corrupt); continue; }
       if (f.size > MAX_UPLOAD_BYTES) big.push({ file: f, replaceIndex: replaceIdx });
       else ok.push(f);
     }
     if (big.length) setOversized((p) => [...p, ...big]);
     return ok;
   }
+
 
 
   async function compressAndUpload(item: OversizedFile) {
@@ -116,7 +121,7 @@ function AdminAnnouncementsPage() {
     if (replaceRef.current) replaceRef.current.value = "";
     setReplaceIndex(null);
     if (!f || idx === null) return;
-    const ok = triage([f], idx);
+    const ok = await triage([f], idx);
     if (ok.length) await uploadInto(ok, idx);
   }
 
@@ -137,7 +142,7 @@ function AdminAnnouncementsPage() {
 
   async function handleFiles(files: FileList | null) {
     if (!files || !files.length) return;
-    const ok = triage(Array.from(files), null);
+    const ok = await triage(Array.from(files), null);
     if (fileRef.current) fileRef.current.value = "";
     if (imageRef.current) imageRef.current.value = "";
     if (ok.length) await uploadInto(ok, null);
