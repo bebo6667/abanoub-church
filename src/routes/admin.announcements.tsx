@@ -16,7 +16,7 @@ import { AnnouncementsFeed } from "@/components/AnnouncementsFeed";
 import { AudioRecorderButton } from "@/components/AudioRecorderButton";
 import { AttachmentPreview } from "@/components/AttachmentPreview";
 import { Progress } from "@/components/ui/progress";
-import { Plus, Loader2, Trash2, Paperclip, X, Image as ImageIcon, LinkIcon, BarChart3, RefreshCw, FileArchive } from "lucide-react";
+import { Plus, Loader2, Trash2, Paperclip, X, Image as ImageIcon, LinkIcon, BarChart3, RefreshCw, FileArchive, CheckCircle2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/announcements")({
@@ -423,5 +423,43 @@ function AdminAnnouncementsPage() {
         <AnnouncementsFeed />
       </div>
     </AppShell>
+  );
+}
+
+const STATUS_META: Record<FileStatus["state"], { label: string; className: string }> = {
+  checking: { label: "جاري الفحص", className: "text-muted-foreground" },
+  "awaiting-compress": { label: "بانتظار الضغط", className: "text-amber-600" },
+  compressing: { label: "قيد الضغط", className: "text-amber-600" },
+  uploading: { label: "جاري الرفع", className: "text-primary" },
+  uploaded: { label: "تم الرفع", className: "text-emerald-600" },
+  rejected: { label: "مرفوض", className: "text-destructive" },
+};
+
+function FileStatusRow({ f, onDismiss }: { f: FileStatus; onDismiss: () => void }) {
+  const meta = STATUS_META[f.state];
+  const busy = f.state === "checking" || f.state === "compressing" || f.state === "uploading";
+  return (
+    <div className="flex items-start gap-2 rounded border p-2 text-[11px]">
+      {busy ? (
+        <Loader2 className="mt-0.5 h-3.5 w-3.5 shrink-0 animate-spin text-muted-foreground" />
+      ) : f.state === "uploaded" ? (
+        <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600" />
+      ) : (
+        <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-destructive" />
+      )}
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <span className="truncate flex-1 font-medium">{f.name}</span>
+          {typeof f.size === "number" && <span className="text-muted-foreground">{formatBytes(f.size)}</span>}
+          <span className={meta.className}>{meta.label}</span>
+        </div>
+        {f.reason && <p className={`mt-0.5 ${f.state === "rejected" ? "text-destructive" : "text-muted-foreground"}`}>{f.reason}</p>}
+      </div>
+      {!busy && (
+        <button type="button" onClick={onDismiss} aria-label="إخفاء">
+          <X className="h-3.5 w-3.5 text-muted-foreground" />
+        </button>
+      )}
+    </div>
   );
 }
