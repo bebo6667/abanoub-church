@@ -65,6 +65,7 @@ function AnnouncementCard({ a }: { a: Announcement }) {
           {atts.map((att, i) => <AttachmentPreview key={`${att.path}-${i}`} att={att} />)}
         </div>
       )}
+      <AnnouncementEngagement announcementId={a.id} />
     </Card>
   );
 }
