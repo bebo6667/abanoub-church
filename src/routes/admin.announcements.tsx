@@ -256,25 +256,39 @@ function AdminAnnouncementsPage() {
                 <Textarea value={body} onChange={(e) => setBody(e.target.value)} rows={4} placeholder="محتوى الإعلان..." />
               </div>
 
-              <div className="flex flex-wrap gap-2">
-                <Button type="button" size="sm" variant="outline" onClick={() => imageRef.current?.click()}>
-                  <ImageIcon className="h-4 w-4" />صورة / فيديو
-                </Button>
-                <Button type="button" size="sm" variant="outline" onClick={() => fileRef.current?.click()}>
-                  <Paperclip className="h-4 w-4" />ملف
-                </Button>
-                <AudioRecorderButton fileName="voice" onRecorded={(a) => setAttachments((p) => [...p, a])} />
-                <Button type="button" size="sm" variant={showLink ? "secondary" : "outline"} onClick={() => setShowLink((v) => !v)}>
-                  <LinkIcon className="h-4 w-4" />لينك
-                </Button>
-                <Button type="button" size="sm" variant={pollOn ? "secondary" : "outline"} onClick={() => setPollOn((v) => !v)}>
-                  <BarChart3 className="h-4 w-4" />تصويت
-                </Button>
-              </div>
+               <div className="rounded-md border border-primary/20 bg-primary/5 p-3 text-xs" dir="rtl">
+                 <div className="mb-2 flex items-center gap-1.5 font-semibold text-foreground">
+                   <Info className="h-4 w-4 text-primary" />
+                   الصيغ المدعومة وحدود الرفع
+                 </div>
+                 <div className="grid gap-1.5 text-muted-foreground sm:grid-cols-2">
+                   <p><span className="font-medium text-foreground">الصور:</span> JPG, JPEG, PNG, GIF, WEBP, HEIC, BMP — حتى 50 ميجا</p>
+                   <p><span className="font-medium text-foreground">الفيديو:</span> MP4, WEBM, MOV, M4V — حتى 50 ميجا</p>
+                   <p><span className="font-medium text-foreground">الصوت:</span> MP3, WAV, M4A, AAC, OGG, OGA — حتى 50 ميجا</p>
+                   <p><span className="font-medium text-foreground">المستندات:</span> PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, CSV, ZIP — حتى 50 ميجا</p>
+                 </div>
+                 <p className="mt-2 text-muted-foreground">الصور والفيديو الأكبر من 50 ميجا سيظهر لهما اقتراح الضغط قبل الإرسال. الملفات الأخرى يجب أن تكون أقل من 50 ميجا.</p>
+               </div>
 
-              <input ref={imageRef} type="file" multiple accept="image/*,video/*" onChange={(e) => handleFiles(e.target.files)} className="hidden" />
-              <input ref={fileRef} type="file" multiple accept="*/*" onChange={(e) => handleFiles(e.target.files)} className="hidden" />
-              <input ref={replaceRef} type="file" accept="*/*" onChange={(e) => handleReplace(e.target.files)} className="hidden" />
+               <div className="flex flex-wrap gap-2">
+                 <Button type="button" size="sm" variant="outline" onClick={() => imageRef.current?.click()}>
+                   <ImageIcon className="h-4 w-4" />صورة / فيديو
+                 </Button>
+                 <Button type="button" size="sm" variant="outline" onClick={() => fileRef.current?.click()}>
+                   <Paperclip className="h-4 w-4" />ملف
+                 </Button>
+                 <AudioRecorderButton fileName="voice" onRecorded={(a) => setAttachments((p) => [...p, a])} />
+                 <Button type="button" size="sm" variant={showLink ? "secondary" : "outline"} onClick={() => setShowLink((v) => !v)}>
+                   <LinkIcon className="h-4 w-4" />لينك
+                 </Button>
+                 <Button type="button" size="sm" variant={pollOn ? "secondary" : "outline"} onClick={() => setPollOn((v) => !v)}>
+                   <BarChart3 className="h-4 w-4" />تصويت
+                 </Button>
+               </div>
+
+               <input ref={imageRef} type="file" multiple accept="image/*,video/*" onChange={(e) => handleFiles(e.target.files)} className="hidden" />
+               <input ref={fileRef} type="file" multiple accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip" onChange={(e) => handleFiles(e.target.files)} className="hidden" />
+               <input ref={replaceRef} type="file" accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip" onChange={(e) => handleReplace(e.target.files)} className="hidden" />
 
               {showLink && (
                 <div>
