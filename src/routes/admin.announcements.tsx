@@ -16,7 +16,7 @@ import { AnnouncementsFeed } from "@/components/AnnouncementsFeed";
 import { AudioRecorderButton } from "@/components/AudioRecorderButton";
 import { AttachmentPreview } from "@/components/AttachmentPreview";
 import { Progress } from "@/components/ui/progress";
-import { Plus, Loader2, Trash2, Paperclip, X, Image as ImageIcon, LinkIcon, BarChart3, RefreshCw, FileArchive, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Plus, Loader2, Trash2, Paperclip, X, Image as ImageIcon, LinkIcon, BarChart3, RefreshCw, FileArchive, CheckCircle2, AlertTriangle, Info } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/announcements")({
