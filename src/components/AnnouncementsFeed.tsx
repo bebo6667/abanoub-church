@@ -5,6 +5,7 @@ import type { Announcement } from "@/lib/announcements";
 import { ExternalLink, Megaphone, LinkIcon } from "lucide-react";
 import { PollView } from "@/components/PollView";
 import { AttachmentPreview } from "@/components/AttachmentPreview";
+import { AnnouncementEngagement } from "@/components/AnnouncementEngagement";
 
 export function AnnouncementsFeed() {
   const { data } = useQuery({
