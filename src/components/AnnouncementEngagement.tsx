@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Eye } from "lucide-react";
+import { Eye, UsersRound } from "lucide-react";
 import { toast } from "sonner";
 
 export const REACTIONS = [
@@ -17,8 +17,9 @@ export const REACTIONS = [
   { emoji: "😢", label: "حزين" },
 ] as const;
 
-type Reaction = { user_id: string; emoji: string };
+type Reaction = { user_id: string; emoji: string; created_at?: string };
 type ViewRow = { user_id: string; viewed_at: string };
+type Person = { id: string; full_name: string };
 
 /** يسجّل مشاهدة الإعلان مرة واحدة لكل عضو */
 function useMarkViewed(announcementId: string) {
@@ -51,8 +52,9 @@ export function AnnouncementEngagement({ announcementId }: { announcementId: str
     queryFn: async () => {
       const { data } = await db
         .from("announcement_reactions")
-        .select("user_id,emoji")
-        .eq("announcement_id", announcementId);
+        .select("user_id,emoji,created_at")
+        .eq("announcement_id", announcementId)
+        .order("created_at", { ascending: false });
       return (data ?? []) as Reaction[];
     },
   });
@@ -68,7 +70,9 @@ export function AnnouncementEngagement({ announcementId }: { announcementId: str
           table: "announcement_reactions",
           filter: `announcement_id=eq.${announcementId}`,
         },
-        () => qc.invalidateQueries({ queryKey: ["announcement-reactions", announcementId] }),
+        () => {
+          qc.invalidateQueries({ queryKey: ["announcement-reactions", announcementId] });
+        },
       )
       .subscribe();
     return () => {
@@ -86,7 +90,9 @@ export function AnnouncementEngagement({ announcementId }: { announcementId: str
     const remove = mine?.emoji === emoji;
     qc.setQueryData(
       key,
-      remove ? prev.filter((r) => r.user_id !== user.id) : [...prev.filter((r) => r.user_id !== user.id), { user_id: user.id, emoji }],
+      remove
+        ? prev.filter((r) => r.user_id !== user.id)
+        : [...prev.filter((r) => r.user_id !== user.id), { user_id: user.id, emoji }],
     );
     const { error } = remove
       ? await db.from("announcement_reactions").delete().eq("announcement_id", announcementId).eq("user_id", user.id)
@@ -120,8 +126,68 @@ export function AnnouncementEngagement({ announcementId }: { announcementId: str
           </button>
         );
       })}
-      {isStaff && <ViewersDialog announcementId={announcementId} />}
+      {isStaff && (
+        <>
+          <ViewersDialog announcementId={announcementId} />
+          <ReactionsDialog announcementId={announcementId} reactions={all} />
+        </>
+      )}
     </div>
+  );
+}
+
+function ReactionsDialog({ announcementId, reactions }: { announcementId: string; reactions: Reaction[] }) {
+  const [open, setOpen] = useState(false);
+
+  const { data: people } = useQuery({
+    enabled: open,
+    queryKey: ["announcement-reaction-profiles", announcementId],
+    queryFn: async () => {
+      const { data } = await db.from("profiles").select("id,full_name").eq("status", "approved");
+      return (data ?? []) as Person[];
+    },
+  });
+
+  const nameOf = (id: string) => people?.find((person) => person.id === id)?.full_name || "عضو";
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="sm" className="h-8 gap-1 text-xs">
+          <UsersRound className="h-4 w-4" />
+          {reactions.length} تفاعل
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle>من تفاعل مع الإعلان ({reactions.length})</DialogTitle>
+        </DialogHeader>
+        <div className="max-h-[60vh] space-y-1 overflow-y-auto">
+          {reactions.length === 0 ? (
+            <p className="py-6 text-center text-sm text-muted-foreground">لا توجد تفاعلات بعد</p>
+          ) : (
+            reactions.map((reaction) => (
+              <div
+                key={reaction.user_id}
+                className="flex items-center justify-between gap-2 rounded-md border p-2 text-sm"
+              >
+                <div className="flex min-w-0 items-center gap-2">
+                  <span className="text-lg" aria-label="نوع التفاعل">
+                    {reaction.emoji}
+                  </span>
+                  <span className="truncate font-medium">{nameOf(reaction.user_id)}</span>
+                </div>
+                {reaction.created_at && (
+                  <span className="shrink-0 text-[11px] text-muted-foreground">
+                    {new Date(reaction.created_at).toLocaleString("ar-EG")}
+                  </span>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -145,12 +211,12 @@ function ViewersDialog({ announcementId }: { announcementId: string }) {
     queryKey: ["announcement-viewers-profiles", announcementId],
     queryFn: async () => {
       const { data } = await db.from("profiles").select("id,full_name,phone,whatsapp").eq("status", "approved");
-      return (data ?? []) as { id: string; full_name: string }[];
+      return (data ?? []) as Person[];
     },
   });
 
   const rows = views ?? [];
-  const nameOf = (id: string) => people?.find((p) => p.id === id)?.full_name || "عضو";
+  const nameOf = (id: string) => people?.find((person) => person.id === id)?.full_name || "عضو";
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
