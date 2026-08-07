@@ -12,7 +12,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger,
 } from "@/components/ui/dialog";
 import { formatFridayDate } from "@/lib/services";
-import { Plus, CalendarDays, ChevronLeft, Megaphone } from "lucide-react";
+import { Plus, CalendarDays, ChevronLeft, Megaphone, Cake } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/")({
