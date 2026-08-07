@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth-context";
 import { db } from "@/lib/db";
+import { effectiveAge } from "@/lib/age";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
 import { Card } from "@/components/ui/card";

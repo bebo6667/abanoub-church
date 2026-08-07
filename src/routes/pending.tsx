@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { db } from "@/lib/db";
+import { effectiveAge } from "@/lib/age";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -119,7 +120,7 @@ function PendingPage() {
           ) : (
             <dl className="space-y-2 text-sm">
               <Row k="الاسم" v={profile.full_name} />
-              <Row k="العمر" v={profile.age?.toString()} />
+              <Row k="العمر" v={effectiveAge(profile.date_of_birth, profile.age)?.toString()} />
               <Row k="واتساب" v={profile.whatsapp} />
               <Row k="هاتف" v={profile.phone} />
               <Row k="الكنيسة" v={profile.church_name} />

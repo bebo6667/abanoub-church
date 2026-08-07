@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { db } from "@/lib/db";
+import { effectiveAge } from "@/lib/age";
 import { useAuth } from "@/lib/auth-context";
 import { AppShell } from "@/components/AppShell";
 import { Card } from "@/components/ui/card";
@@ -424,7 +425,7 @@ function SectionTable({
                   </td>
                   <td className="p-2 whitespace-nowrap">{u.rank ? RANK_LABELS[u.rank as keyof typeof RANK_LABELS] : "—"}</td>
                   <td className="p-2 whitespace-nowrap">{u.education_stage ? EDUCATION_LABELS[u.education_stage as keyof typeof EDUCATION_LABELS] : "—"}</td>
-                  <td className="p-2">{u.age ?? "—"}</td>
+                  <td className="p-2">{effectiveAge(u.date_of_birth, u.age) ?? "—"}</td>
                   <td className="p-2 whitespace-nowrap">{formatDate(u.date_of_birth)}</td>
                   <td className="p-2 whitespace-nowrap">{formatDate(u.last_confession_date)}</td>
                   <td className="p-2 max-w-[200px]">
