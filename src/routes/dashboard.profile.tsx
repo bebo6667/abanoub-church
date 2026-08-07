@@ -62,7 +62,7 @@ function ProfilePage() {
     setSaving(true);
     const { error } = await db.from("profiles").update({
       full_name: form.full_name,
-      age: form.age ? Number(form.age) : null,
+      age: effectiveAge(form.date_of_birth, form.age ? Number(form.age) : null),
       date_of_birth: form.date_of_birth || null,
       whatsapp: form.whatsapp,
       phone: form.phone || null,
@@ -140,7 +140,10 @@ function ProfilePage() {
         <div className="space-y-3">
           <Field label="الاسم الرباعي" value={form.full_name} onChange={(v) => setForm({ ...form, full_name: v })} />
           <div className="grid grid-cols-2 gap-3">
-            <Field label="العمر" type="number" value={form.age} onChange={(v) => setForm({ ...form, age: v })} />
+            <div>
+              <Label className="mb-1 block">العمر (يُحسب تلقائيًا)</Label>
+              <Input type="number" readOnly value={effectiveAge(form.date_of_birth, form.age ? Number(form.age) : null)?.toString() ?? ""} className="bg-muted" />
+            </div>
             <Field label="تاريخ الميلاد" type="date" value={form.date_of_birth} onChange={(v) => setForm({ ...form, date_of_birth: v })} />
           </div>
 
