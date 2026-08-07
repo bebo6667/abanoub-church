@@ -19,6 +19,7 @@ import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as DashboardProfileRouteImport } from './routes/dashboard.profile'
 import { Route as DashboardMembersRouteImport } from './routes/dashboard.members'
 import { Route as DashboardCheckinRouteImport } from './routes/dashboard.checkin'
+import { Route as AdminBirthdaysRouteImport } from './routes/admin.birthdays'
 import { Route as AdminAnnouncementsRouteImport } from './routes/admin.announcements'
 import { Route as DashboardScheduleIndexRouteImport } from './routes/dashboard.schedule.index'
 import { Route as DashboardScheduleIdRouteImport } from './routes/dashboard.schedule.$id'
@@ -77,6 +78,11 @@ const DashboardCheckinRoute = DashboardCheckinRouteImport.update({
   path: '/checkin',
   getParentRoute: () => DashboardRoute,
 } as any)
+const AdminBirthdaysRoute = AdminBirthdaysRouteImport.update({
+  id: '/birthdays',
+  path: '/birthdays',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminAnnouncementsRoute = AdminAnnouncementsRouteImport.update({
   id: '/announcements',
   path: '/announcements',
@@ -121,6 +127,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRouteWithChildren
   '/pending': typeof PendingRoute
   '/admin/announcements': typeof AdminAnnouncementsRoute
+  '/admin/birthdays': typeof AdminBirthdaysRoute
   '/dashboard/checkin': typeof DashboardCheckinRoute
   '/dashboard/members': typeof DashboardMembersRoute
   '/dashboard/profile': typeof DashboardProfileRoute
@@ -138,6 +145,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/pending': typeof PendingRoute
   '/admin/announcements': typeof AdminAnnouncementsRoute
+  '/admin/birthdays': typeof AdminBirthdaysRoute
   '/dashboard/checkin': typeof DashboardCheckinRoute
   '/dashboard/members': typeof DashboardMembersRoute
   '/dashboard/profile': typeof DashboardProfileRoute
@@ -158,6 +166,7 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRouteWithChildren
   '/pending': typeof PendingRoute
   '/admin/announcements': typeof AdminAnnouncementsRoute
+  '/admin/birthdays': typeof AdminBirthdaysRoute
   '/dashboard/checkin': typeof DashboardCheckinRoute
   '/dashboard/members': typeof DashboardMembersRoute
   '/dashboard/profile': typeof DashboardProfileRoute
@@ -179,6 +188,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/pending'
     | '/admin/announcements'
+    | '/admin/birthdays'
     | '/dashboard/checkin'
     | '/dashboard/members'
     | '/dashboard/profile'
@@ -196,6 +206,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/pending'
     | '/admin/announcements'
+    | '/admin/birthdays'
     | '/dashboard/checkin'
     | '/dashboard/members'
     | '/dashboard/profile'
@@ -215,6 +226,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/pending'
     | '/admin/announcements'
+    | '/admin/birthdays'
     | '/dashboard/checkin'
     | '/dashboard/members'
     | '/dashboard/profile'
@@ -309,6 +321,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardCheckinRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/admin/birthdays': {
+      id: '/admin/birthdays'
+      path: '/birthdays'
+      fullPath: '/admin/birthdays'
+      preLoaderRoute: typeof AdminBirthdaysRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/announcements': {
       id: '/admin/announcements'
       path: '/announcements'
@@ -363,6 +382,7 @@ declare module '@tanstack/react-router' {
 
 interface AdminRouteChildren {
   AdminAnnouncementsRoute: typeof AdminAnnouncementsRoute
+  AdminBirthdaysRoute: typeof AdminBirthdaysRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminScheduleIdCheckinRoute: typeof AdminScheduleIdCheckinRoute
   AdminScheduleIdResponsesRoute: typeof AdminScheduleIdResponsesRoute
@@ -371,6 +391,7 @@ interface AdminRouteChildren {
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAnnouncementsRoute: AdminAnnouncementsRoute,
+  AdminBirthdaysRoute: AdminBirthdaysRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminScheduleIdCheckinRoute: AdminScheduleIdCheckinRoute,
   AdminScheduleIdResponsesRoute: AdminScheduleIdResponsesRoute,
@@ -412,13 +433,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
