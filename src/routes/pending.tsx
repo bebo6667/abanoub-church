@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { db } from "@/lib/db";
+import { effectiveAge } from "@/lib/age";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -64,7 +65,7 @@ function PendingPage() {
   async function save() {
     const { error } = await db.from("profiles").update({
       full_name: form.full_name,
-      age: form.age ? Number(form.age) : null,
+      age: effectiveAge(form.date_of_birth, form.age ? Number(form.age) : null),
       date_of_birth: form.date_of_birth || null,
       whatsapp: form.whatsapp,
       phone: form.phone || null,
@@ -107,7 +108,10 @@ function PendingPage() {
           {editing ? (
             <div className="space-y-3">
               <FieldRow label="الاسم الرباعي" value={form.full_name} onChange={(v) => setForm({ ...form, full_name: v })} />
-              <FieldRow label="العمر" type="number" value={form.age} onChange={(v) => setForm({ ...form, age: v })} />
+              <div>
+                <Label className="mb-1 block">العمر (يُحسب تلقائيًا)</Label>
+                <Input type="number" readOnly className="bg-muted" value={effectiveAge(form.date_of_birth, form.age ? Number(form.age) : null)?.toString() ?? ""} />
+              </div>
               <FieldRow label="تاريخ الميلاد" type="date" value={form.date_of_birth} onChange={(v) => setForm({ ...form, date_of_birth: v })} />
               <FieldRow label="واتساب (سيُضاف +20 تلقائياً)" value={form.whatsapp} onChange={(v) => setForm({ ...form, whatsapp: v })} />
               <FieldRow label="هاتف إضافي للاتصال" value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} />
@@ -119,7 +123,7 @@ function PendingPage() {
           ) : (
             <dl className="space-y-2 text-sm">
               <Row k="الاسم" v={profile.full_name} />
-              <Row k="العمر" v={profile.age?.toString()} />
+              <Row k="العمر" v={effectiveAge(profile.date_of_birth, profile.age)?.toString()} />
               <Row k="واتساب" v={profile.whatsapp} />
               <Row k="هاتف" v={profile.phone} />
               <Row k="الكنيسة" v={profile.church_name} />

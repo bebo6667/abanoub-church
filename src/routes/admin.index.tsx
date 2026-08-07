@@ -12,7 +12,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger,
 } from "@/components/ui/dialog";
 import { formatFridayDate } from "@/lib/services";
-import { Plus, CalendarDays, ChevronLeft, Megaphone } from "lucide-react";
+import { Plus, CalendarDays, ChevronLeft, Megaphone, Cake } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/")({
@@ -86,6 +86,20 @@ function AdminHome() {
           <ChevronLeft className="h-5 w-5 text-muted-foreground" />
         </Card>
       </Link>
+      <Link to="/admin/birthdays">
+        <Card className="p-4 mb-4 flex items-center justify-between hover:bg-accent/30">
+          <div className="flex items-center gap-3">
+            <Cake className="h-5 w-5 text-primary" />
+            <div>
+              <p className="font-medium">أعياد الميلاد</p>
+              <p className="text-xs text-muted-foreground">تهنئة شمامسة هذا الشهر بضغطة زر</p>
+            </div>
+          </div>
+          <ChevronLeft className="h-5 w-5 text-muted-foreground" />
+        </Card>
+      </Link>
+
+
 
 
       <div className="flex items-center justify-between mb-3">
