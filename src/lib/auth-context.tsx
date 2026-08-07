@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { db } from "@/lib/db";
+import { computeAge } from "@/lib/age";
 import type { Session, User } from "@supabase/supabase-js";
 
 export type Profile = {
@@ -78,6 +79,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setProfileMissing(false);
     } else {
       const p = (pRes.data as Profile | null) ?? null;
+      // العمر يتحدث تلقائيًا من تاريخ الميلاد كل يوم
+      if (p?.date_of_birth) {
+        const computed = computeAge(p.date_of_birth);
+        if (computed !== null && computed !== p.age) {
+          p.age = computed;
+          db.from("profiles").update({ age: computed }).eq("id", uid).then(() => {});
+        }
+      }
       setProfile(p);
       setProfileMissing(!p);
     }
