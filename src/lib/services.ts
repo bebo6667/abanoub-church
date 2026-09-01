@@ -1,5 +1,6 @@
 export type ServiceType =
   | "morning_incense"
+  | "gospel_matins"
   | "gospel_first"
   | "gospel_third"
   | "gospel_sixth"
@@ -16,6 +17,7 @@ export type ServiceType =
 
 export const SERVICE_LABELS: Record<ServiceType, string> = {
   morning_incense: "رفع بخور باكر",
+  gospel_matins: "إنجيل باكر",
   gospel_first: "إنجيل الساعة الأولى",
   gospel_third: "إنجيل الساعة الثالثة",
   gospel_sixth: "إنجيل الساعة السادسة",
@@ -33,6 +35,7 @@ export const SERVICE_LABELS: Record<ServiceType, string> = {
 
 export const SERVICE_ORDER: ServiceType[] = [
   "morning_incense",
+  "gospel_matins",
   "gospel_third",
   "gospel_sixth",
   "gospel_ninth",
@@ -45,6 +48,7 @@ export const SERVICE_ORDER: ServiceType[] = [
   "altar_service_post_gospel",
   "screen_service",
 ];
+
 
 export const MULTI_SELECT_SERVICES: ServiceType[] = [
   "morning_incense",

@@ -159,33 +159,42 @@ export type Database = {
         Row: {
           checked_at: string
           checked_by: string
+          confirmed_at: string | null
+          confirmed_by: string | null
           created_at: string
           id: string
           note: string | null
           present: boolean
           schedule_id: string
+          self_reported: boolean
           updated_at: string
           user_id: string
         }
         Insert: {
           checked_at?: string
           checked_by: string
+          confirmed_at?: string | null
+          confirmed_by?: string | null
           created_at?: string
           id?: string
           note?: string | null
           present?: boolean
           schedule_id: string
+          self_reported?: boolean
           updated_at?: string
           user_id: string
         }
         Update: {
           checked_at?: string
           checked_by?: string
+          confirmed_at?: string | null
+          confirmed_by?: string | null
           created_at?: string
           id?: string
           note?: string | null
           present?: boolean
           schedule_id?: string
+          self_reported?: boolean
           updated_at?: string
           user_id?: string
         }
