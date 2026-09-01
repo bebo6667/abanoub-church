@@ -20,7 +20,9 @@ import {
   normalizeWhatsapp, whatsappDigits, formatDate, mapsUrl,
 } from "@/lib/services";
 import { toast } from "sonner";
-import { Phone, MessageCircle, Check, X, Search, Shield, MapPin, Loader2, ChevronDown, ChevronUp } from "lucide-react";
+import { Phone, MessageCircle, Check, X, Search, Shield, MapPin, Loader2, ChevronDown, ChevronUp, Pencil, Trash2 } from "lucide-react";
+import { deleteMember } from "@/lib/api/members.functions";
+
 
 export const Route = createFileRoute("/dashboard/members")({
   component: MembersPage,
@@ -39,6 +41,8 @@ function MembersPage() {
   const [approveRole, setApproveRole] = useState<"deacon" | "servant" | "admin">("deacon");
   const [changeRoleFor, setChangeRoleFor] = useState<Row | null>(null);
   const [newRole, setNewRole] = useState<"deacon" | "servant" | "admin">("deacon");
+  const [editFor, setEditFor] = useState<Row | null>(null);
+
 
   useEffect(() => {
     if (loading) return;
@@ -113,6 +117,19 @@ function MembersPage() {
     qc.invalidateQueries({ queryKey: ["pending-count"] });
     toast.success("تم الرفض");
   }
+
+  async function removeMember(u: Row) {
+    if (!confirm(`حذف ${u.full_name} نهائيًا؟ لا يمكن التراجع.`)) return;
+    try {
+      await deleteMember({ data: { userId: u.id } });
+      qc.invalidateQueries({ queryKey: ["members"] });
+      qc.invalidateQueries({ queryKey: ["pending-count"] });
+      toast.success("تم حذف العضو");
+    } catch (e: any) {
+      toast.error(e?.message ?? "تعذّر حذف العضو");
+    }
+  }
+
 
   if (loading || !profile) {
     return <div className="flex min-h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
