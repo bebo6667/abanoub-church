@@ -118,6 +118,28 @@ function MembersPage() {
     toast.success("تم الرفض");
   }
 
+  async function saveEdit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!editFor) return;
+    const fd = new FormData(e.currentTarget);
+    const payload = {
+      full_name: String(fd.get("full_name") || "").trim(),
+      whatsapp: String(fd.get("whatsapp") || "").trim() || null,
+      phone: String(fd.get("phone") || "").trim() || null,
+      address: String(fd.get("address") || "").trim() || null,
+      date_of_birth: String(fd.get("date_of_birth") || "") || null,
+      rank: (String(fd.get("rank") || "") || null) as any,
+      education_stage: (String(fd.get("education_stage") || "") || null) as any,
+      last_confession_date: String(fd.get("last_confession_date") || "") || null,
+    };
+    if (!payload.full_name) return toast.error("الاسم مطلوب");
+    const { error } = await db.from("profiles").update(payload).eq("id", editFor.id);
+    if (error) return toast.error(error.message);
+    setEditFor(null);
+    qc.invalidateQueries({ queryKey: ["members"] });
+    toast.success("تم تحديث بيانات العضو");
+  }
+
   async function removeMember(u: Row) {
     if (!confirm(`حذف ${u.full_name} نهائيًا؟ لا يمكن التراجع.`)) return;
     try {
@@ -159,6 +181,8 @@ function MembersPage() {
           onApprove={(u) => { setApproveFor(u); setApproveRole("admin"); }}
           onReject={(u) => setRejectFor(u)}
           onChangeRole={(u) => { setChangeRoleFor(u); setNewRole("admin"); }}
+          onEdit={(u) => setEditFor(u)}
+          onDelete={removeMember}
         />
         <SectionTable
           title="الخدام"
@@ -169,6 +193,8 @@ function MembersPage() {
           onApprove={(u) => { setApproveFor(u); setApproveRole("servant"); }}
           onReject={(u) => setRejectFor(u)}
           onChangeRole={(u) => { setChangeRoleFor(u); setNewRole("servant"); }}
+          onEdit={(u) => setEditFor(u)}
+          onDelete={removeMember}
         />
         <SectionTable
           title="الشمامسة"
@@ -180,6 +206,8 @@ function MembersPage() {
           onApprove={(u) => { setApproveFor(u); setApproveRole("deacon"); }}
           onReject={(u) => setRejectFor(u)}
           onChangeRole={(u) => { setChangeRoleFor(u); setNewRole("deacon"); }}
+          onEdit={(u) => setEditFor(u)}
+          onDelete={removeMember}
         />
         {isAdmin && groups.others.length > 0 && (
           <SectionTable
@@ -191,6 +219,8 @@ function MembersPage() {
             onApprove={(u) => { setApproveFor(u); setApproveRole(u.requested_role === "servant" ? "servant" : "deacon"); }}
             onReject={(u) => setRejectFor(u)}
             onChangeRole={(u) => { setChangeRoleFor(u); setNewRole("deacon"); }}
+            onEdit={(u) => setEditFor(u)}
+            onDelete={removeMember}
           />
         )}
       </div>
