@@ -128,6 +128,16 @@ function CheckinPage() {
     qc.invalidateQueries({ queryKey: ["attendance-stats"] });
   }
 
+  async function confirmSelf(userId: string, memberName?: string) {
+    const { error } = await db.from("attendance_checkins")
+      .update({ confirmed_by: user!.id, confirmed_at: new Date().toISOString() })
+      .eq("schedule_id", id).eq("user_id", userId);
+    if (error) return toast.error(error.message);
+    toast.success(`تم تأكيد تسجيل ${memberName ?? "الشماس"}`);
+    qc.invalidateQueries({ queryKey: ["schedule-checkin", id] });
+    qc.invalidateQueries({ queryKey: ["attendance-stats"] });
+  }
+
   async function clearMark(userId: string) {
     const { error } = await db.from("attendance_checkins").delete().eq("schedule_id", id).eq("user_id", userId);
     if (error) return toast.error(error.message);
