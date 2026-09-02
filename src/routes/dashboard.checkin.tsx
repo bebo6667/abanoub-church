@@ -49,6 +49,90 @@ function CheckinHub() {
   );
 }
 
+function SelfCheckinTab() {
+  const { user } = useAuth();
+  const qc = useQueryClient();
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["self-checkin", user?.id],
+    queryFn: async () => {
+      const [{ data: schedules }, { data: checkins }] = await Promise.all([
+        db.from("schedules").select("id, friday_date, status").eq("status", "published")
+          .order("friday_date", { ascending: false }).limit(20),
+        db.from("attendance_checkins").select("*").eq("user_id", user!.id),
+      ]);
+      const map = new Map((checkins ?? []).map((c: any) => [c.schedule_id, c]));
+      return { rows: ((schedules ?? []) as any[]).map((s) => ({ ...s, c: map.get(s.id) as any })) };
+    },
+    enabled: !!user?.id,
+  });
+
+  async function report(scheduleId: string, present: boolean, existing: any) {
+    if (existing && !existing.self_reported) {
+      return toast.info("تم تسجيل حضورك بواسطة الخادم، لا يمكن تعديله");
+    }
+    if (existing?.confirmed_by) {
+      return toast.info("تم تأكيد التسجيل من الخادم، لا يمكن تعديله");
+    }
+    const { error } = await db.from("attendance_checkins").upsert({
+      schedule_id: scheduleId,
+      user_id: user!.id,
+      present,
+      self_reported: true,
+      checked_by: user!.id,
+      checked_at: new Date().toISOString(),
+    }, { onConflict: "schedule_id,user_id" });
+    if (error) return toast.error(error.message);
+    toast.success(present ? "تم تسجيل حضورك، بانتظار تأكيد الخادم" : "تم تسجيل عدم حضورك");
+    qc.invalidateQueries({ queryKey: ["self-checkin"] });
+  }
+
+  if (isLoading) return <Loader />;
+
+  return (
+    <div className="space-y-2">
+      <Card className="p-3 text-xs text-muted-foreground">
+        بعد القداس سجّل حضورك بنفسك، ثم يقوم الخادم بتأكيد التسجيل.
+      </Card>
+      {(data?.rows ?? []).map((r: any) => {
+        const c = r.c;
+        const locked = c && (!c.self_reported || c.confirmed_by);
+        return (
+          <Card key={r.id} className="p-3">
+            <div className="flex items-center gap-2">
+              <CalendarDays className="h-4 w-4 text-primary shrink-0" />
+              <span className="text-sm font-medium flex-1 truncate">{formatFridayDate(r.friday_date)}</span>
+              {c && (
+                c.confirmed_by ? (
+                  <Badge className="bg-success text-success-foreground gap-1"><Check className="h-3 w-3" />مؤكَّد</Badge>
+                ) : (
+                  <Badge variant="secondary">بانتظار التأكيد</Badge>
+                )
+              )}
+            </div>
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              <Button size="sm" disabled={!!locked}
+                variant={c?.present ? "default" : "outline"}
+                className={c?.present ? "bg-success text-success-foreground h-9" : "h-9"}
+                onClick={() => report(r.id, true, c)}>
+                <Check className="h-4 w-4 ml-1" />حضرت
+              </Button>
+              <Button size="sm" disabled={!!locked}
+                variant={c && !c.present ? "destructive" : "outline"} className="h-9"
+                onClick={() => report(r.id, false, c)}>
+                <X className="h-4 w-4 ml-1" />لم أحضر
+              </Button>
+            </div>
+          </Card>
+        );
+      })}
+      {data && data.rows.length === 0 && (
+        <Card className="p-6 text-center text-sm text-muted-foreground">لا توجد قداسات منشورة</Card>
+      )}
+    </div>
+  );
+}
+
 function DatesTab() {
   const { data, isLoading } = useQuery({
     queryKey: ["checkin-schedules"],
