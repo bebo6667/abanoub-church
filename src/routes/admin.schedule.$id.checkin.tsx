@@ -169,6 +169,12 @@ function CheckinPage() {
           <div className="min-w-0 flex-1">
             <p className="font-semibold text-sm truncate">{m.full_name}</p>
             {svc && <p className="text-[11px] text-muted-foreground truncate">{svc.join("، ")}</p>}
+            {c?.self_reported && !c?.confirmed_by && (
+              <Badge variant="secondary" className="mt-0.5 text-[10px]">
+                سجّل بنفسه: {c.present ? "حاضر" : "غائب"} — بانتظار تأكيدك
+              </Badge>
+            )}
+            {c?.confirmed_by && <Badge className="mt-0.5 text-[10px] bg-success text-success-foreground">مؤكَّد</Badge>}
             {c?.note && !editing && <p className="text-[11px] mt-0.5 text-primary">📝 {c.note}</p>}
           </div>
           <div className="flex items-center gap-1 shrink-0">
