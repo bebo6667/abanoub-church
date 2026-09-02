@@ -112,6 +112,9 @@ function CheckinPage() {
       schedule_id: id,
       user_id: userId,
       present,
+      self_reported: false,
+      confirmed_by: user!.id,
+      confirmed_at: new Date().toISOString(),
       checked_by: user!.id,
       checked_at: new Date().toISOString(),
     };
