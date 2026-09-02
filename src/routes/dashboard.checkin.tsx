@@ -27,8 +27,8 @@ function CheckinHub() {
 
   if (!isStaff) {
     return (
-      <AppShell title="الحضور">
-        <Card className="p-6 text-center text-sm text-muted-foreground">هذه الصفحة للخدام فقط</Card>
+      <AppShell title="تسجيل حضوري">
+        <SelfCheckinTab />
       </AppShell>
     );
   }
