@@ -202,6 +202,12 @@ function CheckinPage() {
             <X className="h-4 w-4 ml-1" />غائب
           </Button>
         </div>
+        {c?.self_reported && !c?.confirmed_by && (
+          <Button size="sm" variant="outline" className="mt-2 w-full h-9 gap-1"
+            onClick={() => confirmSelf(m.id, m.full_name)}>
+            <Check className="h-4 w-4" />تأكيد التسجيل الذاتي
+          </Button>
+        )}
         {editing ? (
           <div className="mt-2 flex gap-2">
             <Textarea value={noteText} onChange={(e) => setNoteText(e.target.value)} placeholder="ملاحظة (اختياري)" className="min-h-16" />
