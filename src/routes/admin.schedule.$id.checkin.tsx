@@ -112,6 +112,9 @@ function CheckinPage() {
       schedule_id: id,
       user_id: userId,
       present,
+      self_reported: false,
+      confirmed_by: user!.id,
+      confirmed_at: new Date().toISOString(),
       checked_by: user!.id,
       checked_at: new Date().toISOString(),
     };
@@ -121,6 +124,16 @@ function CheckinPage() {
     const { error } = await db.from("attendance_checkins").upsert(payload, { onConflict: "schedule_id,user_id" });
     if (error) return toast.error(error.message);
     toast.success(`تم حفظ ${present ? "حضور" : "غياب"}${memberName ? ` ${memberName}` : ""} بنجاح`);
+    qc.invalidateQueries({ queryKey: ["schedule-checkin", id] });
+    qc.invalidateQueries({ queryKey: ["attendance-stats"] });
+  }
+
+  async function confirmSelf(userId: string, memberName?: string) {
+    const { error } = await db.from("attendance_checkins")
+      .update({ confirmed_by: user!.id, confirmed_at: new Date().toISOString() })
+      .eq("schedule_id", id).eq("user_id", userId);
+    if (error) return toast.error(error.message);
+    toast.success(`تم تأكيد تسجيل ${memberName ?? "الشماس"}`);
     qc.invalidateQueries({ queryKey: ["schedule-checkin", id] });
     qc.invalidateQueries({ queryKey: ["attendance-stats"] });
   }
@@ -156,6 +169,12 @@ function CheckinPage() {
           <div className="min-w-0 flex-1">
             <p className="font-semibold text-sm truncate">{m.full_name}</p>
             {svc && <p className="text-[11px] text-muted-foreground truncate">{svc.join("، ")}</p>}
+            {c?.self_reported && !c?.confirmed_by && (
+              <Badge variant="secondary" className="mt-0.5 text-[10px]">
+                سجّل بنفسه: {c.present ? "حاضر" : "غائب"} — بانتظار تأكيدك
+              </Badge>
+            )}
+            {c?.confirmed_by && <Badge className="mt-0.5 text-[10px] bg-success text-success-foreground">مؤكَّد</Badge>}
             {c?.note && !editing && <p className="text-[11px] mt-0.5 text-primary">📝 {c.note}</p>}
           </div>
           <div className="flex items-center gap-1 shrink-0">
@@ -183,6 +202,12 @@ function CheckinPage() {
             <X className="h-4 w-4 ml-1" />غائب
           </Button>
         </div>
+        {c?.self_reported && !c?.confirmed_by && (
+          <Button size="sm" variant="outline" className="mt-2 w-full h-9 gap-1"
+            onClick={() => confirmSelf(m.id, m.full_name)}>
+            <Check className="h-4 w-4" />تأكيد التسجيل الذاتي
+          </Button>
+        )}
         {editing ? (
           <div className="mt-2 flex gap-2">
             <Textarea value={noteText} onChange={(e) => setNoteText(e.target.value)} placeholder="ملاحظة (اختياري)" className="min-h-16" />

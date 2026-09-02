@@ -22,6 +22,7 @@ export function AppShell({ children, title, isAdmin: _isAdmin }: { children: Rea
     : [
         { to: "/dashboard", label: "الرئيسية", icon: LayoutDashboard },
         { to: "/dashboard/schedule", label: "الجدول", icon: Calendar },
+        { to: "/dashboard/checkin", label: "حضوري", icon: UserCheck },
         { to: "/dashboard/members", label: "الأعضاء", icon: Users },
         { to: "/dashboard/profile", label: "حسابي", icon: User },
       ];
