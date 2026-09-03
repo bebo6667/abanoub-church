@@ -182,13 +182,16 @@ function ReportsPage() {
 
   function print(target: any[]) {
     if (target.length === 0) return toast.error("اختر شماسًا واحدًا على الأقل");
+    const keys = REPORT_FIELDS.filter((f) => fields[f.key]).map((f) => f.key);
+    if (keys.length === 0) return toast.error("اختر بيانًا واحدًا على الأقل للطباعة");
     const w = window.open("", "_blank", "width=1000,height=800");
     if (!w) return toast.error("امنع حجب النوافذ المنبثقة للطباعة");
-    w.document.write(buildReportHtml(target, data?.totalMasses ?? 0));
+    w.document.write(buildReportHtml(target, data?.totalMasses ?? 0, keys, layout));
     w.document.close();
     w.focus();
     setTimeout(() => w.print(), 400);
   }
+
 
   if (!isStaff) {
     return <AppShell title="الكشوف"><Card className="p-6 text-center text-sm text-muted-foreground">هذه الصفحة للخدام والأدمن فقط</Card></AppShell>;
