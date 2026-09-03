@@ -248,50 +248,34 @@ function esc(v: unknown) {
   return String(v ?? "—").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c] as string));
 }
 
-function buildReportHtml(rows: any[], totalMasses: number) {
+function buildReportHtml(rows: any[], totalMasses: number, keys: string[], layout: Layout) {
   const today = new Date().toLocaleDateString("ar-EG-u-nu-latn", { year: "numeric", month: "long", day: "numeric" });
-  const cards = rows.map((m) => `
+  const fields = REPORT_FIELDS.filter((f) => keys.includes(f.key));
+
+  const cards = rows.map((m) => {
+    const cells = fields.map((f) => `<tr><th>${f.label}</th><td${f.ltr ? ' dir="ltr"' : ""}>${esc(f.get(m, totalMasses))}</td></tr>`).join("");
+    return `
     <section class="card">
       <div class="head">
         <h2>${esc(m.full_name)}</h2>
         <span class="pct">${m.pct}%</span>
       </div>
-      <table>
-        <tr><th>الرتبة</th><td>${esc(m.rank ? RANK_LABELS[m.rank as keyof typeof RANK_LABELS] : null)}</td>
-            <th>المرحلة الدراسية</th><td>${esc(m.education_stage ? EDUCATION_LABELS[m.education_stage as keyof typeof EDUCATION_LABELS] : null)}</td></tr>
-        <tr><th>السن</th><td>${esc(effectiveAge(m.date_of_birth, m.age))}</td>
-            <th>تاريخ الميلاد</th><td>${esc(formatDate(m.date_of_birth))}</td></tr>
-        <tr><th>الواتساب</th><td dir="ltr">${esc(normalizeWhatsapp(m.whatsapp))}</td>
-            <th>الهاتف</th><td dir="ltr">${esc(m.phone)}</td></tr>
-        <tr><th>البريد</th><td dir="ltr">${esc(m.email)}</td>
-            <th>الكنيسة</th><td>${esc(m.church_name)}</td></tr>
-        <tr><th>أب الاعتراف</th><td>${esc(m.spiritual_father)}</td>
-            <th>آخر اعتراف</th><td>${esc(formatDate(m.last_confession_date))}</td></tr>
-        <tr><th>العنوان</th><td colspan="3">${esc(m.address)}</td></tr>
-        <tr><th>الحضور</th><td>${m.present} مرة</td><th>الغياب</th><td>${m.absent} مرة</td></tr>
-        <tr><th>عدد القداسات المسجّلة له</th><td>${m.recorded} من ${totalMasses}</td>
-            <th>نسبة المواظبة</th><td>${m.pct}%</td></tr>
-        <tr><th>آخر حضور</th><td>${esc(m.lastPresent ? formatDate(m.lastPresent) : null)}</td>
-            <th>آخر افتقاد</th><td>${esc(m.lastVisit ? formatDate(m.lastVisit) : null)}</td></tr>
-        <tr><th>آخر خدمة</th><td colspan="3">${m.lastService ? `${esc(formatDate(m.lastService.date))} — ${esc(m.lastService.service)}` : "—"}</td></tr>
-      </table>
-    </section>`).join("");
+      <table>${cells}</table>
+    </section>`;
+  }).join("");
 
   const summary = `
     <table class="summary">
-      <thead><tr><th>#</th><th>الاسم</th><th>الرتبة</th><th>حضور</th><th>غياب</th><th>النسبة</th><th>آخر افتقاد</th><th>آخر خدمة</th><th>آخر اعتراف</th></tr></thead>
+      <thead><tr><th>#</th><th>الاسم</th>${fields.map((f) => `<th>${f.label}</th>`).join("")}</tr></thead>
       <tbody>
         ${rows.map((m, i) => `<tr>
           <td>${i + 1}</td>
           <td>${esc(m.full_name)}</td>
-          <td>${esc(m.rank ? RANK_LABELS[m.rank as keyof typeof RANK_LABELS] : null)}</td>
-          <td>${m.present}</td><td>${m.absent}</td><td>${m.pct}%</td>
-          <td>${esc(m.lastVisit ? formatDate(m.lastVisit) : null)}</td>
-          <td>${esc(m.lastService ? formatDate(m.lastService.date) : null)}</td>
-          <td>${esc(formatDate(m.last_confession_date))}</td>
+          ${fields.map((f) => `<td${f.ltr ? ' dir="ltr"' : ""}>${esc(f.get(m, totalMasses))}</td>`).join("")}
         </tr>`).join("")}
       </tbody>
     </table>`;
+
 
   return `<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8">
 <title>كشف بيانات الشمامسة</title>
