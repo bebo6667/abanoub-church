@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
-import { Church, LogOut, LayoutDashboard, Calendar, Users, User, UserCheck } from "lucide-react";
+import { Church, LogOut, LayoutDashboard, Calendar, Users, User, UserCheck, Sparkles, Globe } from "lucide-react";
 import { NotificationsBell } from "@/components/NotificationsBell";
 import type { ReactNode } from "react";
 
