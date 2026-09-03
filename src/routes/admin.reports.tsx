@@ -227,6 +227,47 @@ function ReportsPage() {
             {allSelected ? "إلغاء التحديد" : "تحديد الكل"}
           </Button>
         </div>
+
+        <div className="flex items-center gap-2">
+          <Select value={layout} onValueChange={(v: any) => setLayout(v)}>
+            <SelectTrigger className="h-9 flex-1"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="both">شكل الطباعة: جدول + بطاقات</SelectItem>
+              <SelectItem value="table">شكل الطباعة: جدول ملخّص فقط</SelectItem>
+              <SelectItem value="cards">شكل الطباعة: بطاقة لكل شماس</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button variant="outline" size="sm" className="h-9" onClick={() => setShowFields((s) => !s)}>
+            البيانات ({REPORT_FIELDS.filter((f) => fields[f.key]).length})
+          </Button>
+        </div>
+
+        {showFields && (
+          <div className="rounded-md border p-2 space-y-2">
+            <div className="flex gap-2">
+              <Button variant="ghost" size="sm" className="h-7 text-xs"
+                onClick={() => setFields(Object.fromEntries(DEFAULT_FIELDS.map((k) => [k, true])))}>
+                تحديد كل البيانات
+              </Button>
+              <Button variant="ghost" size="sm" className="h-7 text-xs"
+                onClick={() => setFields({})}>
+                إلغاء الكل
+              </Button>
+            </div>
+            <div className="grid grid-cols-2 gap-1">
+              {REPORT_FIELDS.map((f) => (
+                <label key={f.key} className="flex items-center gap-2 text-xs py-1">
+                  <Checkbox
+                    checked={!!fields[f.key]}
+                    onCheckedChange={(v) => setFields((s) => ({ ...s, [f.key]: !!v }))}
+                  />
+                  {f.label}
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="flex gap-2">
           <Button className="flex-1 gap-1" onClick={() => print(rows)}>
             <Printer className="h-4 w-4" />طباعة الكل ({rows.length})
