@@ -79,6 +79,11 @@ function ReportsPage() {
   const [q, setQ] = useState("");
   const [sort, setSort] = useState<SortKey>("name");
   const [selected, setSelected] = useState<Record<string, boolean>>({});
+  const [layout, setLayout] = useState<Layout>("both");
+  const [showFields, setShowFields] = useState(false);
+  const [fields, setFields] = useState<Record<string, boolean>>(
+    () => Object.fromEntries(DEFAULT_FIELDS.map((k) => [k, true])),
+  );
 
   const { data, isLoading } = useQuery({
     queryKey: ["report-data"],
