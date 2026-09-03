@@ -271,6 +271,68 @@ function MembersPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={!!editFor} onOpenChange={(v) => !v && setEditFor(null)}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>تعديل بيانات {editFor?.full_name}</DialogTitle></DialogHeader>
+          {editFor && (
+            <form onSubmit={saveEdit} className="space-y-3">
+              <div>
+                <label className="text-xs font-semibold">الاسم</label>
+                <Input name="full_name" defaultValue={editFor.full_name} required />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-xs font-semibold">واتساب</label>
+                  <Input name="whatsapp" defaultValue={editFor.whatsapp ?? ""} dir="ltr" />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold">هاتف</label>
+                  <Input name="phone" defaultValue={editFor.phone ?? ""} dir="ltr" />
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-semibold">العنوان</label>
+                <Input name="address" defaultValue={editFor.address ?? ""} />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-xs font-semibold">تاريخ الميلاد</label>
+                  <Input type="date" name="date_of_birth" defaultValue={editFor.date_of_birth ?? ""} />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold">آخر اعتراف</label>
+                  <Input type="date" name="last_confession_date" defaultValue={editFor.last_confession_date ?? ""} />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-xs font-semibold">الرتبة</label>
+                  <Select name="rank" defaultValue={editFor.rank ?? ""}>
+                    <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+                    <SelectContent>
+                      {RANK_ORDER.map((r) => <SelectItem key={r} value={r}>{RANK_LABELS[r]}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold">المرحلة الدراسية</label>
+                  <Select name="education_stage" defaultValue={editFor.education_stage ?? ""}>
+                    <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+                    <SelectContent>
+                      {EDUCATION_ORDER.map((s) => <SelectItem key={s} value={s}>{EDUCATION_LABELS[s]}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="ghost" onClick={() => setEditFor(null)}>إلغاء</Button>
+                <Button type="submit">حفظ</Button>
+              </DialogFooter>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
     </AppShell>
   );
 }
@@ -301,7 +363,7 @@ function ContactButtons({ u }: { u: Row }) {
 
 function SectionTable({
   title, icon, rows, isAdmin, isStaff, showLinkedServant, byId,
-  onApprove, onReject, onChangeRole,
+  onApprove, onReject, onChangeRole, onEdit, onDelete,
 }: {
   title: string;
   icon?: React.ReactNode;
@@ -313,6 +375,8 @@ function SectionTable({
   onApprove: (u: Row) => void;
   onReject: (u: Row) => void;
   onChangeRole: (u: Row) => void;
+  onEdit: (u: Row) => void;
+  onDelete: (u: Row) => void;
 }) {
   const [q, setQ] = useState("");
   const [rankF, setRankF] = useState<string>("all");
@@ -516,27 +580,37 @@ function SectionTable({
                   )}
                   {isAdmin && (
                     <td className="p-2">
-                      {u.status === "pending" ? (
-                        <div className="flex gap-1 justify-center">
-                          <Button size="sm" className="h-8 bg-success text-success-foreground hover:opacity-90"
+                      <div className="flex gap-1 justify-center items-center">
+                        {u.status === "pending" ? (
+                          <>
+                            <Button size="sm" className="h-8 bg-success text-success-foreground hover:opacity-90"
+                              onClick={() => onApprove(u)}>
+                              <Check className="h-4 w-4" />
+                            </Button>
+                            <Button size="sm" variant="outline" className="h-8" onClick={() => onReject(u)}>
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </>
+                        ) : u.status === "approved" ? (
+                          <Button size="sm" variant="outline" className="h-8 whitespace-nowrap"
+                            onClick={() => onChangeRole(u)}>
+                            تغيير الدور
+                          </Button>
+                        ) : (
+                          <Button size="sm" variant="outline" className="h-8"
                             onClick={() => onApprove(u)}>
-                            <Check className="h-4 w-4" />
+                            إعادة قبول
                           </Button>
-                          <Button size="sm" variant="outline" className="h-8" onClick={() => onReject(u)}>
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ) : u.status === "approved" ? (
-                        <Button size="sm" variant="outline" className="h-8 whitespace-nowrap"
-                          onClick={() => onChangeRole(u)}>
-                          تغيير الدور
+                        )}
+                        <Button size="icon" variant="outline" className="h-8 w-8" title="تعديل البيانات"
+                          onClick={() => onEdit(u)}>
+                          <Pencil className="h-4 w-4" />
                         </Button>
-                      ) : (
-                        <Button size="sm" variant="outline" className="h-8"
-                          onClick={() => onApprove(u)}>
-                          إعادة قبول
+                        <Button size="icon" variant="outline" className="h-8 w-8 text-destructive" title="حذف العضو"
+                          onClick={() => onDelete(u)}>
+                          <Trash2 className="h-4 w-4" />
                         </Button>
-                      )}
+                      </div>
                     </td>
                   )}
                 </tr>
