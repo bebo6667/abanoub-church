@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { db } from "@/lib/db";
 import { useAuth } from "@/lib/auth-context";
-import { effectiveAge } from "@/lib/age";
+import { effectiveAge, formatBirthDate, birthMonth, MONTH_NAMES_AR } from "@/lib/age";
 import { AppShell } from "@/components/AppShell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -33,6 +33,38 @@ export const Route = createFileRoute("/admin/reports")({
 });
 
 type SortKey = "name" | "attendance" | "last_visit" | "last_service" | "last_confession";
+type Layout = "both" | "table" | "cards";
+
+type ReportField = {
+  key: string;
+  label: string;
+  ltr?: boolean;
+  get: (m: any, totalMasses: number) => unknown;
+};
+
+const REPORT_FIELDS: ReportField[] = [
+  { key: "rank", label: "الرتبة", get: (m) => (m.rank ? RANK_LABELS[m.rank as keyof typeof RANK_LABELS] : null) },
+  { key: "education", label: "المرحلة الدراسية", get: (m) => (m.education_stage ? EDUCATION_LABELS[m.education_stage as keyof typeof EDUCATION_LABELS] : null) },
+  { key: "age", label: "السن", get: (m) => effectiveAge(m.date_of_birth, m.age) },
+  { key: "dob", label: "تاريخ الميلاد", get: (m) => (m.date_of_birth ? formatBirthDate(m.date_of_birth) : null) },
+  { key: "birth_month", label: "شهر الميلاد", get: (m) => { const mo = birthMonth(m.date_of_birth); return mo ? MONTH_NAMES_AR[mo - 1] : null; } },
+  { key: "whatsapp", label: "الواتساب", ltr: true, get: (m) => normalizeWhatsapp(m.whatsapp) },
+  { key: "phone", label: "الهاتف", ltr: true, get: (m) => m.phone },
+  { key: "email", label: "البريد", ltr: true, get: (m) => m.email },
+  { key: "church", label: "الكنيسة", get: (m) => m.church_name },
+  { key: "father", label: "أب الاعتراف", get: (m) => m.spiritual_father },
+  { key: "address", label: "العنوان", get: (m) => m.address },
+  { key: "present", label: "الحضور", get: (m) => `${m.present} مرة` },
+  { key: "absent", label: "الغياب", get: (m) => `${m.absent} مرة` },
+  { key: "recorded", label: "القداسات المسجّلة", get: (m, t) => `${m.recorded} من ${t}` },
+  { key: "pct", label: "نسبة المواظبة", get: (m) => `${m.pct}%` },
+  { key: "last_present", label: "آخر حضور", get: (m) => (m.lastPresent ? formatDate(m.lastPresent) : null) },
+  { key: "last_visit", label: "آخر افتقاد", get: (m) => (m.lastVisit ? formatDate(m.lastVisit) : null) },
+  { key: "last_service", label: "آخر خدمة", get: (m) => (m.lastService ? `${formatDate(m.lastService.date)} — ${m.lastService.service}` : null) },
+  { key: "last_confession", label: "آخر اعتراف", get: (m) => formatDate(m.last_confession_date) },
+];
+
+const DEFAULT_FIELDS = REPORT_FIELDS.map((f) => f.key);
 
 function daysSince(d?: string | null) {
   if (!d) return null;
@@ -41,11 +73,17 @@ function daysSince(d?: string | null) {
   return Math.floor((Date.now() - t) / 86400000);
 }
 
+
 function ReportsPage() {
   const { isStaff } = useAuth();
   const [q, setQ] = useState("");
   const [sort, setSort] = useState<SortKey>("name");
   const [selected, setSelected] = useState<Record<string, boolean>>({});
+  const [layout, setLayout] = useState<Layout>("both");
+  const [showFields, setShowFields] = useState(false);
+  const [fields, setFields] = useState<Record<string, boolean>>(
+    () => Object.fromEntries(DEFAULT_FIELDS.map((k) => [k, true])),
+  );
 
   const { data, isLoading } = useQuery({
     queryKey: ["report-data"],
@@ -149,13 +187,16 @@ function ReportsPage() {
 
   function print(target: any[]) {
     if (target.length === 0) return toast.error("اختر شماسًا واحدًا على الأقل");
+    const keys = REPORT_FIELDS.filter((f) => fields[f.key]).map((f) => f.key);
+    if (keys.length === 0) return toast.error("اختر بيانًا واحدًا على الأقل للطباعة");
     const w = window.open("", "_blank", "width=1000,height=800");
     if (!w) return toast.error("امنع حجب النوافذ المنبثقة للطباعة");
-    w.document.write(buildReportHtml(target, data?.totalMasses ?? 0));
+    w.document.write(buildReportHtml(target, data?.totalMasses ?? 0, keys, layout));
     w.document.close();
     w.focus();
     setTimeout(() => w.print(), 400);
   }
+
 
   if (!isStaff) {
     return <AppShell title="الكشوف"><Card className="p-6 text-center text-sm text-muted-foreground">هذه الصفحة للخدام والأدمن فقط</Card></AppShell>;
@@ -186,6 +227,47 @@ function ReportsPage() {
             {allSelected ? "إلغاء التحديد" : "تحديد الكل"}
           </Button>
         </div>
+
+        <div className="flex items-center gap-2">
+          <Select value={layout} onValueChange={(v: any) => setLayout(v)}>
+            <SelectTrigger className="h-9 flex-1"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="both">شكل الطباعة: جدول + بطاقات</SelectItem>
+              <SelectItem value="table">شكل الطباعة: جدول ملخّص فقط</SelectItem>
+              <SelectItem value="cards">شكل الطباعة: بطاقة لكل شماس</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button variant="outline" size="sm" className="h-9" onClick={() => setShowFields((s) => !s)}>
+            البيانات ({REPORT_FIELDS.filter((f) => fields[f.key]).length})
+          </Button>
+        </div>
+
+        {showFields && (
+          <div className="rounded-md border p-2 space-y-2">
+            <div className="flex gap-2">
+              <Button variant="ghost" size="sm" className="h-7 text-xs"
+                onClick={() => setFields(Object.fromEntries(DEFAULT_FIELDS.map((k) => [k, true])))}>
+                تحديد كل البيانات
+              </Button>
+              <Button variant="ghost" size="sm" className="h-7 text-xs"
+                onClick={() => setFields({})}>
+                إلغاء الكل
+              </Button>
+            </div>
+            <div className="grid grid-cols-2 gap-1">
+              {REPORT_FIELDS.map((f) => (
+                <label key={f.key} className="flex items-center gap-2 text-xs py-1">
+                  <Checkbox
+                    checked={!!fields[f.key]}
+                    onCheckedChange={(v) => setFields((s) => ({ ...s, [f.key]: !!v }))}
+                  />
+                  {f.label}
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="flex gap-2">
           <Button className="flex-1 gap-1" onClick={() => print(rows)}>
             <Printer className="h-4 w-4" />طباعة الكل ({rows.length})
@@ -248,50 +330,34 @@ function esc(v: unknown) {
   return String(v ?? "—").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c] as string));
 }
 
-function buildReportHtml(rows: any[], totalMasses: number) {
+function buildReportHtml(rows: any[], totalMasses: number, keys: string[], layout: Layout) {
   const today = new Date().toLocaleDateString("ar-EG-u-nu-latn", { year: "numeric", month: "long", day: "numeric" });
-  const cards = rows.map((m) => `
+  const fields = REPORT_FIELDS.filter((f) => keys.includes(f.key));
+
+  const cards = rows.map((m) => {
+    const cells = fields.map((f) => `<tr><th>${f.label}</th><td${f.ltr ? ' dir="ltr"' : ""}>${esc(f.get(m, totalMasses))}</td></tr>`).join("");
+    return `
     <section class="card">
       <div class="head">
         <h2>${esc(m.full_name)}</h2>
         <span class="pct">${m.pct}%</span>
       </div>
-      <table>
-        <tr><th>الرتبة</th><td>${esc(m.rank ? RANK_LABELS[m.rank as keyof typeof RANK_LABELS] : null)}</td>
-            <th>المرحلة الدراسية</th><td>${esc(m.education_stage ? EDUCATION_LABELS[m.education_stage as keyof typeof EDUCATION_LABELS] : null)}</td></tr>
-        <tr><th>السن</th><td>${esc(effectiveAge(m.date_of_birth, m.age))}</td>
-            <th>تاريخ الميلاد</th><td>${esc(formatDate(m.date_of_birth))}</td></tr>
-        <tr><th>الواتساب</th><td dir="ltr">${esc(normalizeWhatsapp(m.whatsapp))}</td>
-            <th>الهاتف</th><td dir="ltr">${esc(m.phone)}</td></tr>
-        <tr><th>البريد</th><td dir="ltr">${esc(m.email)}</td>
-            <th>الكنيسة</th><td>${esc(m.church_name)}</td></tr>
-        <tr><th>أب الاعتراف</th><td>${esc(m.spiritual_father)}</td>
-            <th>آخر اعتراف</th><td>${esc(formatDate(m.last_confession_date))}</td></tr>
-        <tr><th>العنوان</th><td colspan="3">${esc(m.address)}</td></tr>
-        <tr><th>الحضور</th><td>${m.present} مرة</td><th>الغياب</th><td>${m.absent} مرة</td></tr>
-        <tr><th>عدد القداسات المسجّلة له</th><td>${m.recorded} من ${totalMasses}</td>
-            <th>نسبة المواظبة</th><td>${m.pct}%</td></tr>
-        <tr><th>آخر حضور</th><td>${esc(m.lastPresent ? formatDate(m.lastPresent) : null)}</td>
-            <th>آخر افتقاد</th><td>${esc(m.lastVisit ? formatDate(m.lastVisit) : null)}</td></tr>
-        <tr><th>آخر خدمة</th><td colspan="3">${m.lastService ? `${esc(formatDate(m.lastService.date))} — ${esc(m.lastService.service)}` : "—"}</td></tr>
-      </table>
-    </section>`).join("");
+      <table>${cells}</table>
+    </section>`;
+  }).join("");
 
   const summary = `
     <table class="summary">
-      <thead><tr><th>#</th><th>الاسم</th><th>الرتبة</th><th>حضور</th><th>غياب</th><th>النسبة</th><th>آخر افتقاد</th><th>آخر خدمة</th><th>آخر اعتراف</th></tr></thead>
+      <thead><tr><th>#</th><th>الاسم</th>${fields.map((f) => `<th>${f.label}</th>`).join("")}</tr></thead>
       <tbody>
         ${rows.map((m, i) => `<tr>
           <td>${i + 1}</td>
           <td>${esc(m.full_name)}</td>
-          <td>${esc(m.rank ? RANK_LABELS[m.rank as keyof typeof RANK_LABELS] : null)}</td>
-          <td>${m.present}</td><td>${m.absent}</td><td>${m.pct}%</td>
-          <td>${esc(m.lastVisit ? formatDate(m.lastVisit) : null)}</td>
-          <td>${esc(m.lastService ? formatDate(m.lastService.date) : null)}</td>
-          <td>${esc(formatDate(m.last_confession_date))}</td>
+          ${fields.map((f) => `<td${f.ltr ? ' dir="ltr"' : ""}>${esc(f.get(m, totalMasses))}</td>`).join("")}
         </tr>`).join("")}
       </tbody>
     </table>`;
+
 
   return `<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8">
 <title>كشف بيانات الشمامسة</title>
@@ -312,7 +378,7 @@ function buildReportHtml(rows: any[], totalMasses: number) {
 </style></head><body>
 <h1>كشف بيانات الشمامسة</h1>
 <div class="meta">عدد الشمامسة: ${rows.length} • إجمالي القداسات: ${totalMasses} • تاريخ الطباعة: ${today}</div>
-${rows.length > 1 ? summary : ""}
-${cards}
+${layout !== "cards" ? summary : ""}
+${layout !== "table" ? cards : ""}
 </body></html>`;
 }
