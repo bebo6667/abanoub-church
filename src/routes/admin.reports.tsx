@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { db } from "@/lib/db";
 import { useAuth } from "@/lib/auth-context";
-import { effectiveAge } from "@/lib/age";
+import { effectiveAge, formatBirthDate, birthMonth, MONTH_NAMES_AR } from "@/lib/age";
 import { AppShell } from "@/components/AppShell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
