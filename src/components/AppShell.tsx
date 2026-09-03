@@ -41,6 +41,26 @@ export function AppShell({ children, title, isAdmin: _isAdmin }: { children: Rea
             </div>
           </div>
           <div className="flex items-center gap-1">
+            <a
+              href="https://nour-ai.lovable.app/"
+              target="_blank"
+              rel="noopener noreferrer"
+              title="نور — ذكاء اصطناعي قبطي أرثوذكسي"
+              className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1.5 text-xs font-medium text-primary hover:bg-primary/20 transition-colors"
+            >
+              <Sparkles className="h-4 w-4" />
+              <span className="hidden sm:inline">نور AI</span>
+            </a>
+            <a
+              href="https://nour-el-orthodoxy--bbdgjugbgfdb.replit.app/"
+              target="_blank"
+              rel="noopener noreferrer"
+              title="نور الأرثوذكسية — سوشيال ميديا مسيحية"
+              className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1.5 text-xs font-medium text-primary hover:bg-primary/20 transition-colors"
+            >
+              <Globe className="h-4 w-4" />
+              <span className="hidden sm:inline">نور الأرثوذكسية</span>
+            </a>
             <NotificationsBell />
             <Button
               variant="ghost"
