@@ -296,7 +296,7 @@ function buildReportHtml(rows: any[], totalMasses: number, keys: string[], layou
 </style></head><body>
 <h1>كشف بيانات الشمامسة</h1>
 <div class="meta">عدد الشمامسة: ${rows.length} • إجمالي القداسات: ${totalMasses} • تاريخ الطباعة: ${today}</div>
-${rows.length > 1 ? summary : ""}
-${cards}
+${layout !== "cards" ? summary : ""}
+${layout !== "table" ? cards : ""}
 </body></html>`;
 }
