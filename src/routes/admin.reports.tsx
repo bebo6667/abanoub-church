@@ -33,6 +33,38 @@ export const Route = createFileRoute("/admin/reports")({
 });
 
 type SortKey = "name" | "attendance" | "last_visit" | "last_service" | "last_confession";
+type Layout = "both" | "table" | "cards";
+
+type ReportField = {
+  key: string;
+  label: string;
+  ltr?: boolean;
+  get: (m: any, totalMasses: number) => unknown;
+};
+
+const REPORT_FIELDS: ReportField[] = [
+  { key: "rank", label: "الرتبة", get: (m) => (m.rank ? RANK_LABELS[m.rank as keyof typeof RANK_LABELS] : null) },
+  { key: "education", label: "المرحلة الدراسية", get: (m) => (m.education_stage ? EDUCATION_LABELS[m.education_stage as keyof typeof EDUCATION_LABELS] : null) },
+  { key: "age", label: "السن", get: (m) => effectiveAge(m.date_of_birth, m.age) },
+  { key: "dob", label: "تاريخ الميلاد", get: (m) => (m.date_of_birth ? formatBirthDate(m.date_of_birth) : null) },
+  { key: "birth_month", label: "شهر الميلاد", get: (m) => { const mo = birthMonth(m.date_of_birth); return mo ? MONTH_NAMES_AR[mo - 1] : null; } },
+  { key: "whatsapp", label: "الواتساب", ltr: true, get: (m) => normalizeWhatsapp(m.whatsapp) },
+  { key: "phone", label: "الهاتف", ltr: true, get: (m) => m.phone },
+  { key: "email", label: "البريد", ltr: true, get: (m) => m.email },
+  { key: "church", label: "الكنيسة", get: (m) => m.church_name },
+  { key: "father", label: "أب الاعتراف", get: (m) => m.spiritual_father },
+  { key: "address", label: "العنوان", get: (m) => m.address },
+  { key: "present", label: "الحضور", get: (m) => `${m.present} مرة` },
+  { key: "absent", label: "الغياب", get: (m) => `${m.absent} مرة` },
+  { key: "recorded", label: "القداسات المسجّلة", get: (m, t) => `${m.recorded} من ${t}` },
+  { key: "pct", label: "نسبة المواظبة", get: (m) => `${m.pct}%` },
+  { key: "last_present", label: "آخر حضور", get: (m) => (m.lastPresent ? formatDate(m.lastPresent) : null) },
+  { key: "last_visit", label: "آخر افتقاد", get: (m) => (m.lastVisit ? formatDate(m.lastVisit) : null) },
+  { key: "last_service", label: "آخر خدمة", get: (m) => (m.lastService ? `${formatDate(m.lastService.date)} — ${m.lastService.service}` : null) },
+  { key: "last_confession", label: "آخر اعتراف", get: (m) => formatDate(m.last_confession_date) },
+];
+
+const DEFAULT_FIELDS = REPORT_FIELDS.map((f) => f.key);
 
 function daysSince(d?: string | null) {
   if (!d) return null;
@@ -40,6 +72,7 @@ function daysSince(d?: string | null) {
   if (Number.isNaN(t)) return null;
   return Math.floor((Date.now() - t) / 86400000);
 }
+
 
 function ReportsPage() {
   const { isStaff } = useAuth();
