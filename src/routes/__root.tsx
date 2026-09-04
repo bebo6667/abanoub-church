@@ -43,6 +43,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "خدمة قداس الجمعة" },
       { name: "description", content: "تنظيم خدمة الشمامسة لقداس الجمعة في الكنيسة القبطية الأرثوذكسية" },
       { name: "theme-color", content: "#7a1f2b" },
+      { name: "mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
+      { name: "apple-mobile-web-app-title", content: "خدمة الجمعة" },
+
       { property: "og:title", content: "خدمة قداس الجمعة" },
       { name: "twitter:title", content: "خدمة قداس الجمعة" },
       { property: "og:description", content: "تنظيم خدمة الشمامسة لقداس الجمعة في الكنيسة القبطية الأرثوذكسية" },
