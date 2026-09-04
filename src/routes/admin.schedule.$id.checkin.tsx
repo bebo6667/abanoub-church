@@ -158,7 +158,7 @@ function CheckinPage() {
     const c = checkinMap.get(m.id);
     const svc = services.get(m.id);
     const editing = noteFor === m.id;
-    const wa = normalizePhone(m.whatsapp || m.phone);
+    const wa = whatsappDigits(m.whatsapp || m.phone);
     const tel = normalizePhone(m.phone || m.whatsapp);
     return (
       <Card className="p-3">
@@ -179,7 +179,7 @@ function CheckinPage() {
           </div>
           <div className="flex items-center gap-1 shrink-0">
             {wa && (
-              <a href={`https://wa.me/${wa.replace(/^\+/, "")}`} target="_blank" rel="noopener"
+              <a href={`https://wa.me/${wa}`} target="_blank" rel="noopener"
                 className="h-8 w-8 grid place-items-center rounded-md bg-success/10 text-success hover:bg-success/20" aria-label="واتساب">
                 <MessageCircle className="h-4 w-4" />
               </a>

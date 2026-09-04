@@ -81,7 +81,7 @@ function SchedResponses() {
         {rows.length === 0 && <Card className="p-6 text-center text-sm text-muted-foreground">لا نتائج</Card>}
         {rows.map(({ a, r, status }) => {
           const p = a.profiles;
-          const wa = p?.whatsapp?.replace(/\D/g, "");
+          const wa = whatsappDigits(p?.whatsapp);
           return (
             <Card key={a.id} className="p-3">
               <div className="flex items-center gap-2">

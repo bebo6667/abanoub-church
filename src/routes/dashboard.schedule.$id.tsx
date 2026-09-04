@@ -93,7 +93,7 @@ function ScheduleDetail() {
           const rows = Array.from(byUser.values());
           if (rows.length === 0) return <Card className="p-4 text-center text-xs text-muted-foreground">لا يوجد مخدومون بعد</Card>;
           return rows.map(({ profile, services }) => {
-            const wa = profile.whatsapp?.replace(/\D/g, "");
+            const wa = whatsappDigits(profile.whatsapp);
             return (
               <Card key={profile.id} className="p-3 flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2 min-w-0">

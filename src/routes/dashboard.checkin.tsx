@@ -237,7 +237,7 @@ function StatsTab() {
             <div className="mt-2 flex items-center justify-between gap-2">
               <div className="flex items-center gap-1">
                 {(m.whatsapp || m.phone) && (
-                  <a href={`https://wa.me/${String(m.whatsapp || m.phone).replace(/[^\d+]/g, "").replace(/^\+/, "")}`}
+                  <a href={`https://wa.me/${whatsappDigits(m.whatsapp || m.phone)}`}
                     target="_blank" rel="noopener"
                     className="h-8 w-8 grid place-items-center rounded-md bg-success/10 text-success hover:bg-success/20" aria-label="واتساب">
                     <MessageCircle className="h-4 w-4" />
