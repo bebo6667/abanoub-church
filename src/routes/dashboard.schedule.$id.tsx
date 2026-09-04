@@ -1,6 +1,6 @@
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { db } from "@/lib/db";
 import { AppShell } from "@/components/AppShell";
@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { SERVICE_LABELS, SERVICE_ORDER, formatFridayDate, DECLINE_REASONS, whatsappDigits, type ServiceType } from "@/lib/services";
 import { Phone, MessageCircle, Check, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { ShareAsImage } from "@/components/ShareAsImage";
 
 export const Route = createFileRoute("/dashboard/schedule/$id")({
   component: ScheduleDetail,
@@ -24,6 +25,7 @@ function ScheduleDetail() {
   const { id } = useParams({ from: "/dashboard/schedule/$id" });
   const { user, isStaff } = useAuth();
   const qc = useQueryClient();
+  const shareRef = useRef<HTMLDivElement>(null);
 
 
   const { data, isLoading } = useQuery({
