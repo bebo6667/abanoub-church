@@ -52,6 +52,40 @@ function ScheduleDetail() {
         <h2 className="text-xl font-bold">{formatFridayDate(data.schedule.friday_date)}</h2>
       </Card>
 
+      <div className="mb-4">
+        <ShareAsImage
+          targetRef={shareRef}
+          fileName={`جدول-${data.schedule.friday_date}.png`}
+          shareTitle={`جدول خدمة قداس ${formatFridayDate(data.schedule.friday_date)}`}
+        />
+      </div>
+
+      {/* نسخة نظيفة للتصدير كصورة */}
+      <div style={{ position: "fixed", top: 0, right: "-10000px", width: 720 }} aria-hidden>
+        <div ref={shareRef} dir="rtl" className="bg-card text-foreground p-6" style={{ width: 720 }}>
+          <div className="rounded-xl gradient-sacred text-primary-foreground text-center py-5 mb-5">
+            <p className="text-base opacity-90">+ خدمة قداس يوم الجمعة +</p>
+            <h2 className="text-2xl font-bold">{formatFridayDate(data.schedule.friday_date)}</h2>
+          </div>
+          <ul className="space-y-3">
+            {SERVICE_ORDER.map((svc) => {
+              const names = data.assignments
+                .filter((a) => a.service_type === svc)
+                .map((a) => a.profiles?.full_name)
+                .filter(Boolean);
+              if (names.length === 0) return null;
+              return (
+                <li key={svc} className="border-b border-border/50 last:border-0 pb-2">
+                  <span className="font-bold text-primary">{SERVICE_LABELS[svc]}: </span>
+                  <span className="text-[15px]">{names.join(" — ")}</span>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      </div>
+
+
       <Card className="p-3 mb-4">
         <ul className="space-y-3">
           {SERVICE_ORDER.map((svc) => {
