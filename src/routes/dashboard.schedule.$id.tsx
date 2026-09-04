@@ -1,6 +1,6 @@
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { db } from "@/lib/db";
 import { AppShell } from "@/components/AppShell";
@@ -12,9 +12,10 @@ import {
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { SERVICE_LABELS, SERVICE_ORDER, formatFridayDate, DECLINE_REASONS, type ServiceType } from "@/lib/services";
+import { SERVICE_LABELS, SERVICE_ORDER, formatFridayDate, DECLINE_REASONS, whatsappDigits, type ServiceType } from "@/lib/services";
 import { Phone, MessageCircle, Check, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { ShareAsImage } from "@/components/ShareAsImage";
 
 export const Route = createFileRoute("/dashboard/schedule/$id")({
   component: ScheduleDetail,
@@ -24,6 +25,7 @@ function ScheduleDetail() {
   const { id } = useParams({ from: "/dashboard/schedule/$id" });
   const { user, isStaff } = useAuth();
   const qc = useQueryClient();
+  const shareRef = useRef<HTMLDivElement>(null);
 
 
   const { data, isLoading } = useQuery({
@@ -51,6 +53,40 @@ function ScheduleDetail() {
         <p className="text-sm opacity-90">+ خدمة قداس يوم الجمعة +</p>
         <h2 className="text-xl font-bold">{formatFridayDate(data.schedule.friday_date)}</h2>
       </Card>
+
+      <div className="mb-4">
+        <ShareAsImage
+          targetRef={shareRef}
+          fileName={`جدول-${data.schedule.friday_date}.png`}
+          shareTitle={`جدول خدمة قداس ${formatFridayDate(data.schedule.friday_date)}`}
+        />
+      </div>
+
+      {/* نسخة نظيفة للتصدير كصورة */}
+      <div style={{ position: "fixed", top: 0, right: "-10000px", width: 720 }} aria-hidden>
+        <div ref={shareRef} dir="rtl" className="bg-card text-foreground p-6" style={{ width: 720 }}>
+          <div className="rounded-xl gradient-sacred text-primary-foreground text-center py-5 mb-5">
+            <p className="text-base opacity-90">+ خدمة قداس يوم الجمعة +</p>
+            <h2 className="text-2xl font-bold">{formatFridayDate(data.schedule.friday_date)}</h2>
+          </div>
+          <ul className="space-y-3">
+            {SERVICE_ORDER.map((svc) => {
+              const names = data.assignments
+                .filter((a) => a.service_type === svc)
+                .map((a) => a.profiles?.full_name)
+                .filter(Boolean);
+              if (names.length === 0) return null;
+              return (
+                <li key={svc} className="border-b border-border/50 last:border-0 pb-2">
+                  <span className="font-bold text-primary">{SERVICE_LABELS[svc]}: </span>
+                  <span className="text-[15px]">{names.join(" — ")}</span>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      </div>
+
 
       <Card className="p-3 mb-4">
         <ul className="space-y-3">
@@ -93,7 +129,7 @@ function ScheduleDetail() {
           const rows = Array.from(byUser.values());
           if (rows.length === 0) return <Card className="p-4 text-center text-xs text-muted-foreground">لا يوجد مخدومون بعد</Card>;
           return rows.map(({ profile, services }) => {
-            const wa = profile.whatsapp?.replace(/\D/g, "");
+            const wa = whatsappDigits(profile.whatsapp);
             return (
               <Card key={profile.id} className="p-3 flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2 min-w-0">
