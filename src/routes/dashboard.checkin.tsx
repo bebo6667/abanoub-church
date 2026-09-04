@@ -14,7 +14,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
-import { formatFridayDate } from "@/lib/services";
+import { formatFridayDate, whatsappDigits } from "@/lib/services";
 import { CalendarDays, UserCheck, Search, HeartHandshake, Loader2, Trash2, Plus, MessageCircle, Phone, ListChecks, Check, X } from "lucide-react";
 import { toast } from "sonner";
 

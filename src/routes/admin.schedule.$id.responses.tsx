@@ -6,7 +6,7 @@ import { AppShell } from "@/components/AppShell";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { SERVICE_LABELS, DECLINE_REASONS, formatFridayDate, type ServiceType } from "@/lib/services";
+import { SERVICE_LABELS, DECLINE_REASONS, formatFridayDate, whatsappDigits, type ServiceType } from "@/lib/services";
 import { Loader2, Phone, MessageCircle, ChevronLeft, CheckCircle2, XCircle, Clock } from "lucide-react";
 
 export const Route = createFileRoute("/admin/schedule/$id/responses")({

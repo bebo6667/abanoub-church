@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { SERVICE_LABELS, SERVICE_ORDER, formatFridayDate, DECLINE_REASONS, type ServiceType } from "@/lib/services";
+import { SERVICE_LABELS, SERVICE_ORDER, formatFridayDate, DECLINE_REASONS, whatsappDigits, type ServiceType } from "@/lib/services";
 import { Phone, MessageCircle, Check, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
