@@ -26,6 +26,16 @@ export function NotificationsBell() {
 
   const unread = items.filter((i) => !i.read).length;
 
+  // شارة على أيقونة التطبيق في شاشة الهاتف (بدون فتح التطبيق)
+  useEffect(() => {
+    const n = navigator as Navigator & {
+      setAppBadge?: (n?: number) => Promise<void>;
+      clearAppBadge?: () => Promise<void>;
+    };
+    if (unread > 0) n.setAppBadge?.(unread).catch(() => {});
+    else n.clearAppBadge?.().catch(() => {});
+  }, [unread]);
+
   async function handleClick(it: InboxItem) {
     if (!it.read) {
       await markRead(it.id);
