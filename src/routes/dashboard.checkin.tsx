@@ -15,8 +15,9 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import { formatFridayDate, whatsappDigits } from "@/lib/services";
-import { CalendarDays, UserCheck, Search, HeartHandshake, Loader2, Trash2, Plus, MessageCircle, Phone, ListChecks, Check, X } from "lucide-react";
+import { CalendarDays, UserCheck, Search, HeartHandshake, Loader2, Trash2, Plus, MessageCircle, Phone, ListChecks, Check, X, Star } from "lucide-react";
 import { toast } from "sonner";
+import { fetchDeaconInsights } from "@/lib/suggestions";
 
 export const Route = createFileRoute("/dashboard/checkin")({
   component: CheckinHub,
