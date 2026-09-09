@@ -367,6 +367,7 @@ function VisitsTab() {
 
   return (
     <>
+      <VisitSuggestions onPick={(d) => setSelected(d)} />
       <div className="relative mb-3">
         <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input placeholder="ابحث بالاسم..." value={search} onChange={(e) => setSearch(e.target.value)} className="pr-9" />
