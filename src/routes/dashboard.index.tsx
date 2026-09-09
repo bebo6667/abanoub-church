@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SERVICE_LABELS, formatFridayDate } from "@/lib/services";
-import { CalendarDays, ChevronLeft, BellRing, Eye, Bell, BellOff } from "lucide-react";
+import { CalendarDays, ChevronLeft, BellRing, Eye, Bell, BellOff, ChevronDown } from "lucide-react";
 import { getPermission, type NotifPermission } from "@/lib/notifications";
 import { enablePush, pushSupported } from "@/lib/push";
 import { AnnouncementsFeed } from "@/components/AnnouncementsFeed";
@@ -21,6 +21,7 @@ export const Route = createFileRoute("/dashboard/")({
 
 function DashboardHome() {
   const { user } = useAuth();
+  const [showAllSchedules, setShowAllSchedules] = useState(false);
   const { data: schedules } = useQuery({
     queryKey: ["my-schedules", user?.id],
     queryFn: async () => {
@@ -29,7 +30,7 @@ function DashboardHome() {
         .select("*")
         .eq("status", "published")
         .order("friday_date", { ascending: false })
-        .limit(5);
+        .limit(20);
       return (data ?? []) as any[];
     },
     enabled: !!user,
@@ -118,14 +119,31 @@ function DashboardHome() {
           <h2 className="text-lg font-bold">آخر الجداول</h2>
         </div>
         {schedules && schedules.length > 0 ? (
-          schedules.map((s) => (
-            <Card key={s.id} className="p-4 flex items-center justify-between gap-2">
-              <span className="flex-1 truncate">{formatFridayDate(s.friday_date)}</span>
-              <Link to="/dashboard/schedule/$id" params={{ id: s.id }}>
-                <Button size="sm" className="gap-1"><Eye className="h-4 w-4" />عرض</Button>
-              </Link>
-            </Card>
-          ))
+          (() => {
+            const visible = showAllSchedules ? schedules : schedules.slice(0, 2);
+            return (
+              <>
+                {visible.map((s) => (
+                  <Card key={s.id} className="p-4 flex items-center justify-between gap-2">
+                    <span className="flex-1 truncate">{formatFridayDate(s.friday_date)}</span>
+                    <Link to="/dashboard/schedule/$id" params={{ id: s.id }}>
+                      <Button size="sm" className="gap-1"><Eye className="h-4 w-4" />عرض</Button>
+                    </Link>
+                  </Card>
+                ))}
+                {schedules.length > 2 && (
+                  <Button
+                    variant="ghost"
+                    className="w-full gap-1 text-primary"
+                    onClick={() => setShowAllSchedules((v) => !v)}
+                  >
+                    <ChevronDown className={`h-4 w-4 transition-transform ${showAllSchedules ? "rotate-180" : ""}`} />
+                    {showAllSchedules ? "عرض أقل" : `عرض المزيد (${schedules.length - 2})`}
+                  </Button>
+                )}
+              </>
+            );
+          })()
         ) : (
           <Card className="p-6 text-center text-sm text-muted-foreground">لا توجد جداول منشورة</Card>
         )}
