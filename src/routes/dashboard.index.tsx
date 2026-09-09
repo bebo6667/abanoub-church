@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SERVICE_LABELS, formatFridayDate } from "@/lib/services";
-import { CalendarDays, ChevronLeft, BellRing, Eye, Bell, BellOff } from "lucide-react";
+import { CalendarDays, ChevronLeft, BellRing, Eye, Bell, BellOff, ChevronDown } from "lucide-react";
 import { getPermission, type NotifPermission } from "@/lib/notifications";
 import { enablePush, pushSupported } from "@/lib/push";
 import { AnnouncementsFeed } from "@/components/AnnouncementsFeed";
