@@ -21,6 +21,7 @@ export const Route = createFileRoute("/dashboard/")({
 
 function DashboardHome() {
   const { user } = useAuth();
+  const [showAllSchedules, setShowAllSchedules] = useState(false);
   const { data: schedules } = useQuery({
     queryKey: ["my-schedules", user?.id],
     queryFn: async () => {
@@ -29,7 +30,7 @@ function DashboardHome() {
         .select("*")
         .eq("status", "published")
         .order("friday_date", { ascending: false })
-        .limit(5);
+        .limit(20);
       return (data ?? []) as any[];
     },
     enabled: !!user,
