@@ -15,8 +15,9 @@ import {
   SERVICE_LABELS, SERVICE_ORDER, MULTI_SELECT_SERVICES,
   formatFridayDate, DECLINE_REASONS, type ServiceType,
 } from "@/lib/services";
-import { Loader2, UserPlus, Send, Trash2, X, Search, ClipboardList, UserCheck } from "lucide-react";
+import { Loader2, UserPlus, Send, Trash2, X, Search, ClipboardList, UserCheck, Star, Clock } from "lucide-react";
 import { toast } from "sonner";
+import { fetchDeaconInsights, type DeaconInsight } from "@/lib/suggestions";
 
 export const Route = createFileRoute("/admin/schedule/$id/")({
   component: AdminScheduleEditor,
