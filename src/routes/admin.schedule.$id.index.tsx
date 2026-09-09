@@ -45,9 +45,33 @@ function AdminScheduleEditor() {
     },
   });
 
+  const { data: insights } = useQuery({
+    queryKey: ["deacon-insights"],
+    queryFn: fetchDeaconInsights,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const insightMap = useMemo(() => {
+    const m = new Map<string, DeaconInsight>();
+    for (const i of insights ?? []) m.set(i.id, i);
+    return m;
+  }, [insights]);
+
   const filteredDeacons = useMemo(() => {
-    return (data?.deacons ?? []).filter((d) => !search || d.full_name?.toLowerCase().includes(search.toLowerCase()));
-  }, [data, search]);
+    const q = search.trim().toLowerCase();
+    return (data?.deacons ?? [])
+      .filter((d) => !q || d.full_name?.toLowerCase().includes(q))
+      .sort((a, b) => {
+        const ia = insightMap.get(a.id);
+        const ib = insightMap.get(b.id);
+        const ca = ia?.isCandidate ? 1 : 0;
+        const cb = ib?.isCandidate ? 1 : 0;
+        if (ca !== cb) return cb - ca;
+        return (ib?.candidateScore ?? 0) - (ia?.candidateScore ?? 0);
+      });
+  }, [data, search, insightMap]);
+
+  const candidatesCount = filteredDeacons.filter((d) => insightMap.get(d.id)?.isCandidate).length;
 
   if (isLoading || !data?.schedule) {
     return <AppShell title="تحرير الجدول" isAdmin><div className="grid place-items-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div></AppShell>;
