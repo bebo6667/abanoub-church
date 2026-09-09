@@ -216,13 +216,20 @@ function AdminScheduleEditor() {
             <Search className="h-4 w-4 absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="ابحث..." className="pr-8" />
           </div>
+          {candidatesCount > 0 && (
+            <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+              <Star className="h-3 w-3 fill-gold text-gold" />
+              {candidatesCount} مرشحًا حسب المواظبة والسن والرتبة والبيانات ومدة عدم الخدمة
+            </p>
+          )}
           <div className="overflow-y-auto -mx-6 px-6 flex-1">
             <div className="space-y-1">
               {filteredDeacons.map((d) => {
                 const checked = tempSel.includes(d.id);
                 const isMulti = pickerFor ? MULTI_SELECT_SERVICES.includes(pickerFor) : false;
+                const ins = insightMap.get(d.id);
                 return (
-                  <label key={d.id} className="flex items-center gap-3 p-2 rounded hover:bg-accent/30 cursor-pointer">
+                  <label key={d.id} className={`flex items-center gap-3 p-2 rounded hover:bg-accent/30 cursor-pointer ${ins?.isCandidate ? "bg-gold/10 border border-gold/40" : ""}`}>
                     <Checkbox
                       checked={checked}
                       onCheckedChange={(v) => {
@@ -233,10 +240,26 @@ function AdminScheduleEditor() {
                         }
                       }}
                     />
-                    <div className="h-8 w-8 rounded-full bg-secondary overflow-hidden grid place-items-center text-xs font-semibold">
+                    <div className="h-8 w-8 rounded-full bg-secondary overflow-hidden grid place-items-center text-xs font-semibold shrink-0">
                       {d.profile_image_url ? <img src={d.profile_image_url} className="h-full w-full object-cover" /> : d.full_name?.charAt(0)}
                     </div>
-                    <span className="text-sm flex-1">{d.full_name}</span>
+                    <div className="flex-1 min-w-0">
+                      <span className="text-sm flex items-center gap-1">
+                        {ins?.isCandidate && <Star className="h-4 w-4 fill-gold text-gold shrink-0" />}
+                        <span className="truncate">{d.full_name}</span>
+                      </span>
+                      {ins?.isCandidate && (
+                        <span className="mt-0.5 flex flex-wrap items-center gap-1">
+                          <Badge className="text-[10px] bg-gold/20 text-gold border border-gold/40">مقترح</Badge>
+                          {ins.daysSinceService == null ? (
+                            <Badge variant="outline" className="text-[10px] gap-1"><Clock className="h-3 w-3" />لم يخدم من قبل</Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-[10px] gap-1"><Clock className="h-3 w-3" />{ins.daysSinceService} يومًا بلا خدمة</Badge>
+                          )}
+                          <span className="text-[10px] text-muted-foreground">{ins.candidateReasons.join(" • ")}</span>
+                        </span>
+                      )}
+                    </div>
                   </label>
                 );
               })}
