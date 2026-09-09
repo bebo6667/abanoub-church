@@ -511,3 +511,62 @@ function VisitDialog({ deacon, onClose, pickDeacon }: { deacon: { id: string; na
 function Loader() {
   return <div className="grid place-items-center py-16"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
 }
+
+function VisitSuggestions({ onPick }: { onPick: (d: { id: string; name: string }) => void }) {
+  const [open, setOpen] = useState(false);
+  const { data } = useQuery({
+    queryKey: ["deacon-insights"],
+    queryFn: fetchDeaconInsights,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const list = useMemo(
+    () => (data ?? []).filter((d) => d.needsVisit).sort((a, b) => b.visitScore - a.visitScore),
+    [data],
+  );
+
+  if (list.length === 0) return null;
+  const visible = open ? list : list.slice(0, 3);
+
+  return (
+    <Card className="p-3 mb-3 border-gold/50 bg-gold/5">
+      <div className="flex items-center gap-2 mb-2">
+        <Star className="h-4 w-4 fill-gold text-gold" />
+        <p className="text-sm font-bold flex-1">مقترحون للافتقاد ({list.length})</p>
+      </div>
+      <p className="text-[11px] text-muted-foreground mb-2">
+        مسح دوري حسب نسبة الحضور والغياب المتكرر ومدة عدم الافتقاد.
+      </p>
+      <div className="space-y-2">
+        {visible.map((d) => (
+          <div key={d.id} className="flex items-start gap-2 rounded-md bg-background p-2">
+            <div className="h-8 w-8 rounded-full bg-secondary overflow-hidden grid place-items-center text-xs font-semibold shrink-0">
+              {d.profile_image_url ? <img src={d.profile_image_url} className="h-full w-full object-cover" /> : d.full_name?.charAt(0)}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold truncate">{d.full_name}</p>
+              <p className="text-[11px] text-muted-foreground">{d.visitReasons.join(" • ")}</p>
+            </div>
+            <div className="flex items-center gap-1 shrink-0">
+              {(d.whatsapp || d.phone) && (
+                <a href={`https://wa.me/${whatsappDigits(d.whatsapp || d.phone)}`} target="_blank" rel="noopener"
+                  className="h-8 w-8 grid place-items-center rounded-md bg-success/10 text-success" aria-label="واتساب">
+                  <MessageCircle className="h-4 w-4" />
+                </a>
+              )}
+              <Button size="sm" variant="outline" className="gap-1"
+                onClick={() => onPick({ id: d.id, name: d.full_name })}>
+                <HeartHandshake className="h-4 w-4" />افتقاد
+              </Button>
+            </div>
+          </div>
+        ))}
+      </div>
+      {list.length > 3 && (
+        <Button variant="ghost" size="sm" className="w-full mt-2 text-primary" onClick={() => setOpen((v) => !v)}>
+          {open ? "عرض أقل" : `عرض المزيد (${list.length - 3})`}
+        </Button>
+      )}
+    </Card>
+  );
+}
