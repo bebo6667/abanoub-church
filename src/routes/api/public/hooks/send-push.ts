@@ -46,6 +46,7 @@ export const Route = createFileRoute("/api/public/hooks/send-push")({
                 await webpush.sendNotification(
                   { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
                   payload,
+                  { TTL: 60 * 60 * 24 * 2, urgency: "high" },
                 );
                 sent++;
               } catch (err: any) {
