@@ -309,6 +309,7 @@ export type Database = {
           rank: Database["public"]["Enums"]["deacon_rank"] | null
           rejection_reason: string | null
           requested_role: Database["public"]["Enums"]["requested_role"]
+          school_grade: number | null
           spiritual_father: string | null
           status: Database["public"]["Enums"]["profile_status"]
           updated_at: string
@@ -335,6 +336,7 @@ export type Database = {
           rank?: Database["public"]["Enums"]["deacon_rank"] | null
           rejection_reason?: string | null
           requested_role?: Database["public"]["Enums"]["requested_role"]
+          school_grade?: number | null
           spiritual_father?: string | null
           status?: Database["public"]["Enums"]["profile_status"]
           updated_at?: string
@@ -361,6 +363,7 @@ export type Database = {
           rank?: Database["public"]["Enums"]["deacon_rank"] | null
           rejection_reason?: string | null
           requested_role?: Database["public"]["Enums"]["requested_role"]
+          school_grade?: number | null
           spiritual_father?: string | null
           status?: Database["public"]["Enums"]["profile_status"]
           updated_at?: string
@@ -581,6 +584,7 @@ export type Database = {
         | "diakon"
         | "archdiakon"
       education_stage:
+        | "nursery"
         | "primary"
         | "preparatory"
         | "secondary"
@@ -720,6 +724,7 @@ export const Constants = {
       attendance_status: ["attend", "decline"],
       deacon_rank: ["psaltos", "agnostos", "ibodiakon", "diakon", "archdiakon"],
       education_stage: [
+        "nursery",
         "primary",
         "preparatory",
         "secondary",

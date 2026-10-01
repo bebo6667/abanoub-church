@@ -16,7 +16,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  STATUS_LABELS, RANK_LABELS, RANK_ORDER, EDUCATION_LABELS, EDUCATION_ORDER,
+  STATUS_LABELS, RANK_LABELS, RANK_ORDER, EDUCATION_LABELS, gradeLabel, EDUCATION_ORDER,
   normalizeWhatsapp, whatsappDigits, formatDate, mapsUrl,
 } from "@/lib/services";
 import { toast } from "sonner";
@@ -130,6 +130,7 @@ function MembersPage() {
       date_of_birth: String(fd.get("date_of_birth") || "") || null,
       rank: (String(fd.get("rank") || "") || null) as any,
       education_stage: (String(fd.get("education_stage") || "") || null) as any,
+      school_grade: Number(fd.get("school_grade") || 0) || null,
       last_confession_date: String(fd.get("last_confession_date") || "") || null,
     };
     if (!payload.full_name) return toast.error("الاسم مطلوب");
@@ -321,6 +322,15 @@ function MembersPage() {
                     <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
                     <SelectContent>
                       {EDUCATION_ORDER.map((s) => <SelectItem key={s} value={s}>{EDUCATION_LABELS[s]}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold">الصف / السنة</label>
+                  <Select name="school_grade" defaultValue={editFor.school_grade ? String(editFor.school_grade) : ""}>
+                    <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+                    <SelectContent>
+                      {[1,2,3,4,5,6].map((g) => <SelectItem key={g} value={String(g)}>{g}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
@@ -535,7 +545,7 @@ function SectionTable({
                     {u.rejection_reason && <p className="text-[11px] text-destructive mt-1">رفض: {u.rejection_reason}</p>}
                   </td>
                   <td className="p-2 whitespace-nowrap">{u.rank ? RANK_LABELS[u.rank as keyof typeof RANK_LABELS] : "—"}</td>
-                  <td className="p-2 whitespace-nowrap">{u.education_stage ? EDUCATION_LABELS[u.education_stage as keyof typeof EDUCATION_LABELS] : "—"}</td>
+                  <td className="p-2 whitespace-nowrap">{gradeLabel(u.education_stage, u.school_grade) ?? "—"}</td>
                   <td className="p-2">{effectiveAge(u.date_of_birth, u.age) ?? "—"}</td>
                   <td className="p-2 whitespace-nowrap">{formatDate(u.date_of_birth)}</td>
                   <td className="p-2 whitespace-nowrap">{formatDate(u.last_confession_date)}</td>

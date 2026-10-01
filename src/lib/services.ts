@@ -88,15 +88,27 @@ export const RANK_LABELS: Record<DeaconRank, string> = {
 };
 export const RANK_ORDER: DeaconRank[] = ["psaltos", "agnostos", "ibodiakon", "diakon", "archdiakon"];
 
-export type EducationStage = "primary" | "preparatory" | "secondary" | "university" | "graduate";
+export type EducationStage = "nursery" | "primary" | "preparatory" | "secondary" | "university" | "graduate";
 export const EDUCATION_LABELS: Record<EducationStage, string> = {
+  nursery: "حضانة",
   primary: "ابتدائي",
   preparatory: "إعدادي",
   secondary: "ثانوي",
   university: "جامعي",
   graduate: "خريج",
 };
-export const EDUCATION_ORDER: EducationStage[] = ["primary", "preparatory", "secondary", "university", "graduate"];
+export const EDUCATION_ORDER: EducationStage[] = ["nursery", "primary", "preparatory", "secondary", "university", "graduate"];
+
+export const STAGE_GRADES: Partial<Record<EducationStage, number>> = { nursery: 2, primary: 6, preparatory: 3, secondary: 3, university: 6 };
+export const GRADE_NAMES = ["الأول", "الثاني", "الثالث", "الرابع", "الخامس", "السادس"];
+export function gradeLabel(stage?: string | null, grade?: number | null) {
+  if (!stage) return null;
+  const base = EDUCATION_LABELS[stage as EducationStage] ?? stage;
+  if (!grade) return base;
+  if (stage === "nursery") return grade === 1 ? "KG1" : "KG2";
+  if (stage === "university") return `${base} - الفرقة ${GRADE_NAMES[grade - 1]}`;
+  return `الصف ${GRADE_NAMES[grade - 1]} ${base}`;
+}
 
 export function formatFridayDate(d: string) {
   try {
