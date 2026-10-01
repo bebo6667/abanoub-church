@@ -394,7 +394,7 @@ function esc(v: unknown) {
   return String(v ?? "—").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c] as string));
 }
 
-function buildReportHtml(rows: any[], totalMasses: number, keys: string[], layout: Layout) {
+function buildReportHtml(rows: any[], totalMasses: number, keys: string[], layout: Layout, groupByStage = false) {
   const today = new Date().toLocaleDateString("ar-EG-u-nu-latn", { year: "numeric", month: "long", day: "numeric" });
   const fields = REPORT_FIELDS.filter((f) => keys.includes(f.key));
 
@@ -414,7 +414,7 @@ function buildReportHtml(rows: any[], totalMasses: number, keys: string[], layou
     <table class="summary">
       <thead><tr><th>#</th><th>الاسم</th>${fields.map((f) => `<th>${f.label}</th>`).join("")}</tr></thead>
       <tbody>
-        ${rows.map((m, i) => `<tr>
+        ${rows.map((m, i) => `${groupByStage && (i === 0 || rows[i-1].education_stage !== m.education_stage) ? `<tr><th colspan="${fields.length + 2}" style="background:#eee">${esc(m.education_stage ? EDUCATION_LABELS[m.education_stage as EducationStage] : "بدون مرحلة")}</th></tr>` : ""}<tr>
           <td>${i + 1}</td>
           <td>${esc(m.full_name)}</td>
           ${fields.map((f) => `<td${f.ltr ? ' dir="ltr"' : ""}>${esc(f.get(m, totalMasses))}</td>`).join("")}
