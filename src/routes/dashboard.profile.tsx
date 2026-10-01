@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Loader2, Upload, MapPin, Crosshair } from "lucide-react";
-import { RANK_LABELS, RANK_ORDER, EDUCATION_LABELS, EDUCATION_ORDER, mapsUrl } from "@/lib/services";
+import { RANK_LABELS, RANK_ORDER, EDUCATION_LABELS, STAGE_GRADES, gradeLabel, EDUCATION_ORDER, mapsUrl } from "@/lib/services";
 
 export const Route = createFileRoute("/dashboard/profile")({
   component: ProfilePage,
@@ -35,6 +35,7 @@ function ProfilePage() {
     spiritual_father: profile?.spiritual_father ?? "",
     rank: profile?.rank ?? "",
     education_stage: profile?.education_stage ?? "",
+    school_grade: (profile as any)?.school_grade ? String((profile as any).school_grade) : "",
     last_confession_date: profile?.last_confession_date ?? "",
     home_latitude: profile?.home_latitude ?? null as number | null,
     home_longitude: profile?.home_longitude ?? null as number | null,
@@ -71,6 +72,7 @@ function ProfilePage() {
       spiritual_father: form.spiritual_father,
       rank: (form.rank || null) as any,
       education_stage: (form.education_stage || null) as any,
+      school_grade: (form.school_grade && STAGE_GRADES[form.education_stage as keyof typeof STAGE_GRADES]) ? Number(form.school_grade) : null,
       last_confession_date: form.last_confession_date || null,
       home_latitude: form.home_latitude,
       home_longitude: form.home_longitude,
@@ -166,6 +168,20 @@ function ProfilePage() {
               </SelectContent>
             </Select>
           </div>
+
+          {STAGE_GRADES[form.education_stage as keyof typeof STAGE_GRADES] ? (
+            <div>
+              <Label className="mb-1 block">الصف / السنة</Label>
+              <Select value={form.school_grade || ""} onValueChange={(v) => setForm({ ...form, school_grade: v })}>
+                <SelectTrigger><SelectValue placeholder="اختر الصف" /></SelectTrigger>
+                <SelectContent>
+                  {Array.from({ length: STAGE_GRADES[form.education_stage as keyof typeof STAGE_GRADES]! }, (_, i) => i + 1).map((g) => (
+                    <SelectItem key={g} value={String(g)}>{gradeLabel(form.education_stage, g)}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          ) : null}
 
           <Field label="تاريخ آخر اعتراف" type="date" value={form.last_confession_date} onChange={(v) => setForm({ ...form, last_confession_date: v })} />
 

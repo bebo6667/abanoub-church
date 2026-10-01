@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
-  RANK_LABELS, EDUCATION_LABELS, formatDate, formatFridayDate,
+  RANK_LABELS, EDUCATION_LABELS, EDUCATION_ORDER, STAGE_GRADES, gradeLabel, type EducationStage, formatDate, formatFridayDate,
   normalizeWhatsapp, SERVICE_LABELS, type ServiceType,
 } from "@/lib/services";
 import { Loader2, Printer, Search } from "lucide-react";
@@ -44,7 +44,7 @@ type ReportField = {
 
 const REPORT_FIELDS: ReportField[] = [
   { key: "rank", label: "الرتبة", get: (m) => (m.rank ? RANK_LABELS[m.rank as keyof typeof RANK_LABELS] : null) },
-  { key: "education", label: "المرحلة الدراسية", get: (m) => (m.education_stage ? EDUCATION_LABELS[m.education_stage as keyof typeof EDUCATION_LABELS] : null) },
+  { key: "education", label: "المرحلة الدراسية", get: (m) => gradeLabel(m.education_stage, m.school_grade) },
   { key: "age", label: "السن", get: (m) => effectiveAge(m.date_of_birth, m.age) },
   { key: "dob", label: "تاريخ الميلاد", get: (m) => (m.date_of_birth ? formatBirthDate(m.date_of_birth) : null) },
   { key: "birth_month", label: "شهر الميلاد", get: (m) => { const mo = birthMonth(m.date_of_birth); return mo ? MONTH_NAMES_AR[mo - 1] : null; } },
@@ -81,6 +81,9 @@ function ReportsPage() {
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [layout, setLayout] = useState<Layout>("both");
   const [showFields, setShowFields] = useState(false);
+  const [stageFilter, setStageFilter] = useState<Record<string, boolean>>({});
+  const [gradeRange, setGradeRange] = useState<Record<string, [number, number]>>({});
+  const [groupByStage, setGroupByStage] = useState(true);
   const [fields, setFields] = useState<Record<string, boolean>>(
     () => Object.fromEntries(DEFAULT_FIELDS.map((k) => [k, true])),
   );
@@ -148,6 +151,14 @@ function ReportsPage() {
     const term = q.trim().toLowerCase();
     const list = data.deacons
       .filter((m) => !term || m.full_name?.toLowerCase().includes(term))
+      .filter((m) => {
+        const active = Object.keys(stageFilter).filter((k) => stageFilter[k]);
+        if (active.length === 0) return true;
+        if (!m.education_stage || !stageFilter[m.education_stage]) return false;
+        const r = gradeRange[m.education_stage];
+        if (!r || !STAGE_GRADES[m.education_stage as EducationStage]) return true;
+        return !!m.school_grade && m.school_grade >= r[0] && m.school_grade <= r[1];
+      })
       .map((m) => {
         const s = stats.get(m.id) ?? { present: 0, absent: 0, lastPresent: null };
         const recorded = s.present + s.absent;
@@ -164,7 +175,12 @@ function ReportsPage() {
       });
 
     const nullLast = (v: string | null) => (v ? new Date(v).getTime() : -Infinity);
+    const stageIdx = (m: any) => { const i = EDUCATION_ORDER.indexOf(m.education_stage); return i < 0 ? 99 : i; };
     list.sort((a, b) => {
+      if (groupByStage) {
+        const d = stageIdx(a) - stageIdx(b) || (a.school_grade ?? 99) - (b.school_grade ?? 99);
+        if (d) return d;
+      }
       switch (sort) {
         case "attendance": return a.pct - b.pct;
         case "last_visit": return nullLast(a.lastVisit) - nullLast(b.lastVisit);
@@ -174,7 +190,7 @@ function ReportsPage() {
       }
     });
     return list;
-  }, [data, q, sort]);
+  }, [data, q, sort, stageFilter, gradeRange, groupByStage]);
 
   const selectedRows = rows.filter((r) => selected[r.id]);
   const allSelected = rows.length > 0 && rows.every((r) => selected[r.id]);
@@ -191,7 +207,7 @@ function ReportsPage() {
     if (keys.length === 0) return toast.error("اختر بيانًا واحدًا على الأقل للطباعة");
     const w = window.open("", "_blank", "width=1000,height=800");
     if (!w) return toast.error("امنع حجب النوافذ المنبثقة للطباعة");
-    w.document.write(buildReportHtml(target, data?.totalMasses ?? 0, keys, layout));
+    w.document.write(buildReportHtml(target, data?.totalMasses ?? 0, keys, layout, groupByStage));
     w.document.close();
     w.focus();
     setTimeout(() => w.print(), 400);
@@ -226,6 +242,54 @@ function ReportsPage() {
           <Button variant="outline" size="sm" className="h-9" onClick={toggleAll}>
             {allSelected ? "إلغاء التحديد" : "تحديد الكل"}
           </Button>
+        </div>
+
+        <div className="rounded-md border p-2 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold">تصفية حسب المرحلة</span>
+            <label className="flex items-center gap-1 text-xs">
+              <Checkbox checked={groupByStage} onCheckedChange={(v) => setGroupByStage(!!v)} />
+              ترتيب وتقسيم حسب المرحلة
+            </label>
+          </div>
+          <div className="flex flex-wrap gap-1">
+            {EDUCATION_ORDER.map((s) => (
+              <Button key={s} type="button" size="sm" className="h-7 text-xs"
+                variant={stageFilter[s] ? "default" : "outline"}
+                onClick={() => setStageFilter({ ...stageFilter, [s]: !stageFilter[s] })}>
+                {EDUCATION_LABELS[s]}
+              </Button>
+            ))}
+            {Object.values(stageFilter).some(Boolean) && (
+              <Button type="button" size="sm" variant="ghost" className="h-7 text-xs"
+                onClick={() => { setStageFilter({}); setGradeRange({}); }}>الكل</Button>
+            )}
+          </div>
+          {EDUCATION_ORDER.filter((s) => stageFilter[s] && STAGE_GRADES[s]).map((s) => {
+            const max = STAGE_GRADES[s]!;
+            const r = gradeRange[s] ?? [1, max];
+            const opts = Array.from({ length: max }, (_, i) => i + 1);
+            const set = (i: 0 | 1, v: string) => {
+              const n: [number, number] = [...r] as any; n[i] = Number(v);
+              if (n[0] > n[1]) n[i === 0 ? 1 : 0] = n[i];
+              setGradeRange({ ...gradeRange, [s]: n });
+            };
+            return (
+              <div key={s} className="flex items-center gap-1 text-xs">
+                <span className="w-16 font-semibold">{EDUCATION_LABELS[s]}:</span>
+                <span>من</span>
+                <Select value={String(r[0])} onValueChange={(v) => set(0, v)}>
+                  <SelectTrigger className="h-7 flex-1 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>{opts.map((g) => <SelectItem key={g} value={String(g)}>{gradeLabel(s, g)}</SelectItem>)}</SelectContent>
+                </Select>
+                <span>إلى</span>
+                <Select value={String(r[1])} onValueChange={(v) => set(1, v)}>
+                  <SelectTrigger className="h-7 flex-1 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>{opts.map((g) => <SelectItem key={g} value={String(g)}>{gradeLabel(s, g)}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+            );
+          })}
         </div>
 
         <div className="flex items-center gap-2">
