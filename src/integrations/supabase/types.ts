@@ -560,6 +560,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      deacon_self_attendance_reminder: { Args: never; Returns: undefined }
       friday_attendance_reminder: { Args: never; Returns: undefined }
       has_role: {
         Args: {

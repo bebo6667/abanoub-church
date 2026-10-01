@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1790845582463,
+      "tag": "0000_deacon_friday_morning_reminder",
+      "breakpoints": true
+    }
+  ]
+}
