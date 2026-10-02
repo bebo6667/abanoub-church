@@ -89,3 +89,11 @@
   .border-gold { border-color: var(--gold); }
   .shadow-warm { box-shadow: 0 10px 30px -12px color-mix(in oklab, var(--primary) 30%, transparent); }
 }
+
+/* إخفاء شارة Lovable الأصلية */
+[id*="lovable"], .lovable-badge, #lovable-badge {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
