@@ -32,7 +32,7 @@ export const Route = createFileRoute("/admin/reports")({
   }),
 });
 
-type SortKey = "name" | "attendance" | "last_visit" | "last_service" | "last_confession";
+type SortKey = "name" | "attendance" | "last_visit" | "last_service" | "last_confession" | "dob_oldest" | "dob_youngest";
 type Layout = "both" | "table" | "cards";
 
 type ReportField = {
@@ -186,6 +186,22 @@ function ReportsPage() {
         case "last_visit": return nullLast(a.lastVisit) - nullLast(b.lastVisit);
         case "last_service": return nullLast(a.lastService?.date ?? null) - nullLast(b.lastService?.date ?? null);
         case "last_confession": return nullLast(a.last_confession_date) - nullLast(b.last_confession_date);
+        case "dob_oldest": {
+          const ta = a.date_of_birth ? new Date(a.date_of_birth).getTime() : null;
+          const tb = b.date_of_birth ? new Date(b.date_of_birth).getTime() : null;
+          if (ta == null && tb == null) return String(a.full_name).localeCompare(String(b.full_name), "ar");
+          if (ta == null) return 1;
+          if (tb == null) return -1;
+          return ta - tb;
+        }
+        case "dob_youngest": {
+          const ta = a.date_of_birth ? new Date(a.date_of_birth).getTime() : null;
+          const tb = b.date_of_birth ? new Date(b.date_of_birth).getTime() : null;
+          if (ta == null && tb == null) return String(a.full_name).localeCompare(String(b.full_name), "ar");
+          if (ta == null) return 1;
+          if (tb == null) return -1;
+          return tb - ta;
+        }
         default: return String(a.full_name).localeCompare(String(b.full_name), "ar");
       }
     });
@@ -233,6 +249,8 @@ function ReportsPage() {
             <SelectTrigger className="h-9 flex-1"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="name">ترتيب: الاسم</SelectItem>
+              <SelectItem value="dob_oldest">ترتيب: الأكبر سنًا (الأقدم ميلادًا)</SelectItem>
+              <SelectItem value="dob_youngest">ترتيب: الأصغر سنًا (الأحدث ميلادًا)</SelectItem>
               <SelectItem value="attendance">ترتيب: الأقل مواظبة</SelectItem>
               <SelectItem value="last_visit">ترتيب: الأقدم افتقادًا</SelectItem>
               <SelectItem value="last_service">ترتيب: الأقدم خدمة</SelectItem>
