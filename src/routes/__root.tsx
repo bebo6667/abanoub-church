@@ -11,6 +11,7 @@ import type { ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { AuthProvider } from "@/lib/auth-context";
 import { Toaster } from "@/components/ui/sonner";
+import { BeboBadge } from "@/components/BeboBadge";
 
 function NotFoundComponent() {
   return (
@@ -99,6 +100,7 @@ function RootComponent() {
       <AuthProvider>
         <Outlet />
         <Toaster position="top-center" richColors />
+        <BeboBadge />
       </AuthProvider>
     </QueryClientProvider>
   );
