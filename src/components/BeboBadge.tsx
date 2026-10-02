@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { X } from "lucide-react";
 
 /**
@@ -7,14 +7,9 @@ import { X } from "lucide-react";
  * ثم يعود للظهور تلقائيًا مع كل تحديث أو دخول جديد للموقع.
  */
 export function BeboBadge() {
-  const [mounted, setMounted] = useState(false);
-  const [hidden, setHidden] = useState(true);
+  const [hidden, setHidden] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted || hidden) return null;
+  if (hidden) return null;
 
   return (
     <div
