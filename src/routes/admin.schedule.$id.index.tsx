@@ -18,6 +18,7 @@ import {
 import { Loader2, UserPlus, Send, Trash2, X, Search, ClipboardList, UserCheck, Star, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { fetchDeaconInsights, type DeaconInsight } from "@/lib/suggestions";
+import { WhatsappMessageDialog } from "@/components/WhatsappMessageDialog";
 
 export const Route = createFileRoute("/admin/schedule/$id/")({
   component: AdminScheduleEditor,
@@ -142,7 +143,8 @@ function AdminScheduleEditor() {
           </div>
           <Badge variant="secondary">{isPublished ? "منشور" : "مسودة"}</Badge>
         </div>
-        <div className="flex gap-2 mt-3">
+        <div className="flex flex-wrap gap-2 mt-3">
+          {isPublished && <WhatsappMessageDialog scheduleId={id} />}
           {isPublished ? (
             <Button size="sm" variant="secondary" onClick={unpublish}>إلغاء النشر</Button>
           ) : (
