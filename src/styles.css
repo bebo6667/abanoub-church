@@ -97,3 +97,42 @@
   visibility: hidden !important;
   pointer-events: none !important;
 }
+
+/* Liturgical season themes */
+html[data-liturgy="fast"] {
+  --primary: oklch(0.40 0.14 310);
+  --ring: oklch(0.40 0.14 310);
+  --accent: oklch(0.90 0.05 310);
+  --accent-foreground: oklch(0.28 0.10 310);
+  --secondary: oklch(0.93 0.03 310);
+}
+html[data-liturgy="passion"] {
+  --primary: oklch(0.30 0.12 330);
+  --ring: oklch(0.30 0.12 330);
+  --background: oklch(0.96 0.01 320);
+  --accent: oklch(0.86 0.04 330);
+  --accent-foreground: oklch(0.25 0.08 330);
+  --secondary: oklch(0.90 0.02 320);
+}
+html[data-liturgy="festive"] {
+  --primary: oklch(0.62 0.14 80);
+  --primary-foreground: oklch(0.99 0.005 90);
+  --ring: oklch(0.62 0.14 80);
+  --background: oklch(0.995 0.005 90);
+  --accent: oklch(0.93 0.07 88);
+  --accent-foreground: oklch(0.35 0.08 70);
+  --secondary: oklch(0.96 0.03 88);
+}
+html[data-liturgy="kiahk"] {
+  --primary: oklch(0.40 0.14 255);
+  --ring: oklch(0.40 0.14 255);
+  --accent: oklch(0.90 0.05 240);
+  --accent-foreground: oklch(0.28 0.10 255);
+  --secondary: oklch(0.93 0.03 240);
+}
+html[data-liturgy="annual"] {
+  --primary: oklch(0.42 0.10 140);
+  --ring: oklch(0.42 0.10 140);
+  --accent: oklch(0.90 0.05 120);
+  --accent-foreground: oklch(0.28 0.08 140);
+}

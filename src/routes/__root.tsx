@@ -12,6 +12,7 @@ import appCss from "../styles.css?url";
 import { AuthProvider } from "@/lib/auth-context";
 import { Toaster } from "@/components/ui/sonner";
 import { BeboBadge } from "@/components/BeboBadge";
+import { LiturgicalThemeApplier } from "@/components/CopticDayCard";
 
 function NotFoundComponent() {
   return (
@@ -101,6 +102,7 @@ function RootComponent() {
         <Outlet />
         <Toaster position="top-center" richColors />
         <BeboBadge />
+        <LiturgicalThemeApplier />
       </AuthProvider>
     </QueryClientProvider>
   );

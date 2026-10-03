@@ -13,6 +13,7 @@ import { getPermission, type NotifPermission } from "@/lib/notifications";
 import { enablePush, pushSupported } from "@/lib/push";
 import { AnnouncementsFeed } from "@/components/AnnouncementsFeed";
 import { toast } from "sonner";
+import { CopticDayCard } from "@/components/CopticDayCard";
 
 
 export const Route = createFileRoute("/dashboard/")({
@@ -56,6 +57,7 @@ function DashboardHome() {
   return (
     <AppShell title="خدمة قداس الجمعة">
       <NotificationsBanner />
+      <CopticDayCard />
 
       {pending.length > 0 && (
         <Card className="p-4 mb-4 border-gold/60 bg-gold/10">
