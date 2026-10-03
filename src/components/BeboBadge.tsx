@@ -26,7 +26,7 @@ export function BeboBadge() {
         className="h-6 w-6 rounded-full object-cover ring-1 ring-white/40"
       />
       <span className="text-xs font-semibold tracking-wide text-neutral-900 drop-shadow-sm">
-        Edit with Bebo Nader
+        Developer by Bebo Nader
       </span>
       <button
         type="button"
