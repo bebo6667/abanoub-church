@@ -484,6 +484,27 @@ export type Database = {
         }
         Relationships: []
       }
+      synaxarium_cache: {
+        Row: {
+          coptic_day: number
+          coptic_month: number
+          created_at: string
+          saints: Json
+        }
+        Insert: {
+          coptic_day: number
+          coptic_month: number
+          created_at?: string
+          saints?: Json
+        }
+        Update: {
+          coptic_day?: number
+          coptic_month?: number
+          created_at?: string
+          saints?: Json
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
