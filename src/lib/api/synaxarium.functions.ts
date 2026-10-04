@@ -13,7 +13,8 @@ export const getSynaxarium = createServerFn({ method: "POST" })
     const { data: cached } = await (context.supabase as any)
       .from("synaxarium_cache").select("saints")
       .eq("coptic_month", data.month).eq("coptic_day", data.day).maybeSingle();
-    if (cached?.saints?.length) return { saints: cached.saints as Saint[] };
+    // Ignore incomplete cache entries (single saint) so they get regenerated.
+    if (cached?.saints?.length >= 2) return { saints: cached.saints as Saint[] };
 
     const apiKey = process.env.LOVABLE_API_KEY;
     if (!apiKey) throw new Error("خدمة الذكاء الاصطناعي غير مهيأة");
