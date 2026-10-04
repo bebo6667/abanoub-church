@@ -59,6 +59,23 @@ export function CopticDayCard() {
         <p className="mt-2 text-xs text-muted-foreground">اليوم صوم (صوم الأربعاء والجمعة)</p>
       )}
 
+      {upcoming && (
+        <div className="mt-3 rounded-lg border border-primary/20 bg-background/70 p-3">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-sm font-bold">
+              {upcoming.kind === "fast" ? "🕯 الصوم القادم: " : "🎉 المناسبة القادمة: "}
+              {upcoming.name}
+            </p>
+            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary whitespace-nowrap">
+              بعد {upcoming.daysLeft} {upcoming.daysLeft === 1 ? "يوم" : upcoming.daysLeft === 2 ? "يومين" : "أيام"}
+            </span>
+          </div>
+          {upcoming.info && (
+            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{upcoming.info}</p>
+          )}
+        </div>
+      )}
+
       <button onClick={() => setOpen((o) => !o)}
         className="mt-3 flex w-full items-center justify-between rounded-lg bg-background/70 px-3 py-2 text-sm font-bold">
         <span className="flex items-center gap-2"><Cross className="h-4 w-4 text-primary" /> سنكسار اليوم</span>
