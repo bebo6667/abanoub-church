@@ -13,7 +13,8 @@ export const getSynaxarium = createServerFn({ method: "POST" })
     const { data: cached } = await (context.supabase as any)
       .from("synaxarium_cache").select("saints")
       .eq("coptic_month", data.month).eq("coptic_day", data.day).maybeSingle();
-    if (cached?.saints?.length) return { saints: cached.saints as Saint[] };
+    // Ignore incomplete cache entries (single saint) so they get regenerated.
+    if (cached?.saints?.length >= 2) return { saints: cached.saints as Saint[] };
 
     const apiKey = process.env.LOVABLE_API_KEY;
     if (!apiKey) throw new Error("خدمة الذكاء الاصطناعي غير مهيأة");
@@ -28,8 +29,8 @@ export const getSynaxarium = createServerFn({ method: "POST" })
       model: provider.responses("openai/gpt-6-astra"),
       maxRetries: 0,
       system:
-        "أنت خبير في السنكسار القبطي الأرثوذكسي المعتمد من الكنيسة القبطية. أعد JSON فقط بدون أي نص آخر بالشكل: {\"saints\":[{\"name\":\"...\",\"summary\":\"...\"}]}. اذكر تذكارات هذا اليوم القبطي كما وردت في السنكسار (من 1 إلى 5 تذكارات). الملخص بالعربية في سطرين إلى ثلاثة: من هو، وأبرز ما في سيرته، ودرس روحي قصير للشمامسة. لا تخترع قديسين؛ إن لم تكن متأكدًا قلل العدد.",
-      prompt: `اليوم القبطي: ${data.day} ${COPTIC_MONTHS[data.month - 1]}`,
+        "أنت خبير في السنكسار القبطي الأرثوذكسي المعتمد من الكنيسة القبطية. أعد JSON فقط بدون أي نص آخر بالشكل: {\"saints\":[{\"name\":\"...\",\"summary\":\"...\"}]}. اذكر جميع تذكارات هذا اليوم القبطي كما وردت في السنكسار: المطلوب من 3 إلى 5 تذكارات على الأقل، ولا تكتفِ بتذكار واحد أبدًا إلا إذا كان اليوم لا يحتوي فعليًا إلا على تذكار واحد. الملخص بالعربية في سطرين إلى ثلاثة لكل قديس: من هو، وأبرز ما في سيرته، ودرس روحي قصير للشمامسة. لا تخترع قديسين.",
+      prompt: `اليوم القبطي: ${data.day} ${COPTIC_MONTHS[data.month - 1]} — اذكر كل تذكارات هذا اليوم في السنكسار (3 إلى 5 تذكارات).`,
       providerOptions: {
         openai: { store: false, forceReasoning: true, reasoningEffort: "low", reasoningSummary: "auto", include: ["reasoning.encrypted_content"] },
       },
