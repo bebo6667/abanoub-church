@@ -144,3 +144,47 @@ export function getLiturgicalDay(date: Date = cairoToday()): LiturgicalDay {
 
   return { date, coptic, occasion, fast, isWedFriFast, theme };
 }
+
+/** Short deacon-friendly info for each fast/feast. */
+const EVENT_INFO: Record<string, string> = {
+  "صوم يونان (نينوى)": "صوم ثلاثة أيام على مثال توبة أهل نينوى — بداية روحية للصوم الكبير، تدريب على التوبة والرحمة.",
+  "الصوم الكبير المقدس": "٥٥ يومًا: أسبوع الاستعداد ثم ٤٠ يومًا على مثال صوم السيد المسيح ثم أسبوع الآلام. وقت التوبة والميطانيات والصلوات الطقسية الصومية.",
+  "صوم السيدة العذراء": "١٥ يومًا استعدادًا لعيد صعود جسد العذراء — تُقال فيه مدائح وكيهكية للعذراء يوميًا.",
+  "صوم الميلاد المجيد": "٤٣ يومًا استعدادًا لميلاد المخلص — تُقال فيه سبعة وأربعة ومدائح كيهك في شهر كيهك.",
+  "صوم الرسل الأطهار": "صوم على مثال الرسل قبل كرازتهم — يختلف طوله كل عام حسب موعد القيامة، وينتهي بعيد الرسل بطرس وبولس.",
+  "عيد الميلاد المجيد": "ميلاد السيد المسيح بالجسد — ليلة الميلاد تُقال فيها التسبحة وألحان الفرح.",
+  "عيد الغطاس المجيد": "معمودية السيد المسيح في الأردن — من الأعياد السيدية الكبرى، وفيه الظهور الإلهي.",
+  "عيد القيامة المجيد": "أعظم الأعياد — قيامة المسيح من بين الأموات. تبدأ الخماسين المقدسة بطقس الفرح.",
+  "عيد الصعود المجيد": "صعود الرب إلى السموات بعد أربعين يومًا من القيامة.",
+  "عيد العنصرة (حلول الروح القدس)": "حلول الروح القدس على التلاميذ — عيد تأسيس الكنيسة وبداية الكرازة.",
+  "عيد النيروز — رأس السنة القبطية": "بداية سنة الشهداء — تذكار شهداء الكنيسة وطقس فرايحي.",
+  "عيد الصليب المجيد": "تذكار ظهور الصليب المقدس على يد الملكة هيلانة.",
+};
+
+export type UpcomingEvent = { name: string; daysLeft: number; kind: "fast" | "feast"; info: string | null };
+
+/** Nearest upcoming fast or major feast within the next 90 days. */
+export function getUpcomingEvent(date: Date = cairoToday()): UpcomingEvent | null {
+  const candidates: { name: string; start: Date; kind: "fast" | "feast" }[] = [];
+  for (const y of [date.getUTCFullYear(), date.getUTCFullYear() + 1]) {
+    for (const r of fastRanges(y)) candidates.push({ name: r.name, start: r.start, kind: "fast" });
+    const easter = copticEaster(y);
+    candidates.push(
+      { name: "عيد الميلاد المجيد", start: utc(y, 1, 7), kind: "feast" },
+      { name: "عيد الغطاس المجيد", start: utc(y, 1, 19), kind: "feast" },
+      { name: "عيد القيامة المجيد", start: easter, kind: "feast" },
+      { name: "عيد الصعود المجيد", start: addDays(easter, 39), kind: "feast" },
+      { name: "عيد العنصرة (حلول الروح القدس)", start: addDays(easter, 49), kind: "feast" },
+      { name: "عيد النيروز — رأس السنة القبطية", start: utc(y, 9, 11), kind: "feast" },
+      { name: "عيد الصليب المجيد", start: utc(y, 9, 27), kind: "feast" },
+    );
+  }
+  let best: UpcomingEvent | null = null;
+  for (const c of candidates) {
+    const daysLeft = diffDays(c.start, date);
+    if (daysLeft <= 0 || daysLeft > 90) continue;
+    if (!best || daysLeft < best.daysLeft)
+      best = { name: c.name, daysLeft, kind: c.kind, info: EVENT_INFO[c.name] ?? null };
+  }
+  return best;
+}
