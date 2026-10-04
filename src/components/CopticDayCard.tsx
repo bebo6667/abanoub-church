@@ -9,8 +9,13 @@ import { getSynaxarium } from "@/lib/api/synaxarium.functions";
 
 export function CopticDayCard() {
   const [day, setDay] = useState<LiturgicalDay | null>(null);
+  const [upcoming, setUpcoming] = useState<UpcomingEvent | null>(null);
   const [open, setOpen] = useState(false);
-  useEffect(() => setDay(getLiturgicalDay()), []);
+  useEffect(() => {
+    const d = getLiturgicalDay();
+    setDay(d);
+    setUpcoming(getUpcomingEvent(d.date));
+  }, []);
   const fetchSyn = useServerFn(getSynaxarium);
   const syn = useQuery({
     queryKey: ["synaxarium", day?.coptic.month, day?.coptic.day],
