@@ -4,13 +4,18 @@ import { useServerFn } from "@tanstack/react-start";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { ChevronDown, Cross, Loader2 } from "lucide-react";
-import { getLiturgicalDay, THEME_LABELS, type LiturgicalDay } from "@/lib/coptic-calendar";
+import { getLiturgicalDay, getUpcomingEvent, THEME_LABELS, type LiturgicalDay, type UpcomingEvent } from "@/lib/coptic-calendar";
 import { getSynaxarium } from "@/lib/api/synaxarium.functions";
 
 export function CopticDayCard() {
   const [day, setDay] = useState<LiturgicalDay | null>(null);
+  const [upcoming, setUpcoming] = useState<UpcomingEvent | null>(null);
   const [open, setOpen] = useState(false);
-  useEffect(() => setDay(getLiturgicalDay()), []);
+  useEffect(() => {
+    const d = getLiturgicalDay();
+    setDay(d);
+    setUpcoming(getUpcomingEvent(d.date));
+  }, []);
   const fetchSyn = useServerFn(getSynaxarium);
   const syn = useQuery({
     queryKey: ["synaxarium", day?.coptic.month, day?.coptic.day],
@@ -52,6 +57,23 @@ export function CopticDayCard() {
       )}
       {!fast && day.isWedFriFast && (
         <p className="mt-2 text-xs text-muted-foreground">اليوم صوم (صوم الأربعاء والجمعة)</p>
+      )}
+
+      {upcoming && (
+        <div className="mt-3 rounded-lg border border-primary/20 bg-background/70 p-3">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-sm font-bold">
+              {upcoming.kind === "fast" ? "🕯 الصوم القادم: " : "🎉 المناسبة القادمة: "}
+              {upcoming.name}
+            </p>
+            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary whitespace-nowrap">
+              بعد {upcoming.daysLeft} {upcoming.daysLeft === 1 ? "يوم" : upcoming.daysLeft === 2 ? "يومين" : "أيام"}
+            </span>
+          </div>
+          {upcoming.info && (
+            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{upcoming.info}</p>
+          )}
+        </div>
       )}
 
       <button onClick={() => setOpen((o) => !o)}
