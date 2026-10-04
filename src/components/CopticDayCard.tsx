@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { ChevronDown, Cross, Loader2 } from "lucide-react";
-import { getLiturgicalDay, THEME_LABELS, type LiturgicalDay } from "@/lib/coptic-calendar";
+import { getLiturgicalDay, getUpcomingEvent, THEME_LABELS, type LiturgicalDay, type UpcomingEvent } from "@/lib/coptic-calendar";
 import { getSynaxarium } from "@/lib/api/synaxarium.functions";
 
 export function CopticDayCard() {
