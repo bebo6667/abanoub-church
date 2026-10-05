@@ -112,7 +112,7 @@ function HymnPage() {
   const embed = h?.video_url ? embedUrl(h.video_url) : null;
 
   return (
-    <AppShell>
+    <AppShell title={name}>
       <div className="space-y-4" dir="rtl">
         <Link to="/dashboard/synaxarium" className="inline-flex items-center gap-1 text-sm text-muted-foreground">
           <ArrowRight className="h-4 w-4" /> رجوع للسنكسار
