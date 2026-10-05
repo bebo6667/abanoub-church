@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -119,7 +119,16 @@ function SynaxariumPage() {
               </p>
               <ul className="space-y-1.5">
                 {details.hymns.map((h) => (
-                  <li key={h} className="rounded-lg border bg-card px-3 py-2 text-sm">{h}</li>
+                  <li key={h}>
+                    <Link
+                      to="/dashboard/hymn/$name"
+                      params={{ name: h }}
+                      className="flex items-center justify-between rounded-lg border bg-card px-3 py-2 text-sm hover:bg-accent"
+                    >
+                      <span>{h}</span>
+                      <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+                    </Link>
+                  </li>
                 ))}
               </ul>
             </div>

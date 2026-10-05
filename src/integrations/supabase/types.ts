@@ -256,6 +256,36 @@ export type Database = {
           },
         ]
       }
+      hymn_details: {
+        Row: {
+          explanation: string | null
+          info: string | null
+          name: string
+          updated_at: string
+          updated_by: string | null
+          video_path: string | null
+          video_url: string | null
+        }
+        Insert: {
+          explanation?: string | null
+          info?: string | null
+          name: string
+          updated_at?: string
+          updated_by?: string | null
+          video_path?: string | null
+          video_url?: string | null
+        }
+        Update: {
+          explanation?: string | null
+          info?: string | null
+          name?: string
+          updated_at?: string
+          updated_by?: string | null
+          video_path?: string | null
+          video_url?: string | null
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           body: string | null

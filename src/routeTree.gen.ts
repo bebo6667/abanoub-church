@@ -25,6 +25,7 @@ import { Route as AdminBirthdaysRouteImport } from './routes/admin.birthdays'
 import { Route as AdminAnnouncementsRouteImport } from './routes/admin.announcements'
 import { Route as DashboardScheduleIndexRouteImport } from './routes/dashboard.schedule.index'
 import { Route as DashboardScheduleIdRouteImport } from './routes/dashboard.schedule.$id'
+import { Route as DashboardHymnNameRouteImport } from './routes/dashboard.hymn.$name'
 import { Route as AdminScheduleIdIndexRouteImport } from './routes/admin.schedule.$id.index'
 import { Route as ApiPublicHooksSendPushRouteImport } from './routes/api/public/hooks/send-push'
 import { Route as AdminScheduleIdResponsesRouteImport } from './routes/admin.schedule.$id.responses'
@@ -110,6 +111,11 @@ const DashboardScheduleIdRoute = DashboardScheduleIdRouteImport.update({
   path: '/schedule/$id',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardHymnNameRoute = DashboardHymnNameRouteImport.update({
+  id: '/hymn/$name',
+  path: '/hymn/$name',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const AdminScheduleIdIndexRoute = AdminScheduleIdIndexRouteImport.update({
   id: '/schedule/$id/',
   path: '/schedule/$id/',
@@ -147,6 +153,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/synaxarium': typeof DashboardSynaxariumRoute
   '/admin/': typeof AdminIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/dashboard/hymn/$name': typeof DashboardHymnNameRoute
   '/dashboard/schedule/$id': typeof DashboardScheduleIdRoute
   '/dashboard/schedule/': typeof DashboardScheduleIndexRoute
   '/admin/schedule/$id/checkin': typeof AdminScheduleIdCheckinRoute
@@ -167,6 +174,7 @@ export interface FileRoutesByTo {
   '/dashboard/synaxarium': typeof DashboardSynaxariumRoute
   '/admin': typeof AdminIndexRoute
   '/dashboard': typeof DashboardIndexRoute
+  '/dashboard/hymn/$name': typeof DashboardHymnNameRoute
   '/dashboard/schedule/$id': typeof DashboardScheduleIdRoute
   '/dashboard/schedule': typeof DashboardScheduleIndexRoute
   '/admin/schedule/$id/checkin': typeof AdminScheduleIdCheckinRoute
@@ -190,6 +198,7 @@ export interface FileRoutesById {
   '/dashboard/synaxarium': typeof DashboardSynaxariumRoute
   '/admin/': typeof AdminIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/dashboard/hymn/$name': typeof DashboardHymnNameRoute
   '/dashboard/schedule/$id': typeof DashboardScheduleIdRoute
   '/dashboard/schedule/': typeof DashboardScheduleIndexRoute
   '/admin/schedule/$id/checkin': typeof AdminScheduleIdCheckinRoute
@@ -214,6 +223,7 @@ export interface FileRouteTypes {
     | '/dashboard/synaxarium'
     | '/admin/'
     | '/dashboard/'
+    | '/dashboard/hymn/$name'
     | '/dashboard/schedule/$id'
     | '/dashboard/schedule/'
     | '/admin/schedule/$id/checkin'
@@ -234,6 +244,7 @@ export interface FileRouteTypes {
     | '/dashboard/synaxarium'
     | '/admin'
     | '/dashboard'
+    | '/dashboard/hymn/$name'
     | '/dashboard/schedule/$id'
     | '/dashboard/schedule'
     | '/admin/schedule/$id/checkin'
@@ -256,6 +267,7 @@ export interface FileRouteTypes {
     | '/dashboard/synaxarium'
     | '/admin/'
     | '/dashboard/'
+    | '/dashboard/hymn/$name'
     | '/dashboard/schedule/$id'
     | '/dashboard/schedule/'
     | '/admin/schedule/$id/checkin'
@@ -387,6 +399,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardScheduleIdRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/hymn/$name': {
+      id: '/dashboard/hymn/$name'
+      path: '/hymn/$name'
+      fullPath: '/dashboard/hymn/$name'
+      preLoaderRoute: typeof DashboardHymnNameRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/admin/schedule/$id/': {
       id: '/admin/schedule/$id/'
       path: '/schedule/$id'
@@ -446,6 +465,7 @@ interface DashboardRouteChildren {
   DashboardProfileRoute: typeof DashboardProfileRoute
   DashboardSynaxariumRoute: typeof DashboardSynaxariumRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
+  DashboardHymnNameRoute: typeof DashboardHymnNameRoute
   DashboardScheduleIdRoute: typeof DashboardScheduleIdRoute
   DashboardScheduleIndexRoute: typeof DashboardScheduleIndexRoute
 }
@@ -456,6 +476,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardProfileRoute: DashboardProfileRoute,
   DashboardSynaxariumRoute: DashboardSynaxariumRoute,
   DashboardIndexRoute: DashboardIndexRoute,
+  DashboardHymnNameRoute: DashboardHymnNameRoute,
   DashboardScheduleIdRoute: DashboardScheduleIdRoute,
   DashboardScheduleIndexRoute: DashboardScheduleIndexRoute,
 }
