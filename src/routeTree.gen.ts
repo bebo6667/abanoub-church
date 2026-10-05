@@ -16,6 +16,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as DashboardSynaxariumRouteImport } from './routes/dashboard.synaxarium'
 import { Route as DashboardProfileRouteImport } from './routes/dashboard.profile'
 import { Route as DashboardMembersRouteImport } from './routes/dashboard.members'
 import { Route as DashboardCheckinRouteImport } from './routes/dashboard.checkin'
@@ -63,6 +64,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AdminRoute,
+} as any)
+const DashboardSynaxariumRoute = DashboardSynaxariumRouteImport.update({
+  id: '/synaxarium',
+  path: '/synaxarium',
+  getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardProfileRoute = DashboardProfileRouteImport.update({
   id: '/profile',
@@ -138,6 +144,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/checkin': typeof DashboardCheckinRoute
   '/dashboard/members': typeof DashboardMembersRoute
   '/dashboard/profile': typeof DashboardProfileRoute
+  '/dashboard/synaxarium': typeof DashboardSynaxariumRoute
   '/admin/': typeof AdminIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/schedule/$id': typeof DashboardScheduleIdRoute
@@ -157,6 +164,7 @@ export interface FileRoutesByTo {
   '/dashboard/checkin': typeof DashboardCheckinRoute
   '/dashboard/members': typeof DashboardMembersRoute
   '/dashboard/profile': typeof DashboardProfileRoute
+  '/dashboard/synaxarium': typeof DashboardSynaxariumRoute
   '/admin': typeof AdminIndexRoute
   '/dashboard': typeof DashboardIndexRoute
   '/dashboard/schedule/$id': typeof DashboardScheduleIdRoute
@@ -179,6 +187,7 @@ export interface FileRoutesById {
   '/dashboard/checkin': typeof DashboardCheckinRoute
   '/dashboard/members': typeof DashboardMembersRoute
   '/dashboard/profile': typeof DashboardProfileRoute
+  '/dashboard/synaxarium': typeof DashboardSynaxariumRoute
   '/admin/': typeof AdminIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/schedule/$id': typeof DashboardScheduleIdRoute
@@ -202,6 +211,7 @@ export interface FileRouteTypes {
     | '/dashboard/checkin'
     | '/dashboard/members'
     | '/dashboard/profile'
+    | '/dashboard/synaxarium'
     | '/admin/'
     | '/dashboard/'
     | '/dashboard/schedule/$id'
@@ -221,6 +231,7 @@ export interface FileRouteTypes {
     | '/dashboard/checkin'
     | '/dashboard/members'
     | '/dashboard/profile'
+    | '/dashboard/synaxarium'
     | '/admin'
     | '/dashboard'
     | '/dashboard/schedule/$id'
@@ -242,6 +253,7 @@ export interface FileRouteTypes {
     | '/dashboard/checkin'
     | '/dashboard/members'
     | '/dashboard/profile'
+    | '/dashboard/synaxarium'
     | '/admin/'
     | '/dashboard/'
     | '/dashboard/schedule/$id'
@@ -311,6 +323,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/dashboard/synaxarium': {
+      id: '/dashboard/synaxarium'
+      path: '/synaxarium'
+      fullPath: '/dashboard/synaxarium'
+      preLoaderRoute: typeof DashboardSynaxariumRouteImport
+      parentRoute: typeof DashboardRoute
     }
     '/dashboard/profile': {
       id: '/dashboard/profile'
@@ -425,6 +444,7 @@ interface DashboardRouteChildren {
   DashboardCheckinRoute: typeof DashboardCheckinRoute
   DashboardMembersRoute: typeof DashboardMembersRoute
   DashboardProfileRoute: typeof DashboardProfileRoute
+  DashboardSynaxariumRoute: typeof DashboardSynaxariumRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
   DashboardScheduleIdRoute: typeof DashboardScheduleIdRoute
   DashboardScheduleIndexRoute: typeof DashboardScheduleIndexRoute
@@ -434,6 +454,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardCheckinRoute: DashboardCheckinRoute,
   DashboardMembersRoute: DashboardMembersRoute,
   DashboardProfileRoute: DashboardProfileRoute,
+  DashboardSynaxariumRoute: DashboardSynaxariumRoute,
   DashboardIndexRoute: DashboardIndexRoute,
   DashboardScheduleIdRoute: DashboardScheduleIdRoute,
   DashboardScheduleIndexRoute: DashboardScheduleIndexRoute,
