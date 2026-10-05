@@ -1,29 +1,18 @@
 import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { Link } from "@tanstack/react-router";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { ChevronDown, Cross, Loader2 } from "lucide-react";
+import { ChevronLeft, Cross } from "lucide-react";
 import { getLiturgicalDay, getUpcomingEvent, THEME_LABELS, type LiturgicalDay, type UpcomingEvent } from "@/lib/coptic-calendar";
-import { getSynaxarium } from "@/lib/api/synaxarium.functions";
 
 export function CopticDayCard() {
   const [day, setDay] = useState<LiturgicalDay | null>(null);
   const [upcoming, setUpcoming] = useState<UpcomingEvent | null>(null);
-  const [open, setOpen] = useState(false);
   useEffect(() => {
     const d = getLiturgicalDay();
     setDay(d);
     setUpcoming(getUpcomingEvent(d.date));
   }, []);
-  const fetchSyn = useServerFn(getSynaxarium);
-  const syn = useQuery({
-    queryKey: ["synaxarium", day?.coptic.month, day?.coptic.day],
-    queryFn: () => fetchSyn({ data: { month: day!.coptic.month, day: day!.coptic.day } }),
-    enabled: !!day && open,
-    staleTime: Infinity,
-    retry: false,
-  });
   if (!day) return null;
   const { coptic, fast, occasion } = day;
 
@@ -76,24 +65,13 @@ export function CopticDayCard() {
         </div>
       )}
 
-      <button onClick={() => setOpen((o) => !o)}
-        className="mt-3 flex w-full items-center justify-between rounded-lg bg-background/70 px-3 py-2 text-sm font-bold">
-        <span className="flex items-center gap-2"><Cross className="h-4 w-4 text-primary" /> سنكسار اليوم</span>
-        <ChevronDown className={`h-4 w-4 transition ${open ? "rotate-180" : ""}`} />
-      </button>
-      {open && (
-        <div className="mt-2 space-y-2">
-          {syn.isLoading && <p className="flex items-center gap-2 text-xs text-muted-foreground"><Loader2 className="h-3 w-3 animate-spin" /> جاري تحميل السنكسار...</p>}
-          {syn.error && <p className="text-xs text-destructive">{(syn.error as Error).message}</p>}
-          {syn.data?.saints.map((s) => (
-            <div key={s.name} className="rounded-lg border bg-card p-3">
-              <p className="font-bold text-sm text-primary">{s.name}</p>
-              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{s.summary}</p>
-            </div>
-          ))}
-          {syn.data && <p className="text-[10px] text-muted-foreground">الملخصات مكتوبة بالذكاء الاصطناعي.</p>}
-        </div>
-      )}
+      <Link
+        to="/dashboard/synaxarium"
+        className="mt-3 flex w-full items-center justify-between rounded-lg bg-background/70 px-3 py-2 text-sm font-bold transition hover:bg-accent/50"
+      >
+        <span className="flex items-center gap-2"><Cross className="h-4 w-4 text-primary" /> سنكسار اليوم وتفاصيل المناسبة</span>
+        <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+      </Link>
     </Card>
   );
 }

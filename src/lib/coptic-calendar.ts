@@ -46,6 +46,23 @@ function copticToJdn(y: number, m: number, d: number) {
   return 1825029 + 365 * (y - 1) + Math.floor(y / 4) + 30 * (m - 1) + d;
 }
 
+/** Converts a Coptic date to a Gregorian UTC-midnight Date. */
+export function fromCoptic(year: number, month: number, day: number): Date {
+  let jdn = copticToJdn(year, month, day);
+  // JDN -> Gregorian (Fliegel-Van Flandern)
+  const l = jdn + 68569;
+  const n = Math.floor((4 * l) / 146097);
+  const l1 = l - Math.floor((146097 * n + 3) / 4);
+  const i = Math.floor((4000 * (l1 + 1)) / 1461001);
+  const l2 = l1 - Math.floor((1461 * i) / 4) + 31;
+  const j = Math.floor((80 * l2) / 2447);
+  const d = l2 - Math.floor((2447 * j) / 80);
+  const l3 = Math.floor(j / 11);
+  const m = j + 2 - 12 * l3;
+  const y = 100 * (n - 49) + i + l3;
+  return utc(y, m, d);
+}
+
 export function toCoptic(date: Date) {
   const jdn = gregorianToJdn(date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate());
   const year = Math.floor((4 * (jdn - 1825030) + 1463) / 1461);
@@ -187,4 +204,27 @@ export function getUpcomingEvent(date: Date = cairoToday()): UpcomingEvent | nul
       best = { name: c.name, daysLeft, kind: c.kind, info: EVENT_INFO[c.name] ?? null };
   }
   return best;
+}
+
+/** Well-known hymns chanted in each occasion — what deacons need. */
+export const EVENT_HYMNS: Record<string, string[]> = {
+  "صوم يونان (نينوى)": ["ألحان صوم يونان الطقسية", "مرد الإنجيل (آفاف إنطي)", "لحن أومونوجينيس"],
+  "الصوم الكبير المقدس": ["كيهكية الصوم الكبير", "الذكصولوجيات الصومية", "لحن أبيك", "مرد المزمور والإنجيل الصومي", "توبة أهل نينوى"],
+  "صوم السيدة العذراء": ["مدائح العذراء (كيهكية العذراء)", "ثيؤطوكيات الأيام", "لحن طاي شوري", "مرد إنجيل العذراء"],
+  "صوم الميلاد المجيد": ["سبعة وأربعة", "مدائح كيهك (السبت والأحد)", "لحن واطس الميلاد: إبؤرو", "تين أوأو إنسوك"],
+  "صوم الرسل الأطهار": ["الذكصولوجيات السنوية", "مدائح الرسل والآباء"],
+  "عيد الميلاد المجيد": ["إبؤرو (لحن واطس الميلاد)", "تين أوأو إنسوك", "بيك إثرونوس", "مرد إنجيل الميلاد"],
+  "عيد الغطاس المجيد": ["لحن واطس الغطاس", "أومونوجينيس (آدام)", "مرد إنجيل الغطاس", "لحن الذكصولوجية الخاص بالعيد"],
+  "عيد القيامة المجيد": ["خرستوس أنيستي (المسيح قام)", "لحن الفرح (الخمسين)", "مرد إنجيل القيامة", "إبؤرو الفرايحي"],
+  "عيد الصعود المجيد": ["مرد إنجيل الصعود", "لحن الخمسين الفرايحي", "مدائح الصعود"],
+  "عيد العنصرة (حلول الروح القدس)": ["مرد إنجيل العنصرة", "لحن بي إبنفما", "مدائح حلول الروح القدس"],
+  "عيد النيروز — رأس السنة القبطية": ["لحن شيري ني ماريا", "مدائح الشهداء", "مرد إنجيل النيروز"],
+  "عيد الصليب المجيد": ["لحن الصليب (إثو تي طاشڤي)", "مرد إنجيل عيد الصليب", "مدائح الصليب"],
+};
+
+/** Details block for the occasion/fast page: description + hymns. */
+export function getOccasionDetails(day: LiturgicalDay): { name: string; info: string | null; hymns: string[] } | null {
+  const name = day.occasion ?? day.fast?.name ?? null;
+  if (!name) return null;
+  return { name, info: EVENT_INFO[name] ?? null, hymns: EVENT_HYMNS[name] ?? [] };
 }
