@@ -46,6 +46,23 @@ function copticToJdn(y: number, m: number, d: number) {
   return 1825029 + 365 * (y - 1) + Math.floor(y / 4) + 30 * (m - 1) + d;
 }
 
+/** Converts a Coptic date to a Gregorian UTC-midnight Date. */
+export function fromCoptic(year: number, month: number, day: number): Date {
+  let jdn = copticToJdn(year, month, day);
+  // JDN -> Gregorian (Fliegel-Van Flandern)
+  const l = jdn + 68569;
+  const n = Math.floor((4 * l) / 146097);
+  const l1 = l - Math.floor((146097 * n + 3) / 4);
+  const i = Math.floor((4000 * (l1 + 1)) / 1461001);
+  const l2 = l1 - Math.floor((1461 * i) / 4) + 31;
+  const j = Math.floor((80 * l2) / 2447);
+  const d = l2 - Math.floor((2447 * j) / 80);
+  const l3 = Math.floor(j / 11);
+  const m = j + 2 - 12 * l3;
+  const y = 100 * (n - 49) + i + l3;
+  return utc(y, m, d);
+}
+
 export function toCoptic(date: Date) {
   const jdn = gregorianToJdn(date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate());
   const year = Math.floor((4 * (jdn - 1825030) + 1463) / 1461);
