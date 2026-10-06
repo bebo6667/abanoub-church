@@ -259,8 +259,11 @@ export type Database = {
       hymn_details: {
         Row: {
           explanation: string | null
+          image_path: string | null
+          image_url: string | null
           info: string | null
           name: string
+          source: string | null
           updated_at: string
           updated_by: string | null
           video_path: string | null
@@ -268,8 +271,11 @@ export type Database = {
         }
         Insert: {
           explanation?: string | null
+          image_path?: string | null
+          image_url?: string | null
           info?: string | null
           name: string
+          source?: string | null
           updated_at?: string
           updated_by?: string | null
           video_path?: string | null
@@ -277,8 +283,11 @@ export type Database = {
         }
         Update: {
           explanation?: string | null
+          image_path?: string | null
+          image_url?: string | null
           info?: string | null
           name?: string
+          source?: string | null
           updated_at?: string
           updated_by?: string | null
           video_path?: string | null
