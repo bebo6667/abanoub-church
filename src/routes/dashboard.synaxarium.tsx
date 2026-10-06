@@ -8,10 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import {
   COPTIC_MONTHS, THEME_LABELS, cairoToday, toCoptic, fromCoptic,
-  getLiturgicalDay, getOccasionDetails,
+  getLiturgicalDay, getOccasionDetails, getTasbeha,
 } from "@/lib/coptic-calendar";
 import { getSynaxarium } from "@/lib/api/synaxarium.functions";
-import { ChevronLeft, ChevronRight, Cross, Loader2, Music4, Flame } from "lucide-react";
+import { ChevronLeft, ChevronRight, Cross, Loader2, Music4, Flame, BookOpen } from "lucide-react";
 
 export const Route = createFileRoute("/dashboard/synaxarium")({
   head: () => ({
@@ -29,11 +29,28 @@ function SynaxariumPage() {
   const today = useMemo(() => toCoptic(cairoToday()), []);
   const [month, setMonth] = useState(today.month);
   const [day, setDay] = useState(today.day);
+  const [year, setYear] = useState(today.year);
 
   const daysInMonth = month === 13 ? 6 : 30;
-  const gregDate = useMemo(() => fromCoptic(today.year, month, day), [today.year, month, day]);
+  const gregDate = useMemo(() => fromCoptic(year, month, day), [year, month, day]);
   const litDay = useMemo(() => getLiturgicalDay(gregDate), [gregDate]);
   const details = getOccasionDetails(litDay);
+  const tasbeha = getTasbeha(litDay);
+  const gregIso = gregDate.toISOString().slice(0, 10);
+  const pickGregorian = (v: string) => {
+    if (!v) return;
+    const [y, m, d] = v.split("-").map(Number);
+    const c = toCoptic(new Date(Date.UTC(y, m - 1, d)));
+    setYear(c.year); setMonth(c.month); setDay(c.day);
+  };
+  const HymnLink = ({ h }: { h: string }) => (
+    <li>
+      <Link to="/dashboard/hymn/$name" params={{ name: h }}
+        className="flex items-center justify-between rounded-lg border bg-card px-3 py-2 text-sm hover:bg-accent">
+        <span>{h}</span><ChevronLeft className="h-4 w-4 text-muted-foreground" />
+      </Link>
+    </li>
+  );
 
   const fetchSyn = useServerFn(getSynaxarium);
   const syn = useQuery({
@@ -45,11 +62,11 @@ function SynaxariumPage() {
 
   const prev = () => {
     if (day > 1) setDay(day - 1);
-    else { const m = month === 1 ? 13 : month - 1; setMonth(m); setDay(m === 13 ? 6 : 30); }
+    else { const m = month === 1 ? 13 : month - 1; if (month === 1) setYear(year - 1); setMonth(m); setDay(m === 13 ? 6 : 30); }
   };
   const next = () => {
     if (day < daysInMonth) setDay(day + 1);
-    else { setMonth(month === 13 ? 1 : month + 1); setDay(1); }
+    else { if (month === 13) setYear(year + 1); setMonth(month === 13 ? 1 : month + 1); setDay(1); }
   };
 
   return (
@@ -68,7 +85,11 @@ function SynaxariumPage() {
             <ChevronLeft className="h-5 w-5" />
           </Button>
         </div>
-        <div className="mt-3 grid grid-cols-2 gap-2">
+        <label className="mt-3 block text-xs font-bold text-muted-foreground">التاريخ الميلادي</label>
+        <input type="date" value={gregIso} onChange={(e) => pickGregorian(e.target.value)}
+          className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm" />
+        <label className="mt-2 block text-xs font-bold text-muted-foreground">التاريخ القبطي</label>
+        <div className="mt-1 grid grid-cols-2 gap-2">
           <select
             value={month}
             onChange={(e) => { const m = Number(e.target.value); setMonth(m); setDay((d) => Math.min(d, m === 13 ? 6 : 30)); }}
@@ -84,15 +105,15 @@ function SynaxariumPage() {
             {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((d) => <option key={d} value={d}>{d}</option>)}
           </select>
         </div>
-        {(month !== today.month || day !== today.day) && (
-          <Button variant="outline" size="sm" className="mt-2 w-full" onClick={() => { setMonth(today.month); setDay(today.day); }}>
+        {(month !== today.month || day !== today.day || year !== today.year) && (
+          <Button variant="outline" size="sm" className="mt-2 w-full" onClick={() => { setYear(today.year); setMonth(today.month); setDay(today.day); }}>
             العودة إلى اليوم الحالي
           </Button>
         )}
       </Card>
 
       {/* Occasion / fast details */}
-      {details && (
+      {(
         <Card className="p-4 mb-4">
           <div className="flex items-center gap-2 mb-2">
             <Flame className="h-5 w-5 text-primary" />
@@ -118,23 +139,33 @@ function SynaxariumPage() {
                 <Music4 className="h-4 w-4 text-primary" /> ألحان المناسبة
               </p>
               <ul className="space-y-1.5">
-                {details.hymns.map((h) => (
-                  <li key={h}>
-                    <Link
-                      to="/dashboard/hymn/$name"
-                      params={{ name: h }}
-                      className="flex items-center justify-between rounded-lg border bg-card px-3 py-2 text-sm hover:bg-accent"
-                    >
-                      <span>{h}</span>
-                      <ChevronLeft className="h-4 w-4 text-muted-foreground" />
-                    </Link>
-                  </li>
-                ))}
+                {details.hymns.map((h) => <HymnLink key={h} h={h} />)}
               </ul>
             </div>
           )}
+          <div className="mt-3">
+            <p className="flex items-center gap-1.5 text-sm font-bold mb-2">
+              <Music4 className="h-4 w-4 text-primary" /> مردات المناسبة
+            </p>
+            <ul className="space-y-1.5">{details.responses.map((h) => <HymnLink key={h} h={h} />)}</ul>
+          </div>
         </Card>
       )}
+
+      {/* Tasbeha */}
+      <Card className="p-4 mb-4">
+        <h2 className="flex items-center gap-2 text-lg font-bold mb-1"><BookOpen className="h-5 w-5 text-primary" /> التسبحة القبطية</h2>
+        <p className="text-xs text-muted-foreground mb-3">ترتيب تسبحة نصف الليل لهذا اليوم مع الإضافات حسب المناسبة والصوم.</p>
+        <div className="space-y-3">
+          {tasbeha.map((part) => (
+            <div key={part.title}>
+              <p className="text-sm font-bold">{part.title}</p>
+              {part.note && <p className="text-xs text-muted-foreground mb-1">{part.note}</p>}
+              <ul className="space-y-1.5 mt-1">{part.hymns.map((h) => <HymnLink key={h} h={h} />)}</ul>
+            </div>
+          ))}
+        </div>
+      </Card>
 
       {/* Synaxarium */}
       <section className="space-y-2">
