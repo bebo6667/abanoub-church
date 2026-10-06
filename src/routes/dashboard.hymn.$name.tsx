@@ -9,7 +9,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
-import { hymnSources } from "@/lib/coptic-calendar";
 import { ArrowRight, Loader2, Music4, Pencil, Save, X, ExternalLink, Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/dashboard/hymn/$name")({
@@ -31,7 +30,7 @@ export const Route = createFileRoute("/dashboard/hymn/$name")({
   component: HymnPage,
 });
 
-type Hymn = { name: string; explanation: string | null; info: string | null; video_url: string | null; video_path: string | null; image_url: string | null; image_path: string | null; source: string | null };
+type Hymn = { name: string; explanation: string | null; info: string | null; video_url: string | null; video_path: string | null };
 
 function embedUrl(url: string): string | null {
   const yt = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([\w-]{11})/);
@@ -56,12 +55,7 @@ function HymnPage() {
         const s = await supabase.storage.from("hymns").createSignedUrl(data.video_path, 3600);
         signed = s.data?.signedUrl ?? null;
       }
-      let img: string | null = data?.image_url ?? null;
-      if (data?.image_path) {
-        const s = await supabase.storage.from("hymns").createSignedUrl(data.image_path, 3600);
-        img = s.data?.signedUrl ?? img;
-      }
-      return { hymn: data as Hymn | null, signed, img };
+      return { hymn: data as Hymn | null, signed };
     },
   });
 
@@ -71,9 +65,6 @@ function HymnPage() {
   const [videoUrl, setVideoUrl] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [removeVideo, setRemoveVideo] = useState(false);
-  const [imageUrl, setImageUrl] = useState("");
-  const [imgFile, setImgFile] = useState<File | null>(null);
-  const [source, setSource] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -81,8 +72,6 @@ function HymnPage() {
     setExplanation(h?.explanation ?? "");
     setInfo(h?.info ?? "");
     setVideoUrl(h?.video_url ?? "");
-    setImageUrl(h?.image_url ?? "");
-    setSource(h?.source ?? "");
   }, [q.data, editing]);
 
   async function save() {
@@ -99,19 +88,7 @@ function HymnPage() {
       } else if (removeVideo && q.data?.hymn?.video_path) {
         await supabase.storage.from("hymns").remove([q.data.hymn.video_path]);
       }
-      let image_path = q.data?.hymn?.image_path ?? null;
-      if (imgFile) {
-        if (!imgFile.type.startsWith("image/")) throw new Error("الملف لازم يكون صورة");
-        const ip = `img-${crypto.randomUUID()}.${imgFile.name.split(".").pop() || "jpg"}`;
-        const up = await supabase.storage.from("hymns").upload(ip, imgFile, { contentType: imgFile.type });
-        if (up.error) throw up.error;
-        if (image_path) await supabase.storage.from("hymns").remove([image_path]);
-        image_path = ip;
-      }
       const { error } = await supabase.from("hymn_details").upsert({
-        image_url: imageUrl.trim() || null,
-        image_path,
-        source: source.trim() || null,
         name,
         explanation: explanation.trim() || null,
         info: info.trim() || null,
@@ -122,7 +99,7 @@ function HymnPage() {
       });
       if (error) throw error;
       toast.success("تم حفظ بيانات اللحن");
-      setEditing(false); setFile(null); setImgFile(null); setRemoveVideo(false);
+      setEditing(false); setFile(null); setRemoveVideo(false);
       qc.invalidateQueries({ queryKey: key });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "تعذر الحفظ");
@@ -159,11 +136,6 @@ function HymnPage() {
             <Input dir="ltr" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder="https://youtube.com/..." />
             <label className="block text-sm font-bold">أو ارفع فيديو تعليمي</label>
             <Input type="file" accept="video/*" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
-            <label className="block text-sm font-bold">صورة اللحن (لينك أو رفع)</label>
-            <Input dir="ltr" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://..." />
-            <Input type="file" accept="image/*" onChange={(e) => setImgFile(e.target.files?.[0] ?? null)} />
-            <label className="block text-sm font-bold">المصدر (كتاب الخولاجي، المعلم إبراهيم عياد، ...)</label>
-            <Input value={source} onChange={(e) => setSource(e.target.value)} placeholder="اذكر مصدرًا كنسيًا موثوقًا" />
             {h?.video_path && !file && (
               <label className="flex items-center gap-2 text-sm">
                 <input type="checkbox" checked={removeVideo} onChange={(e) => setRemoveVideo(e.target.checked)} />
@@ -177,7 +149,6 @@ function HymnPage() {
           </Card>
         ) : (
           <>
-            {q.data?.img && <img src={q.data.img} alt={name} className="w-full max-h-72 rounded-xl object-cover" />}
             {(q.data?.signed || h?.video_url) ? (
               <Card className="space-y-3 p-3">
                 <h2 className="font-bold">الفيديو التعليمي</h2>
@@ -201,15 +172,6 @@ function HymnPage() {
             <Card className="p-4">
               <h2 className="mb-2 font-bold">معلومات عن اللحن</h2>
               <p className="whitespace-pre-wrap text-sm leading-7">{h?.info || "لم تُضف معلومات بعد."}</p>
-            </Card>
-            {h?.source && <p className="text-xs text-muted-foreground">المصدر: {h.source}</p>}
-            <Card className="p-4">
-              <h2 className="mb-2 font-bold">مصادر قبطية موثوقة لتعلّم اللحن</h2>
-              <ul className="space-y-1.5">
-                {hymnSources(name).map((s) => (
-                  <li key={s.url}><a href={s.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-primary underline"><ExternalLink className="h-4 w-4" /> {s.label}</a></li>
-                ))}
-              </ul>
             </Card>
             {!h && isStaff && <p className="text-center text-sm text-muted-foreground">اضغط «تعديل» لإضافة الشرح والفيديو.</p>}
           </>
