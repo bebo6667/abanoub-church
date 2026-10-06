@@ -223,8 +223,69 @@ export const EVENT_HYMNS: Record<string, string[]> = {
 };
 
 /** Details block for the occasion/fast page: description + hymns. */
-export function getOccasionDetails(day: LiturgicalDay): { name: string; info: string | null; hymns: string[] } | null {
-  const name = day.occasion ?? day.fast?.name ?? null;
-  if (!name) return null;
-  return { name, info: EVENT_INFO[name] ?? null, hymns: EVENT_HYMNS[name] ?? [] };
+export function getOccasionDetails(day: LiturgicalDay): { name: string; info: string | null; hymns: string[]; responses: string[] } {
+  const name = day.occasion ?? day.fast?.name ?? "الطقس السنوي";
+  const hymns = EVENT_HYMNS[name] ?? (day.fast ? EVENT_HYMNS[day.fast.name] : undefined) ?? ANNUAL_HYMNS;
+  const responses = EVENT_RESPONSES[name] ?? (day.fast ? EVENT_RESPONSES[day.fast.name] : undefined) ?? ["مرد المزمور السنوي", "مرد الإنجيل السنوي"];
+  return { name, info: EVENT_INFO[name] ?? null, hymns, responses };
+}
+
+/** Hymns used all year in the annual rite (fallback when no special occasion). */
+export const ANNUAL_HYMNS: string[] = [
+  "لحن أسبسموس آدام", "لحن أسبسموس واطس", "الهيتنيات", "لحن تين ثينو", "مرد المزمور السنوي", "مرد الإنجيل السنوي", "لحن بي إخرستوس أفطونف",
+];
+
+/** Gospel/psalm responses (مردات) per occasion — they change with the rite. */
+export const EVENT_RESPONSES: Record<string, string[]> = {
+  "صوم يونان (نينوى)": ["مرد مزمور صوم يونان", "مرد إنجيل صوم يونان"],
+  "الصوم الكبير المقدس": ["مرد المزمور الصومي", "مرد الإنجيل الصومي", "مرد الأبركسيس الصومي"],
+  "صوم السيدة العذراء": ["مرد إنجيل العذراء", "مرد الأبركسيس للعذراء"],
+  "صوم الميلاد المجيد": ["مرد الإنجيل الكيهكي", "مرد الأبركسيس الكيهكي"],
+  "صوم الرسل الأطهار": ["مرد الإنجيل السنوي", "مرد الأبركسيس للرسل"],
+  "عيد الميلاد المجيد": ["مرد مزمور الميلاد", "مرد إنجيل الميلاد", "مرد الأبركسيس للميلاد"],
+  "عيد الغطاس المجيد": ["مرد مزمور الغطاس", "مرد إنجيل الغطاس", "مرد الأبركسيس للغطاس"],
+  "عيد القيامة المجيد": ["مرد مزمور القيامة", "مرد إنجيل القيامة", "مرد الأبركسيس للقيامة"],
+  "عيد الصعود المجيد": ["مرد مزمور الصعود", "مرد إنجيل الصعود"],
+  "عيد العنصرة (حلول الروح القدس)": ["مرد مزمور العنصرة", "مرد إنجيل العنصرة"],
+  "عيد النيروز — رأس السنة القبطية": ["مرد مزمور النيروز", "مرد إنجيل النيروز"],
+  "عيد الصليب المجيد": ["مرد مزمور الصليب", "مرد إنجيل الصليب"],
+  "أحد الشعانين": ["مرد مزمور الشعانين", "مرد إنجيل الشعانين", "لحن إفلوجيمينوس"],
+  "الجمعة العظيمة": ["لحن أومونوجينيس", "لحن بيك إثرونوس", "لحن غولغوثا"],
+};
+for (const [k, v] of Object.entries({
+  "أحد الشعانين": ["لحن إفلوجيمينوس", "لحن أوصنا", "دورة الشعانين"],
+  "خميس العهد": ["لحن يهوذا", "لحن طاي شوري الحزايني"],
+  "الجمعة العظيمة": ["لحن أومونوجينيس", "لحن بيك إثرونوس", "لحن غولغوثا", "لحن إيبرتو"],
+  "سبت النور": ["تسبحة أبو غلمسيس"],
+})) EVENT_HYMNS[k] = v;
+
+export type TasbehaPart = { title: string; note?: string; hymns: string[] };
+
+/** Structure of the Midnight Praise (التسبحة) with seasonal additions. */
+export function getTasbeha(day: LiturgicalDay): TasbehaPart[] {
+  const dow = day.date.getUTCDay();
+  const weekday = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"][dow];
+  const base: TasbehaPart[] = [
+    { title: "البداية", hymns: ["قوموا يا بني النور", "تين ثينو"] },
+    { title: "الهوسات الأربع", hymns: ["الهوس الأول (تسبحة موسى)", "الهوس الثاني (مزمور 135)", "الهوس الثالث (تسبحة الثلاثة فتية)", "الهوس الرابع (مزامير التسبيح)"] },
+    { title: `إبصالية وثيؤطوكية يوم ${weekday}`, hymns: [`إبصالية يوم ${weekday}`, `ثيؤطوكية يوم ${weekday}`] },
+    { title: "الذكصولوجيات والختام", hymns: ["ذكصولوجيات التسبحة", "لحن تين أوأوشت", "قانون الإيمان"] },
+  ];
+  const extra: TasbehaPart[] = [];
+  if (day.theme === "kiahk") extra.push({ title: "إضافات شهر كيهك", note: "تُقال المدائح والإبصاليات الكيهكية مع كل هوس وثيؤطوكية.", hymns: ["الإبصاليات الكيهكية", "لبش الهوسات", "مدائح كيهك", "سبعة وأربعة"] });
+  if (day.fast?.name === "الصوم الكبير المقدس" || day.fast?.name === "صوم يونان (نينوى)") extra.push({ title: "إضافات الصوم الكبير", note: "تُقال الإبصاليات الآدام والواطس الصومية.", hymns: ["الإبصالية الصومية آدام", "الإبصالية الصومية واطس", "توبة أهل نينوى"] });
+  if (day.fast?.name === "صوم السيدة العذراء") extra.push({ title: "إضافات صوم العذراء", hymns: ["مدائح العذراء", "ثيؤطوكيات الأيام"] });
+  if (day.theme === "festive") extra.push({ title: "إضافات الطقس الفرايحي", note: "تُقال الألحان بالطريقة الفرايحي، وفي الخماسين تُرتل إبصالية القيامة.", hymns: ["إبصالية القيامة", "خرستوس أنيستي"] });
+  if (day.theme === "passion") extra.push({ title: "أسبوع الآلام", note: "لا تُقال التسبحة المعتادة؛ تُصلى السواعي بالبصخة المقدسة.", hymns: ["ثوك تي تي جوم"] });
+  return [...base.slice(0, 3), ...extra, base[3]];
+}
+
+/** Trusted Coptic Orthodox references for learning a hymn. */
+export function hymnSources(name: string) {
+  const q = encodeURIComponent(name);
+  return [
+    { label: "يوتيوب — المعلم إبراهيم عياد", url: `https://www.youtube.com/results?search_query=${encodeURIComponent(name + " المعلم إبراهيم عياد")}` },
+    { label: "موقع الأنبا تكلا هيمانوت", url: `https://www.google.com/search?q=site:st-takla.org+${q}` },
+    { label: "معهد الدراسات القبطية / tasbeha.org", url: `https://www.google.com/search?q=site:tasbeha.org+${q}` },
+  ];
 }
