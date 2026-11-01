@@ -259,8 +259,11 @@ export type Database = {
       hymn_details: {
         Row: {
           explanation: string | null
+          image_path: string | null
+          image_url: string | null
           info: string | null
           name: string
+          source: string | null
           updated_at: string
           updated_by: string | null
           video_path: string | null
@@ -268,8 +271,11 @@ export type Database = {
         }
         Insert: {
           explanation?: string | null
+          image_path?: string | null
+          image_url?: string | null
           info?: string | null
           name: string
+          source?: string | null
           updated_at?: string
           updated_by?: string | null
           video_path?: string | null
@@ -277,8 +283,11 @@ export type Database = {
         }
         Update: {
           explanation?: string | null
+          image_path?: string | null
+          image_url?: string | null
           info?: string | null
           name?: string
+          source?: string | null
           updated_at?: string
           updated_by?: string | null
           video_path?: string | null
@@ -334,6 +343,7 @@ export type Database = {
           id: string
           last_confession_date: string | null
           linked_servant_id: string | null
+          parent_id: string | null
           phone: string | null
           profile_image_url: string | null
           rank: Database["public"]["Enums"]["deacon_rank"] | null
@@ -361,6 +371,7 @@ export type Database = {
           id: string
           last_confession_date?: string | null
           linked_servant_id?: string | null
+          parent_id?: string | null
           phone?: string | null
           profile_image_url?: string | null
           rank?: Database["public"]["Enums"]["deacon_rank"] | null
@@ -388,6 +399,7 @@ export type Database = {
           id?: string
           last_confession_date?: string | null
           linked_servant_id?: string | null
+          parent_id?: string | null
           phone?: string | null
           profile_image_url?: string | null
           rank?: Database["public"]["Enums"]["deacon_rank"] | null
@@ -403,6 +415,13 @@ export type Database = {
           {
             foreignKeyName: "profiles_linked_servant_id_fkey"
             columns: ["linked_servant_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_parent_id_fkey"
+            columns: ["parent_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -626,7 +645,7 @@ export type Database = {
       is_approved: { Args: { _uid: string }; Returns: boolean }
     }
     Enums: {
-      app_role: "admin" | "deacon" | "servant"
+      app_role: "admin" | "deacon" | "servant" | "guardian"
       attendance_status: "attend" | "decline"
       deacon_rank:
         | "psaltos"
@@ -642,7 +661,7 @@ export type Database = {
         | "university"
         | "graduate"
       profile_status: "pending" | "approved" | "rejected"
-      requested_role: "admin" | "deacon" | "servant" | "pending"
+      requested_role: "admin" | "deacon" | "servant" | "pending" | "guardian"
       schedule_status: "draft" | "published"
     }
     CompositeTypes: {
@@ -771,7 +790,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "deacon", "servant"],
+      app_role: ["admin", "deacon", "servant", "guardian"],
       attendance_status: ["attend", "decline"],
       deacon_rank: ["psaltos", "agnostos", "ibodiakon", "diakon", "archdiakon"],
       education_stage: [
@@ -783,7 +802,7 @@ export const Constants = {
         "graduate",
       ],
       profile_status: ["pending", "approved", "rejected"],
-      requested_role: ["admin", "deacon", "servant", "pending"],
+      requested_role: ["admin", "deacon", "servant", "pending", "guardian"],
       schedule_status: ["draft", "published"],
     },
   },

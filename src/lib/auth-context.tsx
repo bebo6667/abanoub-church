@@ -16,7 +16,7 @@ export type Profile = {
   church_name: string | null;
   spiritual_father: string | null;
   profile_image_url: string | null;
-  requested_role: "admin" | "deacon" | "servant" | "pending";
+  requested_role: "admin" | "deacon" | "servant" | "guardian" | "pending";
   status: "pending" | "approved" | "rejected";
   rejection_reason: string | null;
   rank: "psaltos" | "agnostos" | "ibodiakon" | "diakon" | "archdiakon" | null;
@@ -25,6 +25,7 @@ export type Profile = {
   home_latitude: number | null;
   home_longitude: number | null;
   linked_servant_id: string | null;
+  parent_id?: string | null;
 };
 
 export type AuthDiagnostic = {
@@ -35,13 +36,22 @@ export type AuthDiagnostic = {
   details?: string;
 };
 
+const ACTIVE_CHILD_KEY = "active-child-id";
+
 type AuthCtx = {
   session: Session | null;
   user: User | null;
   profile: Profile | null;
+  children: Profile[];
+  /** الحساب المعروض حاليًا: بروفايل الابن عند التصفح نيابة عنه، وإلا حساب ولي الأمر */
+  effectiveProfile: Profile | null;
+  effectiveUserId: string | null;
+  activeChildId: string | null;
+  setActiveChildId: (id: string | null) => void;
   roles: string[];
   isAdmin: boolean;
   isServant: boolean;
+  isGuardian: boolean;
   isStaff: boolean;
   loading: boolean;
   diagnostics: AuthDiagnostic[];
@@ -52,19 +62,39 @@ type AuthCtx = {
 
 const Ctx = createContext<AuthCtx | null>(null);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({ children: appChildren }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [childProfiles, setChildProfiles] = useState<Profile[]>([]);
   const [roles, setRoles] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [diagnostics, setDiagnostics] = useState<AuthDiagnostic[]>([]);
   const [profileMissing, setProfileMissing] = useState(false);
+  const [activeChildId, setActiveChildIdState] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    try {
+      return window.localStorage.getItem(ACTIVE_CHILD_KEY);
+    } catch {
+      return null;
+    }
+  });
+
+  function setActiveChildId(id: string | null) {
+    setActiveChildIdState(id);
+    try {
+      if (id) window.localStorage.setItem(ACTIVE_CHILD_KEY, id);
+      else window.localStorage.removeItem(ACTIVE_CHILD_KEY);
+    } catch {
+      /* ignore */
+    }
+  }
 
   async function loadUserData(uid: string) {
     const diags: AuthDiagnostic[] = [];
-    const [pRes, rRes] = await Promise.all([
+    const [pRes, rRes, cRes] = await Promise.all([
       db.from("profiles").select("*").eq("id", uid).maybeSingle(),
       db.from("user_roles").select("role").eq("user_id", uid),
+      db.from("profiles").select("*").eq("parent_id", uid).order("full_name"),
     ]);
 
     if (pRes.error) {
@@ -104,6 +134,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setRoles(((rRes.data as { role: string }[]) ?? []).map((x) => x.role));
     }
 
+    if (cRes.error) {
+      setChildProfiles([]);
+    } else {
+      const kids = ((cRes.data as Profile[]) ?? []).filter(Boolean);
+      setChildProfiles(kids);
+      // لو الطفل المحفوظ لم يعد موجودًا نرجع لحساب ولي الأمر
+      setActiveChildIdState((cur) => {
+        if (!cur) return cur;
+        if (!kids.some((k) => k.id === cur)) {
+          try {
+            window.localStorage.removeItem(ACTIVE_CHILD_KEY);
+          } catch {
+            /* ignore */
+          }
+          return null;
+        }
+        return cur;
+      });
+    }
+
     setDiagnostics(diags);
     if (diags.length || !pRes.data) {
       // eslint-disable-next-line no-console
@@ -118,9 +168,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setTimeout(() => loadUserData(s.user.id), 0);
       } else {
         setProfile(null);
+        setChildProfiles([]);
         setRoles([]);
         setDiagnostics([]);
         setProfileMissing(false);
+        setActiveChildId(null);
       }
     });
     supabase.auth.getSession().then(({ data }) => {
@@ -134,13 +186,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => sub.subscription.unsubscribe();
   }, []);
 
+  const activeChild = activeChildId
+    ? childProfiles.find((c) => c.id === activeChildId) ?? null
+    : null;
+
   const value: AuthCtx = {
     session,
     user: session?.user ?? null,
     profile,
+    children: childProfiles,
+    effectiveProfile: activeChild ?? profile,
+    effectiveUserId: activeChild?.id ?? session?.user?.id ?? null,
+    activeChildId,
+    setActiveChildId,
     roles,
     isAdmin: roles.includes("admin"),
     isServant: roles.includes("servant"),
+    isGuardian: roles.includes("guardian"),
     isStaff: roles.includes("admin") || roles.includes("servant"),
     loading,
     diagnostics,
@@ -149,11 +211,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (session?.user) await loadUserData(session.user.id);
     },
     signOut: async () => {
+      setActiveChildId(null);
       await supabase.auth.signOut();
     },
   };
 
-  return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={value}>{appChildren}</Ctx.Provider>;
 }
 
 export function useAuth() {

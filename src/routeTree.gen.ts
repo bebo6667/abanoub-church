@@ -9,41 +9,31 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as PendingRouteImport } from './routes/pending'
-import { Route as DashboardRouteImport } from './routes/dashboard'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
+import { Route as AdminRouteImport } from './routes/admin'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as PendingRouteImport } from './routes/pending'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
-import { Route as DashboardSynaxariumRouteImport } from './routes/dashboard.synaxarium'
-import { Route as DashboardProfileRouteImport } from './routes/dashboard.profile'
-import { Route as DashboardMembersRouteImport } from './routes/dashboard.members'
-import { Route as DashboardCheckinRouteImport } from './routes/dashboard.checkin'
-import { Route as AdminReportsRouteImport } from './routes/admin.reports'
-import { Route as AdminBirthdaysRouteImport } from './routes/admin.birthdays'
 import { Route as AdminAnnouncementsRouteImport } from './routes/admin.announcements'
+import { Route as AdminBirthdaysRouteImport } from './routes/admin.birthdays'
+import { Route as AdminReportsRouteImport } from './routes/admin.reports'
+import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
+import { Route as DashboardCheckinRouteImport } from './routes/dashboard.checkin'
+import { Route as DashboardMembersRouteImport } from './routes/dashboard.members'
+import { Route as DashboardProfileRouteImport } from './routes/dashboard.profile'
+import { Route as DashboardSynaxariumRouteImport } from './routes/dashboard.synaxarium'
+import { Route as DashboardHymnNameRouteImport } from './routes/dashboard.hymn.$name'
 import { Route as DashboardScheduleIndexRouteImport } from './routes/dashboard.schedule.index'
 import { Route as DashboardScheduleIdRouteImport } from './routes/dashboard.schedule.$id'
-import { Route as DashboardHymnNameRouteImport } from './routes/dashboard.hymn.$name'
 import { Route as AdminScheduleIdIndexRouteImport } from './routes/admin.schedule.$id.index'
-import { Route as ApiPublicHooksSendPushRouteImport } from './routes/api/public/hooks/send-push'
-import { Route as AdminScheduleIdResponsesRouteImport } from './routes/admin.schedule.$id.responses'
 import { Route as AdminScheduleIdCheckinRouteImport } from './routes/admin.schedule.$id.checkin'
+import { Route as AdminScheduleIdResponsesRouteImport } from './routes/admin.schedule.$id.responses'
+import { Route as ApiPublicHooksSendPushRouteImport } from './routes/api/public/hooks/send-push'
 
-const PendingRoute = PendingRouteImport.update({
-  id: '/pending',
-  path: '/pending',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DashboardRoute = DashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -51,44 +41,29 @@ const AdminRoute = AdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DashboardIndexRoute = DashboardIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => DashboardRoute,
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PendingRoute = PendingRouteImport.update({
+  id: '/pending',
+  path: '/pending',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AdminRoute,
 } as any)
-const DashboardSynaxariumRoute = DashboardSynaxariumRouteImport.update({
-  id: '/synaxarium',
-  path: '/synaxarium',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardProfileRoute = DashboardProfileRouteImport.update({
-  id: '/profile',
-  path: '/profile',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardMembersRoute = DashboardMembersRouteImport.update({
-  id: '/members',
-  path: '/members',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardCheckinRoute = DashboardCheckinRouteImport.update({
-  id: '/checkin',
-  path: '/checkin',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const AdminReportsRoute = AdminReportsRouteImport.update({
-  id: '/reports',
-  path: '/reports',
+const AdminAnnouncementsRoute = AdminAnnouncementsRouteImport.update({
+  id: '/announcements',
+  path: '/announcements',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminBirthdaysRoute = AdminBirthdaysRouteImport.update({
@@ -96,10 +71,40 @@ const AdminBirthdaysRoute = AdminBirthdaysRouteImport.update({
   path: '/birthdays',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminAnnouncementsRoute = AdminAnnouncementsRouteImport.update({
-  id: '/announcements',
-  path: '/announcements',
+const AdminReportsRoute = AdminReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
   getParentRoute: () => AdminRoute,
+} as any)
+const DashboardIndexRoute = DashboardIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardCheckinRoute = DashboardCheckinRouteImport.update({
+  id: '/checkin',
+  path: '/checkin',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardMembersRoute = DashboardMembersRouteImport.update({
+  id: '/members',
+  path: '/members',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardProfileRoute = DashboardProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardSynaxariumRoute = DashboardSynaxariumRouteImport.update({
+  id: '/synaxarium',
+  path: '/synaxarium',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardHymnNameRoute = DashboardHymnNameRouteImport.update({
+  id: '/hymn/$name',
+  path: '/hymn/$name',
+  getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardScheduleIndexRoute = DashboardScheduleIndexRouteImport.update({
   id: '/schedule/',
@@ -111,20 +116,15 @@ const DashboardScheduleIdRoute = DashboardScheduleIdRouteImport.update({
   path: '/schedule/$id',
   getParentRoute: () => DashboardRoute,
 } as any)
-const DashboardHymnNameRoute = DashboardHymnNameRouteImport.update({
-  id: '/hymn/$name',
-  path: '/hymn/$name',
-  getParentRoute: () => DashboardRoute,
-} as any)
 const AdminScheduleIdIndexRoute = AdminScheduleIdIndexRouteImport.update({
   id: '/schedule/$id/',
   path: '/schedule/$id/',
   getParentRoute: () => AdminRoute,
 } as any)
-const ApiPublicHooksSendPushRoute = ApiPublicHooksSendPushRouteImport.update({
-  id: '/api/public/hooks/send-push',
-  path: '/api/public/hooks/send-push',
-  getParentRoute: () => rootRouteImport,
+const AdminScheduleIdCheckinRoute = AdminScheduleIdCheckinRouteImport.update({
+  id: '/schedule/$id/checkin',
+  path: '/schedule/$id/checkin',
+  getParentRoute: () => AdminRoute,
 } as any)
 const AdminScheduleIdResponsesRoute =
   AdminScheduleIdResponsesRouteImport.update({
@@ -132,10 +132,10 @@ const AdminScheduleIdResponsesRoute =
     path: '/schedule/$id/responses',
     getParentRoute: () => AdminRoute,
   } as any)
-const AdminScheduleIdCheckinRoute = AdminScheduleIdCheckinRouteImport.update({
-  id: '/schedule/$id/checkin',
-  path: '/schedule/$id/checkin',
-  getParentRoute: () => AdminRoute,
+const ApiPublicHooksSendPushRoute = ApiPublicHooksSendPushRouteImport.update({
+  id: '/api/public/hooks/send-push',
+  path: '/api/public/hooks/send-push',
+  getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -287,25 +287,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/pending': {
-      id: '/pending'
-      path: '/pending'
-      fullPath: '/pending'
-      preLoaderRoute: typeof PendingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboard': {
-      id: '/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -315,19 +301,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/dashboard/': {
-      id: '/dashboard/'
-      path: '/'
-      fullPath: '/dashboard/'
-      preLoaderRoute: typeof DashboardIndexRouteImport
-      parentRoute: typeof DashboardRoute
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pending': {
+      id: '/pending'
+      path: '/pending'
+      fullPath: '/pending'
+      preLoaderRoute: typeof PendingRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/admin/': {
       id: '/admin/'
@@ -336,39 +329,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/dashboard/synaxarium': {
-      id: '/dashboard/synaxarium'
-      path: '/synaxarium'
-      fullPath: '/dashboard/synaxarium'
-      preLoaderRoute: typeof DashboardSynaxariumRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/profile': {
-      id: '/dashboard/profile'
-      path: '/profile'
-      fullPath: '/dashboard/profile'
-      preLoaderRoute: typeof DashboardProfileRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/members': {
-      id: '/dashboard/members'
-      path: '/members'
-      fullPath: '/dashboard/members'
-      preLoaderRoute: typeof DashboardMembersRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/checkin': {
-      id: '/dashboard/checkin'
-      path: '/checkin'
-      fullPath: '/dashboard/checkin'
-      preLoaderRoute: typeof DashboardCheckinRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/admin/reports': {
-      id: '/admin/reports'
-      path: '/reports'
-      fullPath: '/admin/reports'
-      preLoaderRoute: typeof AdminReportsRouteImport
+    '/admin/announcements': {
+      id: '/admin/announcements'
+      path: '/announcements'
+      fullPath: '/admin/announcements'
+      preLoaderRoute: typeof AdminAnnouncementsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/birthdays': {
@@ -378,12 +343,54 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminBirthdaysRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/admin/announcements': {
-      id: '/admin/announcements'
-      path: '/announcements'
-      fullPath: '/admin/announcements'
-      preLoaderRoute: typeof AdminAnnouncementsRouteImport
+    '/admin/reports': {
+      id: '/admin/reports'
+      path: '/reports'
+      fullPath: '/admin/reports'
+      preLoaderRoute: typeof AdminReportsRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/dashboard/': {
+      id: '/dashboard/'
+      path: '/'
+      fullPath: '/dashboard/'
+      preLoaderRoute: typeof DashboardIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/checkin': {
+      id: '/dashboard/checkin'
+      path: '/checkin'
+      fullPath: '/dashboard/checkin'
+      preLoaderRoute: typeof DashboardCheckinRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/members': {
+      id: '/dashboard/members'
+      path: '/members'
+      fullPath: '/dashboard/members'
+      preLoaderRoute: typeof DashboardMembersRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/profile': {
+      id: '/dashboard/profile'
+      path: '/profile'
+      fullPath: '/dashboard/profile'
+      preLoaderRoute: typeof DashboardProfileRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/synaxarium': {
+      id: '/dashboard/synaxarium'
+      path: '/synaxarium'
+      fullPath: '/dashboard/synaxarium'
+      preLoaderRoute: typeof DashboardSynaxariumRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/hymn/$name': {
+      id: '/dashboard/hymn/$name'
+      path: '/hymn/$name'
+      fullPath: '/dashboard/hymn/$name'
+      preLoaderRoute: typeof DashboardHymnNameRouteImport
+      parentRoute: typeof DashboardRoute
     }
     '/dashboard/schedule/': {
       id: '/dashboard/schedule/'
@@ -399,32 +406,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardScheduleIdRouteImport
       parentRoute: typeof DashboardRoute
     }
-    '/dashboard/hymn/$name': {
-      id: '/dashboard/hymn/$name'
-      path: '/hymn/$name'
-      fullPath: '/dashboard/hymn/$name'
-      preLoaderRoute: typeof DashboardHymnNameRouteImport
-      parentRoute: typeof DashboardRoute
-    }
     '/admin/schedule/$id/': {
       id: '/admin/schedule/$id/'
       path: '/schedule/$id'
       fullPath: '/admin/schedule/$id/'
       preLoaderRoute: typeof AdminScheduleIdIndexRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/api/public/hooks/send-push': {
-      id: '/api/public/hooks/send-push'
-      path: '/api/public/hooks/send-push'
-      fullPath: '/api/public/hooks/send-push'
-      preLoaderRoute: typeof ApiPublicHooksSendPushRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/schedule/$id/responses': {
-      id: '/admin/schedule/$id/responses'
-      path: '/schedule/$id/responses'
-      fullPath: '/admin/schedule/$id/responses'
-      preLoaderRoute: typeof AdminScheduleIdResponsesRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/schedule/$id/checkin': {
@@ -433,6 +419,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/schedule/$id/checkin'
       preLoaderRoute: typeof AdminScheduleIdCheckinRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/admin/schedule/$id/responses': {
+      id: '/admin/schedule/$id/responses'
+      path: '/schedule/$id/responses'
+      fullPath: '/admin/schedule/$id/responses'
+      preLoaderRoute: typeof AdminScheduleIdResponsesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/api/public/hooks/send-push': {
+      id: '/api/public/hooks/send-push'
+      path: '/api/public/hooks/send-push'
+      fullPath: '/api/public/hooks/send-push'
+      preLoaderRoute: typeof ApiPublicHooksSendPushRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
