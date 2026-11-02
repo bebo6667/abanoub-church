@@ -38,7 +38,7 @@ function MembersPage() {
   const [rejectFor, setRejectFor] = useState<Row | null>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [approveFor, setApproveFor] = useState<Row | null>(null);
-  const [approveRole, setApproveRole] = useState<"deacon" | "servant" | "admin">("deacon");
+  const [approveRole, setApproveRole] = useState<"deacon" | "servant" | "admin" | "guardian">("deacon");
   const [changeRoleFor, setChangeRoleFor] = useState<Row | null>(null);
   const [newRole, setNewRole] = useState<"deacon" | "servant" | "admin">("deacon");
   const [editFor, setEditFor] = useState<Row | null>(null);
@@ -70,13 +70,18 @@ function MembersPage() {
   }, [users]);
 
   const groups = useMemo(() => {
-    const get = (u: Row) => u.user_roles?.[0]?.role;
+    const order = ["admin", "servant", "deacon", "guardian"];
+    const get = (u: Row) => {
+      const rs: string[] = (u.user_roles ?? []).map((r: any) => r.role);
+      return order.find((o) => rs.includes(o));
+    };
     const list = users ?? [];
     return {
       admins: list.filter((u) => get(u) === "admin"),
       servants: list.filter((u) => get(u) === "servant"),
       deacons: list.filter((u) => get(u) === "deacon"),
-      others: list.filter((u) => !["admin", "servant", "deacon"].includes(get(u))),
+      guardians: list.filter((u) => get(u) === "guardian"),
+      others: list.filter((u) => !order.includes(get(u) as string)),
     };
   }, [users]);
 
@@ -89,6 +94,14 @@ function MembersPage() {
     await db.from("user_roles").delete().eq("user_id", approveFor.id);
     const { error: e2 } = await db.from("user_roles").insert({ user_id: approveFor.id, role: approveRole });
     if (e2) return toast.error(e2.message);
+    // الموافقة على ولي الأمر توافق تلقائيًا على كل أبنائه المعلقين
+    const { data: kids } = await db.from("profiles").select("id").eq("parent_id", approveFor.id).neq("status", "approved");
+    for (const k of (kids ?? []) as { id: string }[]) {
+      await db.from("profiles").update({ status: "approved", rejection_reason: null }).eq("id", k.id);
+      await db.from("user_roles").delete().eq("user_id", k.id);
+      await db.from("user_roles").insert({ user_id: k.id, role: "deacon" });
+    }
+    if (kids?.length) toast.success(`تمت الموافقة على ${kids.length} من الأبناء تلقائيًا`);
     setApproveFor(null);
     qc.invalidateQueries({ queryKey: ["members"] });
     qc.invalidateQueries({ queryKey: ["pending-count"] });
@@ -210,6 +223,20 @@ function MembersPage() {
           onEdit={(u) => setEditFor(u)}
           onDelete={removeMember}
         />
+        {isStaff && groups.guardians.length > 0 && (
+          <SectionTable
+            title="أولياء الأمور"
+            rows={groups.guardians}
+            isAdmin={isAdmin}
+            isStaff={isStaff}
+            showLinkedServant={false}
+            onApprove={(u) => { setApproveFor(u); setApproveRole("guardian"); }}
+            onReject={(u) => setRejectFor(u)}
+            onChangeRole={(u) => { setChangeRoleFor(u); setNewRole("deacon"); }}
+            onEdit={(u) => setEditFor(u)}
+            onDelete={removeMember}
+          />
+        )}
         {isAdmin && groups.others.length > 0 && (
           <SectionTable
             title="بدون دور / قيد المراجعة"
@@ -217,7 +244,7 @@ function MembersPage() {
             isAdmin={isAdmin}
             isStaff={isStaff}
             showLinkedServant={false}
-            onApprove={(u) => { setApproveFor(u); setApproveRole(u.requested_role === "servant" ? "servant" : "deacon"); }}
+            onApprove={(u) => { setApproveFor(u); setApproveRole(u.requested_role === "servant" ? "servant" : u.requested_role === "guardian" ? "guardian" : "deacon"); }}
             onReject={(u) => setRejectFor(u)}
             onChangeRole={(u) => { setChangeRoleFor(u); setNewRole("deacon"); }}
             onEdit={(u) => setEditFor(u)}
@@ -235,6 +262,7 @@ function MembersPage() {
               <SelectItem value="deacon">شماس</SelectItem>
               <SelectItem value="servant">خادم</SelectItem>
               <SelectItem value="admin">أدمن</SelectItem>
+              <SelectItem value="guardian">ولي أمر</SelectItem>
             </SelectContent>
           </Select>
           <DialogFooter>

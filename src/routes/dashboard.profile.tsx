@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { effectiveAge } from "@/lib/age";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
+import { GuardianChildren } from "@/components/GuardianChildren";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,7 +21,7 @@ export const Route = createFileRoute("/dashboard/profile")({
 });
 
 function ProfilePage() {
-  const { profile, user, isAdmin, roles, refresh } = useAuth();
+  const { profile, user, isAdmin, roles, refresh, isGuardian } = useAuth();
   const isDeacon = roles.includes("deacon");
   const [saving, setSaving] = useState(false);
   const [locating, setLocating] = useState(false);
@@ -58,8 +59,8 @@ function ProfilePage() {
 
   async function save() {
     if (!form.full_name.trim()) return toast.error("الاسم مطلوب");
-    if (!form.rank) return toast.error("اختر الرتبة الكنسية");
-    if (!form.education_stage) return toast.error("اختر المرحلة الدراسية");
+    if (isDeacon && !form.rank) return toast.error("اختر الرتبة الكنسية");
+    if (isDeacon && !form.education_stage) return toast.error("اختر المرحلة الدراسية");
     setSaving(true);
     const { error } = await db.from("profiles").update({
       full_name: form.full_name,
@@ -238,6 +239,7 @@ function ProfilePage() {
           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "حفظ"}
         </Button>
       </Card>
+      {!isAdmin && (isGuardian || !roles.includes("servant")) && <div className="mt-4"><GuardianChildren /></div>}
     </AppShell>
   );
 }

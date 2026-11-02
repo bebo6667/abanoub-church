@@ -36,6 +36,13 @@
       "when": 1793518443130,
       "tag": "0004_guardian_accounts_policies",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793606206827,
+      "tag": "0005_guard_child_status",
+      "breakpoints": true
     }
   ]
 }
