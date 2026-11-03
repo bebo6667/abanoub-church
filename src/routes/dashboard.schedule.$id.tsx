@@ -163,7 +163,6 @@ function ScheduleDetail() {
 }
 
 function AssignmentLine({ a, isMine, canManage, onSaved }: { a: any; isMine: boolean; canManage?: boolean; onSaved: () => void }) {
-  const { user } = useAuth();
   const p = a.profiles;
   const resp = a.attendance_responses?.[0];
   const [open, setOpen] = useState(false);
