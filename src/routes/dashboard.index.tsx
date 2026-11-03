@@ -21,7 +21,7 @@ export const Route = createFileRoute("/dashboard/")({
 });
 
 function DashboardHome() {
-  const { user } = useAuth();
+  const { user, effectiveUserId, effectiveProfile } = useAuth();
   const [showAllSchedules, setShowAllSchedules] = useState(false);
   const { data: schedules } = useQuery({
     queryKey: ["my-schedules", user?.id],
