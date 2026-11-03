@@ -23,7 +23,7 @@ export const Route = createFileRoute("/dashboard/schedule/$id")({
 
 function ScheduleDetail() {
   const { id } = useParams({ from: "/dashboard/schedule/$id" });
-  const { user, isStaff } = useAuth();
+  const { user, isStaff, effectiveUserId } = useAuth();
   const qc = useQueryClient();
   const shareRef = useRef<HTMLDivElement>(null);
 

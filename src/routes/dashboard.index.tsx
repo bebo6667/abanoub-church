@@ -38,12 +38,12 @@ function DashboardHome() {
   });
 
   const { data: assignments } = useQuery({
-    queryKey: ["my-assignments", user?.id],
+    queryKey: ["my-assignments", effectiveUserId],
     queryFn: async () => {
       const { data } = await db
         .from("schedule_assignments")
         .select("*, schedules(friday_date,status), attendance_responses!attendance_responses_assignment_id_fkey(status,reason)")
-        .eq("user_id", user!.id)
+        .eq("user_id", effectiveUserId!)
         .order("created_at", { ascending: false });
       const todayIso = new Date().toISOString().slice(0, 10);
       return ((data ?? []) as any[])

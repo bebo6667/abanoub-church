@@ -51,21 +51,21 @@ function CheckinHub() {
 }
 
 function SelfCheckinTab() {
-  const { user } = useAuth();
+  const { user, effectiveUserId, effectiveProfile, profile } = useAuth();
   const qc = useQueryClient();
 
   const { data, isLoading } = useQuery({
-    queryKey: ["self-checkin", user?.id],
+    queryKey: ["self-checkin", effectiveUserId],
     queryFn: async () => {
       const [{ data: schedules }, { data: checkins }] = await Promise.all([
         db.from("schedules").select("id, friday_date, status").eq("status", "published")
           .order("friday_date", { ascending: false }).limit(20),
-        db.from("attendance_checkins").select("*").eq("user_id", user!.id),
+        db.from("attendance_checkins").select("*").eq("user_id", effectiveUserId!),
       ]);
       const map = new Map((checkins ?? []).map((c: any) => [c.schedule_id, c]));
       return { rows: ((schedules ?? []) as any[]).map((s) => ({ ...s, c: map.get(s.id) as any })) };
     },
-    enabled: !!user?.id,
+    enabled: !!effectiveUserId,
   });
 
   async function report(scheduleId: string, present: boolean, existing: any) {
@@ -77,7 +77,7 @@ function SelfCheckinTab() {
     }
     const { error } = await db.from("attendance_checkins").upsert({
       schedule_id: scheduleId,
-      user_id: user!.id,
+      user_id: effectiveUserId!,
       present,
       self_reported: true,
       checked_by: user!.id,
