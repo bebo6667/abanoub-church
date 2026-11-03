@@ -7,8 +7,9 @@ import type { ReactNode } from "react";
 
 
 export function AppShell({ children, title, isAdmin: _isAdmin }: { children: ReactNode; title: string; isAdmin?: boolean }) {
-  const { signOut, profile, isStaff } = useAuth();
+  const { signOut, profile, isStaff, isGuardian, children: kids, activeChildId, setActiveChildId } = useAuth();
   const navigate = useNavigate();
+
 
   const navItems = isStaff
     ? [
@@ -73,6 +74,27 @@ export function AppShell({ children, title, isAdmin: _isAdmin }: { children: Rea
 
         </div>
       </header>
+      {isGuardian && kids.length > 0 && (
+        <div className="border-b bg-muted/50">
+          <div className="max-w-3xl mx-auto px-4 py-2 flex gap-2 overflow-x-auto">
+            <button
+              onClick={() => setActiveChildId(null)}
+              className={`shrink-0 rounded-full border px-3 py-1 text-xs transition-colors ${!activeChildId ? "bg-primary text-primary-foreground border-primary font-semibold" : "bg-card hover:bg-accent"}`}
+            >
+              أنا{profile?.full_name ? ` — ${profile.full_name.split(" ")[0]}` : ""}
+            </button>
+            {kids.map((c) => (
+              <button
+                key={c.id}
+                onClick={() => setActiveChildId(c.id)}
+                className={`shrink-0 rounded-full border px-3 py-1 text-xs transition-colors ${activeChildId === c.id ? "bg-primary text-primary-foreground border-primary font-semibold" : "bg-card hover:bg-accent"}`}
+              >
+                {c.full_name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
       <main className="max-w-3xl mx-auto px-4 py-4">{children}</main>
       <nav className="fixed bottom-0 inset-x-0 z-20 border-t bg-card/95 backdrop-blur">
         <div className="max-w-3xl mx-auto grid" style={{ gridTemplateColumns: `repeat(${navItems.length}, minmax(0,1fr))` }}>

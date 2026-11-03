@@ -172,6 +172,7 @@ function RegisterForm() {
             <SelectContent>
               <SelectItem value="deacon">شماس</SelectItem>
               <SelectItem value="servant">خادم</SelectItem>
+              <SelectItem value="guardian">ولي أمر (عائلة)</SelectItem>
             </SelectContent>
           </Select>
         </Field>

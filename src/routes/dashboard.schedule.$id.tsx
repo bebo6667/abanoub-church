@@ -23,7 +23,7 @@ export const Route = createFileRoute("/dashboard/schedule/$id")({
 
 function ScheduleDetail() {
   const { id } = useParams({ from: "/dashboard/schedule/$id" });
-  const { user, isStaff } = useAuth();
+  const { user, isStaff, effectiveUserId } = useAuth();
   const qc = useQueryClient();
   const shareRef = useRef<HTMLDivElement>(null);
 
@@ -103,7 +103,7 @@ function ScheduleDetail() {
                       <AssignmentLine
                         key={a.id}
                         a={a}
-                        isMine={a.user_id === user!.id}
+                        isMine={a.user_id === effectiveUserId}
                         canManage={isStaff}
                         onSaved={refresh}
                       />
@@ -163,14 +163,14 @@ function ScheduleDetail() {
 }
 
 function AssignmentLine({ a, isMine, canManage, onSaved }: { a: any; isMine: boolean; canManage?: boolean; onSaved: () => void }) {
-  const { user } = useAuth();
   const p = a.profiles;
   const resp = a.attendance_responses?.[0];
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState("exams");
   const [text, setText] = useState("");
   const canAct = isMine || !!canManage;
-  const actingUserId = isMine ? user!.id : a.user_id;
+  // نمرر user_id بتاع الشماس نفسه (ابن ولي الأمر أو الشماس) عشان سياسات الحماية تشوف الرد كأنه بتاعه
+  const actingUserId = a.user_id;
 
   async function attend() {
     const { error } = await db.from("attendance_responses").upsert({

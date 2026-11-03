@@ -21,7 +21,7 @@ export const Route = createFileRoute("/dashboard/")({
 });
 
 function DashboardHome() {
-  const { user } = useAuth();
+  const { user, effectiveUserId, effectiveProfile } = useAuth();
   const [showAllSchedules, setShowAllSchedules] = useState(false);
   const { data: schedules } = useQuery({
     queryKey: ["my-schedules", user?.id],
@@ -38,12 +38,12 @@ function DashboardHome() {
   });
 
   const { data: assignments } = useQuery({
-    queryKey: ["my-assignments", user?.id],
+    queryKey: ["my-assignments", effectiveUserId],
     queryFn: async () => {
       const { data } = await db
         .from("schedule_assignments")
         .select("*, schedules(friday_date,status), attendance_responses!attendance_responses_assignment_id_fkey(status,reason)")
-        .eq("user_id", user!.id)
+        .eq("user_id", effectiveUserId!)
         .order("created_at", { ascending: false });
       const todayIso = new Date().toISOString().slice(0, 10);
       return ((data ?? []) as any[])
@@ -80,7 +80,11 @@ function DashboardHome() {
       )}
 
       <section className="space-y-3">
-        <h2 className="text-lg font-bold">خدماتي القادمة</h2>
+        <h2 className="text-lg font-bold">
+          {effectiveProfile && effectiveProfile.id !== user?.id
+            ? `خدمات ${effectiveProfile.full_name} القادمة`
+            : "خدماتي القادمة"}
+        </h2>
         {assignments && assignments.length > 0 ? (
           assignments.map((a) => {
             const resp = a.attendance_responses?.[0];
