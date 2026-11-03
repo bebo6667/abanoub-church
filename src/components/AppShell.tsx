@@ -7,8 +7,9 @@ import type { ReactNode } from "react";
 
 
 export function AppShell({ children, title, isAdmin: _isAdmin }: { children: ReactNode; title: string; isAdmin?: boolean }) {
-  const { signOut, profile, isStaff } = useAuth();
+  const { signOut, profile, isStaff, isGuardian, children: kids, activeChildId, setActiveChildId } = useAuth();
   const navigate = useNavigate();
+
 
   const navItems = isStaff
     ? [
