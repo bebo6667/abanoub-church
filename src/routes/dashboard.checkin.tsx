@@ -51,8 +51,9 @@ function CheckinHub() {
 }
 
 function SelfCheckinTab() {
-  const { user, effectiveUserId, effectiveProfile, profile } = useAuth();
+  const { user, effectiveUserId, effectiveProfile } = useAuth();
   const qc = useQueryClient();
+  const isChildMode = !!effectiveProfile && effectiveProfile.id !== user?.id;
 
   const { data, isLoading } = useQuery({
     queryKey: ["self-checkin", effectiveUserId],
@@ -93,7 +94,9 @@ function SelfCheckinTab() {
   return (
     <div className="space-y-2">
       <Card className="p-3 text-xs text-muted-foreground">
-        بعد القداس سجّل حضورك بنفسك، ثم يقوم الخادم بتأكيد التسجيل.
+        {isChildMode
+          ? `بتسجل حضور ${effectiveProfile?.full_name} بنفسك، وبعدين الخادم يأكد التسجيل.`
+          : "بعد القداس سجّل حضورك بنفسك، ثم يقوم الخادم بتأكيد التسجيل."}
       </Card>
       {(data?.rows ?? []).map((r: any) => {
         const c = r.c;

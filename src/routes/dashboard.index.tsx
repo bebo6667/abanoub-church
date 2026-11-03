@@ -80,7 +80,11 @@ function DashboardHome() {
       )}
 
       <section className="space-y-3">
-        <h2 className="text-lg font-bold">خدماتي القادمة</h2>
+        <h2 className="text-lg font-bold">
+          {effectiveProfile && effectiveProfile.id !== user?.id
+            ? `خدمات ${effectiveProfile.full_name} القادمة`
+            : "خدماتي القادمة"}
+        </h2>
         {assignments && assignments.length > 0 ? (
           assignments.map((a) => {
             const resp = a.attendance_responses?.[0];
