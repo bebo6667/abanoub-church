@@ -261,6 +261,9 @@ function AdminScheduleEditor() {
                           <span className="text-[10px] text-muted-foreground">{ins.candidateReasons.join(" • ")}</span>
                         </span>
                       )}
+                      <span className="mt-0.5 block text-[10px] text-muted-foreground">
+                        {ins?.lastServiceDate ? <>آخر خدمة: <b className="text-foreground">{formatFridayDate(ins.lastServiceDate)}</b></> : "لم يُسند إليه خدمة في جداول منشورة"}
+                      </span>
                     </div>
                   </label>
                 );
