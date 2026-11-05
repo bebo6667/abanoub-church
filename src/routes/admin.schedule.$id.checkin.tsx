@@ -10,8 +10,9 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Checkbox } from "@/components/ui/checkbox";
 import { formatFridayDate, SERVICE_LABELS, whatsappDigits, type ServiceType } from "@/lib/services";
-import { Loader2, Check, X, Search, ChevronRight, Save, Phone, MessageCircle, BarChart3 } from "lucide-react";
+import { Loader2, Check, X, Search, ChevronRight, Save, Phone, MessageCircle, BarChart3, ListChecks } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/schedule/$id/checkin")({
@@ -39,6 +40,8 @@ function CheckinPage() {
   const [search, setSearch] = useState("");
   const [noteFor, setNoteFor] = useState<string | null>(null);
   const [noteText, setNoteText] = useState("");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [tab, setTab] = useState("assigned");
 
   const { data, isLoading } = useQuery({
     queryKey: ["schedule-checkin", id],
@@ -128,6 +131,37 @@ function CheckinPage() {
     qc.invalidateQueries({ queryKey: ["attendance-stats"] });
   }
 
+  async function markBulk(present: boolean) {
+    // Only the ones whose status actually changes; already-marked matching rows are skipped.
+    const targets = Array.from(selected).filter((uid) => {
+      const c = checkinMap.get(uid);
+      return !c || c.present !== present;
+    });
+    if (!targets.length) {
+      toast.info("المحددون مسجلون بهذه الحالة بالفعل");
+      return;
+    }
+    const overwriting = targets.filter((uid) => checkinMap.get(uid)).length;
+    if (overwriting > 0 && !confirm(`سيتم تغيير حالة ${overwriting} شماس مسجل مسبقًا. متابعة؟`)) return;
+    const now = new Date().toISOString();
+    const payload = targets.map((uid) => ({
+      schedule_id: id,
+      user_id: uid,
+      present,
+      self_reported: false,
+      confirmed_by: user!.id,
+      confirmed_at: now,
+      checked_by: user!.id,
+      checked_at: now,
+    }));
+    const { error } = await db.from("attendance_checkins").upsert(payload, { onConflict: "schedule_id,user_id" });
+    if (error) return toast.error(error.message);
+    toast.success(`تم تسجيل ${present ? "حضور" : "غياب"} ${targets.length} شماس`);
+    setSelected(new Set());
+    qc.invalidateQueries({ queryKey: ["schedule-checkin", id] });
+    qc.invalidateQueries({ queryKey: ["attendance-stats"] });
+  }
+
   async function confirmSelf(userId: string, memberName?: string) {
     const { error } = await db.from("attendance_checkins")
       .update({ confirmed_by: user!.id, confirmed_at: new Date().toISOString() })
@@ -163,6 +197,18 @@ function CheckinPage() {
     return (
       <Card className="p-3">
         <div className="flex items-center gap-2">
+          <Checkbox
+            checked={selected.has(m.id)}
+            onCheckedChange={(v) => {
+              setSelected((prev) => {
+                const s = new Set(prev);
+                if (v) s.add(m.id); else s.delete(m.id);
+                return s;
+              });
+            }}
+            aria-label={`تحديد ${m.full_name}`}
+            className="shrink-0"
+          />
           <div className="h-10 w-10 rounded-full bg-secondary overflow-hidden grid place-items-center text-xs font-semibold shrink-0">
             {m.profile_image_url ? <img src={m.profile_image_url} className="h-full w-full object-cover" /> : m.full_name?.charAt(0)}
           </div>
@@ -258,7 +304,32 @@ function CheckinPage() {
         <Input placeholder="ابحث بالاسم..." value={search} onChange={(e) => setSearch(e.target.value)} className="pr-9" />
       </div>
 
-      <Tabs defaultValue="assigned">
+      {selected.size > 0 && (
+        <Card className="p-3 mb-3 flex flex-wrap items-center gap-2 border-primary/40 bg-primary/5">
+          <span className="text-sm font-bold">تم تحديد {selected.size} شماس</span>
+          <Button size="sm" className="bg-success text-success-foreground h-9" onClick={() => markBulk(true)}>
+            <Check className="h-4 w-4 ml-1" />حضور للمحددين
+          </Button>
+          <Button size="sm" variant="destructive" className="h-9" onClick={() => markBulk(false)}>
+            <X className="h-4 w-4 ml-1" />غياب للمحددين
+          </Button>
+          <Button size="sm" variant="ghost" className="h-9" onClick={() => setSelected(new Set())}>إلغاء التحديد</Button>
+        </Card>
+      )}
+      <div className="mb-3 flex gap-2">
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => setSelected(new Set((tab === "assigned" ? assignedList : othersList).map((m) => m.id)))}
+        >
+          <ListChecks className="h-4 w-4 ml-1" />تحديد كل {tab === "assigned" ? "المسندون" : "الأعضاء الآخرون"}
+        </Button>
+        {selected.size > 0 && (
+          <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>مسح التحديد</Button>
+        )}
+      </div>
+
+      <Tabs defaultValue="assigned" onValueChange={setTab}>
         <TabsList className="w-full grid grid-cols-2">
           <TabsTrigger value="assigned">المسندون ({assignedList.length})</TabsTrigger>
           <TabsTrigger value="others">أعضاء آخرون ({othersList.length})</TabsTrigger>
