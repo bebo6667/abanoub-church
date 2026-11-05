@@ -88,6 +88,7 @@ export async function fetchDeaconInsights(): Promise<DeaconInsight[]> {
     const pct = recorded === 0 ? 0 : Math.round((s.present / recorded) * 100);
     const age = effectiveAge(m.date_of_birth, m.age);
     const lastSvc = lastService.get(m.id);
+    const lastServiceDate = lastSvc && lastSvc <= today ? lastSvc : null;
     const daysSinceService = lastSvc && lastSvc <= today ? daysBetween(lastSvc) : lastSvc ? 0 : null;
     const daysSinceVisit = daysBetween(lastVisit.get(m.id));
     const profileComplete = Boolean((m.phone || m.whatsapp) && m.date_of_birth && m.rank);
@@ -139,6 +140,7 @@ export async function fetchDeaconInsights(): Promise<DeaconInsight[]> {
       absent: s.absent,
       recorded,
       pct,
+      lastServiceDate,
       daysSinceService,
       daysSinceVisit,
       profileComplete,
