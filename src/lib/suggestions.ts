@@ -25,6 +25,7 @@ export type DeaconInsight = {
   absent: number;
   recorded: number;
   pct: number;
+  lastServiceDate: string | null; // تاريخ آخر خدمة في جدول منشور (null = لم يخدم قط)
   daysSinceService: number | null; // null = لم يخدم قط
   daysSinceVisit: number | null; // null = لم يُفتقد قط
   profileComplete: boolean;
