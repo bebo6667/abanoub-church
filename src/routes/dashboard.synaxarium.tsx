@@ -147,8 +147,8 @@ function SynaxariumPage() {
           </Card>
         )}
         {syn.error && <Card className="p-4 text-sm text-destructive">{(syn.error as Error).message}</Card>}
-        {syn.data?.saints.map((s) => (
-          <Card key={s.name} className="p-4">
+        {syn.data?.saints.map((s, index) => (
+          <Card key={`${s.name}-${index}`} className="p-4">
             <p className="font-bold text-primary">{s.name}</p>
             <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{s.summary}</p>
           </Card>
@@ -156,7 +156,11 @@ function SynaxariumPage() {
         {syn.data && syn.data.saints.length === 0 && (
           <Card className="p-6 text-center text-sm text-muted-foreground">لا توجد تذكارات مسجلة لهذا اليوم</Card>
         )}
-        {syn.data && <p className="text-[10px] text-muted-foreground">الملخصات مكتوبة بالذكاء الاصطناعي وتحتاج مراجعة كنسية.</p>}
+        {syn.data?.sourceUrl && (
+          <p className="text-xs text-muted-foreground">
+            النص من مصدره الكنسي كما هو — <a href={syn.data.sourceUrl} target="_blank" rel="noopener noreferrer" className="underline text-primary">الأنبا تكلا</a>
+          </p>
+        )}
       </section>
     </AppShell>
   );

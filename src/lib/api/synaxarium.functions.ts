@@ -3,34 +3,33 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { COPTIC_MONTHS, fromCoptic } from "@/lib/coptic-calendar";
 
-export type Saint = { name: string; summary: string };
+export type Saint = { name: string; summary: string; source?: string };
 
 const SYNAXARIUM_SOURCE = "https://st-takla.org/zJ/index.php/ar-synaxarium";
 
-/**
- * Fetches the authentic Synaxarium text for a Coptic day from St-Takla.org
- * (the reference Coptic source) and caches it per Coptic day. No AI involved.
- */
+/** Fetches the original Arabic Synaxarium entries for a Coptic day and caches them. */
 export const getSynaxarium = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ month: z.number().int().min(1).max(13), day: z.number().int().min(1).max(30) }))
-  .handler(async ({ data, context }): Promise<{ saints: Saint[] }> => {
-    const { data: cached } = await (context.supabase as any)
-      .from("synaxarium_cache").select("saints")
-      .eq("coptic_month", data.month).eq("coptic_day", data.day).maybeSingle();
-    const cachedSaints = (cached?.saints ?? []) as Saint[];
-    if (cachedSaints.length >= 1) return { saints: cachedSaints };
-
-    // Coptic dates map to a stable Gregorian date; any reference year works.
+  .handler(async ({ data, context }): Promise<{ saints: Saint[]; sourceUrl: string }> => {
     const g = fromCoptic(1743, data.month, data.day);
     const iday = String(g.getUTCDate()).padStart(2, "0");
     const imonth = String(g.getUTCMonth() + 1).padStart(2, "0");
     const iyear = g.getUTCFullYear();
-    const url = `${SYNAXARIUM_SOURCE}?view=synaxarium-arabic&dbl=ar&iday=${iday}&imonth=${imonth}&iyear=${iyear}`;
+    const sourceUrl = `${SYNAXARIUM_SOURCE}?view=synaxarium-arabic&dbl=ar&iday=${iday}&imonth=${imonth}&iyear=${iyear}`;
+
+    const { data: cached } = await (context.supabase as any)
+      .from("synaxarium_cache").select("saints")
+      .eq("coptic_month", data.month).eq("coptic_day", data.day).maybeSingle();
+    const cachedSaints = (cached?.saints ?? []) as Saint[];
+    // Previous cache rows contain generated summaries; only reuse entries tagged as source text.
+    if (cachedSaints.length > 0 && cachedSaints.every((saint) => saint.source === "St-Takla")) {
+      return { saints: cachedSaints, sourceUrl };
+    }
 
     let html: string;
     try {
-      const res = await fetch(url, {
+      const res = await fetch(sourceUrl, {
         headers: {
           "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36",
           "Accept-Language": "ar,en;q=0.8",
@@ -39,81 +38,79 @@ export const getSynaxarium = createServerFn({ method: "POST" })
       });
       if (!res.ok) throw new Error(String(res.status));
       html = await res.text();
-    } catch (e: any) {
-      if (e?.name === "TimeoutError") throw new Error("المصدر الكنسي لم يستجب، جرّب بعد قليل");
+    } catch (error) {
+      if (error instanceof Error && error.name === "TimeoutError") throw new Error("المصدر الكنسي لم يستجب، جرّب بعد قليل");
       throw new Error("تعذر الوصول إلى مصدر السنكسار الآن");
     }
 
     const saints = parseSynaxariumHtml(html);
-    if (!saints.length) throw new Error("تعذر تحليل نص السنكسار من المصدر");
+    if (!saints.length) throw new Error("تعذر استخراج تذكارات هذا اليوم من المصدر الكنسي");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await (supabaseAdmin as any).from("synaxarium_cache")
       .upsert({ coptic_month: data.month, coptic_day: data.day, saints });
-    return { saints };
+    return { saints, sourceUrl };
   });
 
-/** Extracts every commemoration section (title + full story) from the St-Takla day page. */
+/** Extracts all titled commemoration sections while preserving the source's Arabic text. */
 export function parseSynaxariumHtml(html: string): Saint[] {
-  const preambleIdx = html.indexOf("من الشهر المبارك");
-  if (preambleIdx === -1) return [];
-  const start = html.lastIndexOf("<p", preambleIdx);
-  const endSearch = html.indexOf("البحث في السنكسار", preambleIdx);
-  const endNav = html.indexOf("الذهاب إلى", preambleIdx);
-  const end = Math.min(...[endSearch, endNav].filter((n) => n > preambleIdx));
-  if (end === -1 || !end) return [];
-  let content = html.slice(start < 0 ? 0 : start, end);
+  const paragraphs = [...html.matchAll(/<p\b([^>]*)>([\s\S]*?)<\/p\s*>/gi)].map((match) => ({
+    attributes: match[1] ?? "",
+    text: htmlToText(match[2] ?? ""),
+  }));
+  const preambleIndex = paragraphs.findIndex(({ text }) => text.includes("من الشهر المبارك"));
+  if (preambleIndex < 0) return [];
 
-  // Section boundaries are the divider images.
-  content = content.replace(/<p[^>]*>\s*<img[^>]*divider\.png[^>]*>\s*<\/p>/gi, "\n@@S@@\n");
-  content = content.replace(/<img[^>]*divider\.png[^>]*>/gi, "\n@@S@@\n");
-  // Line breaks and paragraph ends become newlines; all other tags disappear.
-  content = content
-    .replace(/<script[\s\S]*?<\/script>/gi, " ")
-    .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<\/(p|div|td|tr|table|li|h[1-6])>/gi, "\n")
-    .replace(/<[^>]+>/g, "");
+  const entries: Saint[] = [];
+  let title: string | null = null;
+  let story: string[] = [];
+  const save = () => {
+    const summary = story.join("\n").trim();
+    if (title && summary) entries.push({ name: title, summary, source: "St-Takla" });
+  };
 
-  const decoded = decodeEntities(content)
-    .split("\n")
-    .map((l) => l.replace(/\u00a0/g, " ").replace(/\s+/g, " ").trim())
-    .filter(Boolean);
+  for (const paragraph of paragraphs.slice(preambleIndex + 1)) {
+    const line = paragraph.text.trim();
+    if (!line || line.includes("أعلى الصفحة") || line.includes("الذهاب إلى :")) break;
 
-  const chunks: string[][] = [];
-  let cur: string[] = [];
-  for (const line of decoded) {
-    if (line === "@@S@@") { chunks.push(cur); cur = []; continue; }
-    cur.push(line);
+    const attrs = paragraph.attributes.toLowerCase();
+    const isCommemorationTitle = /text-align\s*:\s*center/.test(attrs)
+      && /color\s*:\s*#8b0000/.test(attrs)
+      && /font-size\s*:\s*24px/.test(attrs);
+    if (isCommemorationTitle) {
+      save();
+      title = line;
+      story = [];
+      continue;
+    }
+
+    // Ignore the centered date heading before the first actual commemoration.
+    if (!title && /اليوم السابع عشر|اليوم الثامن|اليوم التاسع|اليوم العاشر|اليوم الأول|اليوم الثاني|اليوم الثالث|اليوم الرابع|اليوم الخامس|اليوم السادس|شهر/.test(line)) continue;
+    if (title) story.push(line);
   }
-  chunks.push(cur);
-
-  const saints: Saint[] = [];
-  for (const [i, chunk] of chunks.entries()) {
-    // The first chunk is the day preamble ("اليوم ... من الشهر المبارك") — not a commemoration.
-    if (i === 0) continue;
-    const lines = chunk.filter((l) => l !== "آمين." || chunk.length > 2);
-    if (lines.length < 2) continue;
-    const title = lines[0].replace(/^\W+/, "").trim();
-    if (!title || title.length > 150) continue;
-    if (/أختر اليوم|أعلى الصفحة|اختر اليوم/.test(title)) continue;
-    // Drop the date line right after the title, e.g. "1 توت - 11 سبتمبر".
-    const body = lines.slice(1).filter((l) => !/^\d{1,2}\s+[\u0621-\u064A]+\s*-\s*\d{1,2}\s+[\u0621-\u064A]+$/.test(l));
-    const summary = body.join("\n");
-    if (summary.length < 40) continue;
-    saints.push({ name: title, summary: summary.slice(0, 8000) });
-  }
-  return saints;
+  save();
+  return entries;
 }
 
-function decodeEntities(s: string): string {
+function htmlToText(markup: string): string {
+  return decodeEntities(markup
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<[^>]+>/g, " "))
+    .replace(/[\t\r ]+/g, " ")
+    .replace(/\n\s*/g, "\n")
+    .trim();
+}
+
+function decodeEntities(value: string): string {
   const named: Record<string, string> = {
     "&nbsp;": " ", "&amp;": "&", "&quot;": '"', "&apos;": "'", "&#39;": "'",
     "&lt;": "<", "&gt;": ">", "&laquo;": "«", "&raquo;": "»", "&mdash;": "—", "&ndash;": "–",
   };
-  return s
-    .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
-    .replace(/&#x([0-9a-fA-F]+);/g, (_, n) => String.fromCodePoint(parseInt(n, 16)))
-    .replace(/&(nbsp|amp|quot|apos|lt|gt|laquo|raquo|mdash|ndash);/g, (m) => named[m] ?? m);
+  return value
+    .replace(/&#(\d+);/g, (_, digits: string) => String.fromCodePoint(Number(digits)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, digits: string) => String.fromCodePoint(parseInt(digits, 16)))
+    .replace(/&(nbsp|amp|quot|apos|lt|gt|laquo|raquo|mdash|ndash);/gi, (entity) => named[entity.toLowerCase()] ?? entity);
 }
 
 export { COPTIC_MONTHS };
