@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Loader2, Pencil, Plus, Trash2, Users } from "lucide-react";
+import { Loader2, Pencil, Plus, Trash2, Users, Info } from "lucide-react";
 import { RANK_LABELS, RANK_ORDER, EDUCATION_LABELS, EDUCATION_ORDER, STATUS_LABELS } from "@/lib/services";
 
 type ChildForm = { id?: string; full_name: string; date_of_birth: string; rank: string; education_stage: string };
@@ -86,6 +86,14 @@ export function GuardianChildren() {
         <p className="text-sm text-muted-foreground">
           حوّل حسابك لحساب ولي أمر عشان تضيف كل أبنائك على نفس الإيميل، ولكل ابن بياناته وخدمته وحضوره.
         </p>
+        <div className="rounded-md border bg-muted/40 p-3 text-sm leading-relaxed">
+          <p className="flex items-center gap-2 font-semibold"><Info className="h-4 w-4 text-primary" /> طريقة الاستخدام</p>
+          <ol className="mt-2 list-decimal space-y-1 pr-5 text-muted-foreground">
+            <li>اضغط «التحويل إلى حساب ولي أمر» وأكّد الاختيار؛ هتفضل تستخدم نفس الإيميل.</li>
+            <li>بعد التحويل، اضغط «إضافة ابن» واكتب بيانات كل شماس.</li>
+            <li>بعد مراجعة واعتماد بيانات الابن، اختار اسمه من الشريط أعلى الصفحات للتبديل بين حساباته.</li>
+          </ol>
+        </div>
         <Button variant="outline" className="w-full" onClick={convert} disabled={converting}>
           {converting ? <Loader2 className="h-4 w-4 animate-spin" /> : "التحويل إلى حساب ولي أمر"}
         </Button>
@@ -99,6 +107,9 @@ export function GuardianChildren() {
         <div className="flex items-center gap-2 font-semibold"><Users className="h-5 w-5 text-primary" /> أبنائي</div>
         <Button size="sm" onClick={() => setEdit({ ...empty })}><Plus className="h-4 w-4 ml-1" /> إضافة ابن</Button>
       </div>
+      <p className="text-sm leading-relaxed text-muted-foreground">
+        أضف لكل شماس بيانات مستقلة. بعد اعتماد بياناته، استخدم شريط الأسماء أعلى الصفحة للتبديل بين الأبناء، أو اختر «أنا» للعودة لحساب ولي الأمر.
+      </p>
       {children.length === 0 && <p className="text-sm text-muted-foreground">لسه مفيش أبناء — اضغط «إضافة ابن».</p>}
       <div className="space-y-2">
         {children.map((c) => (
